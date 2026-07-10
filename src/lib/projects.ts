@@ -29,3 +29,9 @@ export async function getSortedProjects(): Promise<CollectionEntry<'projects'>[]
   const entries = await getCollection('projects');
   return sortProjects(entries);
 }
+
+/** Cover image URL: the project's own `cover`, or its generated fallback (see
+ * src/pages/covers/[slug].svg.ts). */
+export function coverUrl(project: CollectionEntry<'projects'>): string {
+  return project.data.cover ?? `/covers/${project.id}.svg`;
+}

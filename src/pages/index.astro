@@ -1,8 +1,20 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getSortedProjects } from '../lib/projects';
+import TagRow from '../components/TagRow.astro';
+import StatsBand from '../components/StatsBand.tsx';
+import { getSortedProjects, coverUrl } from '../lib/projects';
+import '../styles/stats-band.css';
 
 const projects = await getSortedProjects();
+
+// The project count is always accurate (computed here); the other two are
+// fixed headline numbers from the résumé (ClickHouse migration, automation
+// savings) — see src/content/projects/clickhouse-migration.md.
+const stats = [
+  { value: String(projects.length), label: '篇專案作品' },
+  { value: '~21×', label: 'ClickHouse 查詢提速' },
+  { value: '300+', label: '小時/年 自動化節省' }
+];
 ---
 
 <BaseLayout title="李孟儒 Lance Lee ｜ 作品集">
@@ -11,25 +23,26 @@ const projects = await getSortedProjects();
     <p>全端工程師。這裡收錄我的專案紀錄 —— 內容以 Markdown 維護、版本控制在 GitHub。</p>
   </section>
 
+  <StatsBand stats={stats} client:visible />
+
   <section class="projects">
     <h2>專案</h2>
     <ul class="project-list">
       {
         projects.map((project) => (
-          <li class="project-card">
+          <li class="project-card" data-reveal>
             <a href={`/projects/${project.id}/`}>
-              <span class="project-card__title">{project.data.title}</span>
-              <span class="project-card__meta">
-                {project.data.role} · {project.data.period}
-              </span>
-              {project.data.metrics && (
-                <span class="project-card__metrics">{project.data.metrics}</span>
-              )}
-              <span class="project-card__tags">
-                {project.data.tags.map((tag) => (
-                  <span class="tag">{tag}</span>
-                ))}
-              </span>
+              <img class="project-card__cover" src={coverUrl(project)} alt="" loading="lazy" />
+              <div class="project-card__body">
+                <span class="project-card__title">{project.data.title}</span>
+                <span class="project-card__meta">
+                  {project.data.role} · {project.data.period}
+                </span>
+                {project.data.metrics && (
+                  <span class="project-card__metrics">{project.data.metrics}</span>
+                )}
+                <TagRow tags={project.data.tags} />
+              </div>
             </a>
           </li>
         ))
@@ -54,11 +67,21 @@ const projects = await getSortedProjects();
   }
   .project-card a {
     display: block;
-    padding: 1.25rem 1.5rem;
-    border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
-    border-radius: 0.75rem;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
     text-decoration: none;
     color: inherit;
+    overflow: hidden;
+  }
+  .project-card__cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1200 / 630;
+    object-fit: cover;
+    background: var(--fill-softer);
+  }
+  .project-card__body {
+    padding: 1.25rem 1.5rem;
   }
   .project-card__title {
     display: block;
@@ -76,16 +99,7 @@ const projects = await getSortedProjects();
     margin-top: 0.5rem;
     font-weight: 600;
   }
-  .project-card__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
+  .project-card :global(.tag-row) {
     margin-top: 0.75rem;
-  }
-  .tag {
-    font-size: 0.75rem;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, currentColor 10%, transparent);
   }
 </style>

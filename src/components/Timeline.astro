@@ -1,0 +1,53 @@
+---
+interface TimelineItem {
+  date: string;
+  label: string;
+}
+interface Props {
+  items: TimelineItem[];
+}
+const { items } = Astro.props as Props;
+---
+
+<ol class="timeline">
+  {
+    items.map((item) => (
+      <li class="timeline__item" data-reveal>
+        <span class="timeline__date">{item.date}</span>
+        <span class="timeline__label">{item.label}</span>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .timeline {
+    list-style: none;
+    margin: 1.5rem 0;
+    padding: 0;
+    border-left: 2px solid var(--border-soft);
+  }
+  .timeline__item {
+    position: relative;
+    padding: 0 0 1.25rem 1.25rem;
+  }
+  .timeline__item::before {
+    content: '';
+    position: absolute;
+    left: -0.4rem;
+    top: 0.3rem;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .timeline__date {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.7;
+  }
+  .timeline__label {
+    display: block;
+  }
+</style>

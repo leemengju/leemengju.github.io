@@ -1,6 +1,11 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import MetricCard from '../../components/MetricCard.astro';
+import TagRow from '../../components/TagRow.astro';
+import BeforeAfterBar from '../../components/BeforeAfterBar.astro';
+import Timeline from '../../components/Timeline.astro';
+import { coverUrl } from '../../lib/projects';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -14,7 +19,7 @@ const { project } = Astro.props;
 const { Content } = await render(project);
 ---
 
-<BaseLayout title={`${project.data.title} ｜ 李孟儒 Lance Lee`}>
+<BaseLayout title={`${project.data.title} ｜ 李孟儒 Lance Lee`} ogImage={coverUrl(project)}>
   <a class="back-link" href="/">← 回首頁</a>
 
   <header class="project-header">
@@ -22,10 +27,19 @@ const { Content } = await render(project);
     <p class="project-header__meta">
       {project.data.role} · {project.data.period}
     </p>
-    {project.data.metrics && <p class="project-header__metrics">{project.data.metrics}</p>}
-    <div class="project-header__tags">
-      {project.data.tags.map((tag) => <span class="tag">{tag}</span>)}
-    </div>
+    {project.data.metrics && <MetricCard metric={project.data.metrics} />}
+    <TagRow tags={project.data.tags} />
+    {
+      project.data.beforeAfter && (
+        <BeforeAfterBar
+          before={project.data.beforeAfter.before}
+          after={project.data.beforeAfter.after}
+          unit={project.data.beforeAfter.unit}
+          label={project.data.beforeAfter.label}
+        />
+      )
+    }
+    {project.data.timeline && <Timeline items={project.data.timeline} />}
     {
       project.data.github && (
         <a class="github-link" href={project.data.github} target="_blank" rel="noopener noreferrer">
@@ -53,28 +67,18 @@ const { Content } = await render(project);
   }
   .project-header {
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+    border-bottom: 1px solid var(--border-soft);
     margin-bottom: 2rem;
   }
   .project-header__meta {
     opacity: 0.7;
     margin-top: 0.25rem;
   }
-  .project-header__metrics {
-    font-weight: 600;
-    font-size: 1.1rem;
-  }
-  .project-header__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
+  .project-header :global(.metric-card) {
     margin-top: 0.75rem;
   }
-  .tag {
-    font-size: 0.75rem;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, currentColor 10%, transparent);
+  .project-header :global(.tag-row) {
+    margin-top: 0.75rem;
   }
   .github-link {
     display: inline-block;

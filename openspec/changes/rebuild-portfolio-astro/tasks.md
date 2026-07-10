@@ -19,17 +19,17 @@
 
 ## 4. Presentation (visual vocabulary)
 
-- [ ] 4.1 MetricCard component (headline metric, e.g. `104s → 5s`, `~21×`)
-- [ ] 4.2 DiagramBlock: render Mermaid code blocks to vector at build (no image files)
-- [ ] 4.3 CodeBlock + LogBlock (syntax-highlighted snippet / terminal-style output)
-- [ ] 4.4 BeforeAfterBar, Timeline, TagRow components
-- [ ] 4.5 Auto-generated typographic cover for projects without `cover` (listing + OG)
+- [x] 4.1 MetricCard component (headline metric, e.g. `104s → 5s`, `~21×`)
+- [x] 4.2 DiagramBlock: render Mermaid code blocks to vector at build (no image files)
+- [x] 4.3 CodeBlock + LogBlock (syntax-highlighted snippet / terminal-style output)
+- [x] 4.4 BeforeAfterBar, Timeline, TagRow components
+- [x] 4.5 Auto-generated typographic cover for projects without `cover` (listing + OG)
 
 ## 5. Motion (progressive)
 
-- [ ] 5.1 L0: CSS `@keyframes` + IntersectionObserver reveal utility (no framework)
-- [ ] 5.2 L1 (optional): add `gsap` + ScrollTrigger in a `<script>` for scroll-driven effects
-- [ ] 5.3 L2 (optional): `astro add react` + `framer-motion` island, hydrated `client:visible`
+- [x] 5.1 L0: CSS `@keyframes` + IntersectionObserver reveal utility (no framework)
+- [x] 5.2 L1 (optional): add `gsap` + ScrollTrigger in a `<script>` for scroll-driven effects
+- [x] 5.3 L2 (optional): `astro add react` + `framer-motion` island, hydrated `client:visible`
 
 ## 6. Content migration
 

@@ -1,0 +1,20 @@
+---
+/**
+ * Client-side Mermaid renderer. Diagrams are authored as ```mermaid fences in
+ * project markdown; `rehype-mermaid-blocks.mjs` (wired in astro.config.mjs)
+ * turns each fence into a plain `<pre class="mermaid">` at build time. This
+ * component just includes the runtime that renders them — dropped once per
+ * page (in BaseLayout), it dynamically imports the `mermaid` package only
+ * when `.mermaid` elements are actually present, so pages without diagrams
+ * pay zero extra JS cost.
+ */
+---
+
+<script>
+  const blocks = document.querySelectorAll('pre.mermaid');
+  if (blocks.length > 0) {
+    const mermaid = (await import('mermaid')).default;
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+    await mermaid.run({ nodes: blocks });
+  }
+</script>

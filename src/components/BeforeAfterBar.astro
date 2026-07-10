@@ -1,0 +1,159 @@
+---
+/**
+ * To-scale before/after comparison bar, e.g. 104s -> 5s. Bar widths are
+ * computed at build time relative to the larger of the two values.
+ *
+ * Default motion tier is L0: the "after" bar grows in on scroll by reusing
+ * the shared `[data-reveal]` / `.is-visible` toggle from RevealScript.astro
+ * (no second observer) — see design.md "reach up a tier only when needed".
+ *
+ * `motion="gsap"` opts a single instance into L1 instead: GSAP + ScrollTrigger
+ * (dynamically imported, only when at least one `[data-gsap-bar]` exists on
+ * the page) drive both the fade-in and the fill growth for that instance,
+ * replacing the CSS-driven reveal rather than fighting it for ownership of
+ * the same property.
+ */
+interface Props {
+  before: number;
+  after: number;
+  unit?: string;
+  label?: string;
+  motion?: 'css' | 'gsap';
+}
+const { before, after, unit = '', label, motion = 'css' } = Astro.props as Props;
+const max = Math.max(before, after) || 1;
+const beforePct = (before / max) * 100;
+const afterPct = (after / max) * 100;
+const multiplier = after > 0 ? before / after : undefined;
+---
+
+<figure
+  class="before-after"
+  data-reveal={motion === 'css' ? true : undefined}
+  data-gsap-bar={motion === 'gsap' ? afterPct : undefined}
+  style={`--after-width: ${afterPct}%`}
+>
+  {label && <figcaption class="before-after__label">{label}</figcaption>}
+  <div class="before-after__row">
+    <span class="before-after__tag">Before</span>
+    <div class="before-after__track">
+      <div class="before-after__fill before-after__fill--before" style={`width: ${beforePct}%`}>
+      </div>
+    </div>
+    <span class="before-after__value">
+      {before}
+      {unit}
+    </span>
+  </div>
+  <div class="before-after__row">
+    <span class="before-after__tag">After</span>
+    <div class="before-after__track">
+      <div class="before-after__fill before-after__fill--after"></div>
+    </div>
+    <span class="before-after__value">
+      {after}
+      {unit}
+    </span>
+  </div>
+  {multiplier && <p class="before-after__multiplier">~{multiplier.toFixed(1)}×</p>}
+</figure>
+
+<style>
+  .before-after {
+    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+  }
+  .before-after__label {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+  .before-after__row {
+    display: grid;
+    grid-template-columns: 3.5rem 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.4rem 0;
+  }
+  .before-after__tag {
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+  .before-after__track {
+    height: 0.6rem;
+    border-radius: 999px;
+    background: var(--fill-softer);
+    overflow: hidden;
+  }
+  .before-after__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+    opacity: 0.55;
+  }
+  .before-after__fill--after {
+    opacity: 1;
+    width: 0;
+    transition: width 0.8s ease;
+  }
+  .before-after.is-visible .before-after__fill--after {
+    width: var(--after-width);
+  }
+  .before-after__value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .before-after__multiplier {
+    margin: 0.75rem 0 0;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .before-after__fill--after {
+      transition: none;
+      width: var(--after-width);
+    }
+  }
+
+  /* GSAP variant (motion="gsap"): starts hidden, the script below owns both
+     the fade and the fill — do not also apply the L0 CSS transition/reveal. */
+  .before-after[data-gsap-bar] {
+    opacity: 0;
+  }
+</style>
+
+<script>
+  const bars = document.querySelectorAll('[data-gsap-bar]');
+  if (bars.length > 0) {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const { default: gsap } = await import('gsap');
+    const { ScrollTrigger } = await import('gsap/ScrollTrigger');
+    gsap.registerPlugin(ScrollTrigger);
+
+    bars.forEach((bar) => {
+      const fill = bar.querySelector('.before-after__fill--after');
+      const target = parseFloat(bar.getAttribute('data-gsap-bar')) || 0;
+
+      if (reduceMotion) {
+        gsap.set(bar, { opacity: 1 });
+        gsap.set(fill, { width: `${target}%` });
+        return;
+      }
+
+      gsap.set(fill, { width: 0 });
+      gsap.to(bar, {
+        opacity: 1,
+        duration: 0.4,
+        scrollTrigger: { trigger: bar, start: 'top 85%' }
+      });
+      gsap.to(fill, {
+        width: `${target}%`,
+        duration: 0.9,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: bar, start: 'top 85%' }
+      });
+    });
+  }
+</script>

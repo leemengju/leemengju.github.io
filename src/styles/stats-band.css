@@ -1,0 +1,29 @@
+/* Styles for the StatsBand.tsx island (home page only) — plain CSS since a
+   .tsx file has no Astro scoped <style>. */
+.stats-band {
+  list-style: none;
+  margin: 0 0 2.5rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+.stats-band__item {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  text-align: center;
+  cursor: default;
+}
+.stats-band__value {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.stats-band__label {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}

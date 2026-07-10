@@ -25,7 +25,26 @@ const projects = defineCollection({
     // Optional cover image; falls back to an auto-generated typographic cover.
     cover: z.string().optional(),
     // Optional explicit sort position (ascending); undefined sorts last.
-    order: z.number().optional()
+    order: z.number().optional(),
+    // Optional to-scale numeric comparison, rendered as a BeforeAfterBar.
+    // Keep this separate from `metrics` (free text) since a bar needs real numbers.
+    beforeAfter: z
+      .object({
+        label: z.string().optional(),
+        before: z.number(),
+        after: z.number(),
+        unit: z.string().optional()
+      })
+      .optional(),
+    // Optional dated milestones, rendered as a Timeline.
+    timeline: z
+      .array(
+        z.object({
+          date: z.string(),
+          label: z.string()
+        })
+      )
+      .optional()
   })
 });
 

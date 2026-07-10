@@ -1,0 +1,54 @@
+/*
+ * CodeBlock + LogBlock (tasks 4.3): content is authored as plain .md, not
+ * .mdx, so authors can't drop in a custom Astro/JSX component around a fence
+ * — the only hook available to them is the fence's language tag. Astro's
+ * built-in Shiki step already syntax-highlights ```<lang> fences into
+ * `<pre class="astro-code" data-language="<lang>">`; these rules key off that
+ * `data-language` attribute rather than introducing separate .astro
+ * components that plain markdown could never invoke.
+ *
+ * - CodeBlock: any recognized language (php, sql, js, ...) — Shiki's own
+ *   highlighting stays, this just adds the language-label badge and
+ *   consistent border/spacing.
+ * - LogBlock: ```log (or ```text / ```shell) — same base treatment, styled
+ *   as terminal/benchmark output. These aren't real Shiki grammars, so
+ *   Shiki already renders them as unhighlighted plain text; a "$_" badge
+ *   replaces the language label since it isn't a programming language.
+ */
+
+main pre[data-language] {
+  position: relative;
+  border-radius: var(--radius);
+  padding: 1.25rem 1rem 1rem;
+  margin: 1.5rem 0;
+}
+main pre[data-language]::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.4rem;
+  right: 0.75rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+}
+
+main pre[data-language='log']::before,
+main pre[data-language='text']::before,
+main pre[data-language='shell']::before {
+  content: '$_';
+  opacity: 0.4;
+}
+
+/* Mermaid diagrams (see rehype-mermaid-blocks.mjs): plain text until
+   DiagramBlock's client script renders them; centered once mermaid.js swaps
+   in its <svg>. */
+main pre.mermaid {
+  background: none;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  text-align: center;
+}

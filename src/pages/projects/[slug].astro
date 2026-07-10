@@ -1,0 +1,92 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project }
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+---
+
+<BaseLayout title={`${project.data.title} ｜ 李孟儒 Lance Lee`}>
+  <a class="back-link" href="/">← 回首頁</a>
+
+  <header class="project-header">
+    <h1>{project.data.title}</h1>
+    <p class="project-header__meta">
+      {project.data.role} · {project.data.period}
+    </p>
+    {project.data.metrics && <p class="project-header__metrics">{project.data.metrics}</p>}
+    <div class="project-header__tags">
+      {project.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+    </div>
+    {
+      project.data.github && (
+        <a class="github-link" href={project.data.github} target="_blank" rel="noopener noreferrer">
+          View on GitHub
+        </a>
+      )
+    }
+  </header>
+
+  <article class="project-body">
+    <Content />
+  </article>
+</BaseLayout>
+
+<style>
+  .back-link {
+    display: inline-block;
+    margin: 1.5rem 0 1rem;
+    color: inherit;
+    opacity: 0.7;
+    text-decoration: none;
+  }
+  .back-link:hover {
+    opacity: 1;
+  }
+  .project-header {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+    margin-bottom: 2rem;
+  }
+  .project-header__meta {
+    opacity: 0.7;
+    margin-top: 0.25rem;
+  }
+  .project-header__metrics {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  .project-header__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+  }
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+  .github-link {
+    display: inline-block;
+    margin-top: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid currentColor;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.9rem;
+  }
+  .project-body :global(h2) {
+    margin-top: 2rem;
+  }
+</style>

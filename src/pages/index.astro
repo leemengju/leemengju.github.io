@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSortedProjects } from '../lib/projects';
+
+const projects = await getSortedProjects();
+---
+
+<BaseLayout title="李孟儒 Lance Lee ｜ 作品集">
+  <section class="intro">
+    <h1>李孟儒 Lance Lee</h1>
+    <p>全端工程師。這裡收錄我的專案紀錄 —— 內容以 Markdown 維護、版本控制在 GitHub。</p>
+  </section>
+
+  <section class="projects">
+    <h2>專案</h2>
+    <ul class="project-list">
+      {
+        projects.map((project) => (
+          <li class="project-card">
+            <a href={`/projects/${project.id}/`}>
+              <span class="project-card__title">{project.data.title}</span>
+              <span class="project-card__meta">
+                {project.data.role} · {project.data.period}
+              </span>
+              {project.data.metrics && (
+                <span class="project-card__metrics">{project.data.metrics}</span>
+              )}
+              <span class="project-card__tags">
+                {project.data.tags.map((tag) => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .intro {
+    padding: 3rem 0 2rem;
+  }
+  .intro h1 {
+    margin-bottom: 0.5rem;
+  }
+  .project-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .project-card a {
+    display: block;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+    border-radius: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+  }
+  .project-card__title {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  .project-card__meta {
+    display: block;
+    opacity: 0.7;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+  .project-card__metrics {
+    display: block;
+    margin-top: 0.5rem;
+    font-weight: 600;
+  }
+  .project-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+  }
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+</style>

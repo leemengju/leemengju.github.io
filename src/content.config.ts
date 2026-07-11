@@ -36,6 +36,10 @@ const projects = defineCollection({
         unit: z.string().optional()
       })
       .optional(),
+    // Motion tier for the BeforeAfterBar (see design.md "Progressive motion
+    // tiers"). Defaults to 'css' (L0); set 'gsap' to opt one flagship project
+    // into the L1 ScrollTrigger-driven variant instead.
+    beforeAfterMotion: z.enum(['css', 'gsap']).optional(),
     // Optional dated milestones, rendered as a Timeline.
     timeline: z
       .array(

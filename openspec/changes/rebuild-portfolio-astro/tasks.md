@@ -33,9 +33,9 @@
 
 ## 6. Content migration
 
-- [ ] 6.1 Port 2–3 representative projects from the résumé md (工程師版) to validate the model
-- [ ] 6.2 Port remaining engineering projects (9), then training (HUBD, EatNow), then design cases
-- [ ] 6.3 Set `github` only on projects with a real public repo; leave others without
+- [x] 6.1 Port 2–3 representative projects from the résumé md (工程師版) to validate the model
+- [x] 6.2 Port remaining engineering projects (9), then training (HUBD, EatNow), then design cases
+- [x] 6.3 Set `github` only on projects with a real public repo; leave others without
 
 ## 7. Build & deploy
 

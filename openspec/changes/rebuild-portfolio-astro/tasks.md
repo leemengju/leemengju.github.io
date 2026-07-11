@@ -39,8 +39,8 @@
 
 ## 7. Build & deploy
 
-- [ ] 7.1 Verify `astro build` produces static output with zero JS on island-free pages
-- [ ] 7.2 Add GitHub Actions workflow to build and deploy to GitHub Pages on push to main
+- [x] 7.1 Verify `astro build` produces static output with zero JS on island-free pages
+- [x] 7.2 Add GitHub Actions workflow to build and deploy to GitHub Pages on push to main
 - [ ] 7.3 Push repo to GitHub, enable Pages, confirm a push deploys and a build failure blocks deploy
 
 ## 8. Later phases (out of this change's critical path)

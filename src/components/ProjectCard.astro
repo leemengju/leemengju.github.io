@@ -1,0 +1,70 @@
+---
+/**
+ * One listing card, shared by the zh and en home pages so the two locales
+ * can't drift apart visually. Locale only affects link targets and which
+ * generated cover is used.
+ */
+import TagRow from './TagRow.astro';
+import { coverUrl, type ProjectEntry } from '../lib/projects';
+import { projectPath, type Locale } from '../lib/i18n';
+
+interface Props {
+  project: ProjectEntry;
+  locale?: Locale;
+}
+const { project, locale = 'zh' } = Astro.props as Props;
+---
+
+<li class="project-card" data-reveal>
+  <a href={projectPath(project.id, locale)}>
+    <img class="project-card__cover" src={coverUrl(project, locale)} alt="" loading="lazy" />
+    <div class="project-card__body">
+      <span class="project-card__title">{project.data.title}</span>
+      <span class="project-card__meta">
+        {project.data.role} · {project.data.period}
+      </span>
+      {project.data.metrics && <span class="project-card__metrics">{project.data.metrics}</span>}
+      <TagRow tags={project.data.tags} />
+    </div>
+  </a>
+</li>
+
+<style>
+  .project-card a {
+    display: block;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+  }
+  .project-card__cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1200 / 630;
+    object-fit: cover;
+    background: var(--fill-softer);
+  }
+  .project-card__body {
+    padding: 1.25rem 1.5rem;
+  }
+  .project-card__title {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  .project-card__meta {
+    display: block;
+    opacity: 0.7;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+  .project-card__metrics {
+    display: block;
+    margin-top: 0.5rem;
+    font-weight: 600;
+  }
+  .project-card :global(.tag-row) {
+    margin-top: 0.75rem;
+  }
+</style>

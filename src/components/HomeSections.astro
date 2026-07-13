@@ -1,0 +1,234 @@
+---
+/**
+ * The full home-page structure carried over from the old Framer site:
+ * Hero → About → Skills → Experience → Projects → Education → Contact.
+ * Shared by the zh (/) and en (/en/) home pages so the two locales stay
+ * structurally identical; only content (via getProfile/strings) differs.
+ */
+import ProjectCard from './ProjectCard.astro';
+import StatsBand from './StatsBand.tsx';
+import { strings, type Locale } from '../lib/i18n';
+import { getProfile } from '../lib/profile';
+import type { ProjectEntry } from '../lib/projects';
+
+interface Props {
+  locale: Locale;
+  projects: ProjectEntry[];
+}
+const { locale, projects } = Astro.props as Props;
+const t = strings[locale];
+const p = getProfile(locale);
+
+const stats = [
+  { value: String(projects.length), label: t.statProjects },
+  { value: '~21×', label: t.statClickhouse },
+  { value: '300+', label: t.statAutomation }
+];
+---
+
+<section class="hero">
+  <h1>{t.introHeading}</h1>
+  <p class="hero__tagline">{t.introText}</p>
+</section>
+
+<StatsBand stats={stats} client:visible />
+
+<section id="about" class="section">
+  <h2>{t.aboutHeading}</h2>
+  {p.about.map((para) => <p class="about__para" data-reveal>{para}</p>)}
+</section>
+
+<section id="skills" class="section">
+  <h2>{t.skillsHeading}</h2>
+  <ul class="skills">
+    {
+      p.skills.map((s) => (
+        <li class="skill" data-reveal>
+          <span class="skill__name">{s.name}</span>
+          <span class="skill__desc">{s.desc}</span>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<section id="experience" class="section">
+  <h2>{t.experienceHeading}</h2>
+  <ol class="exp">
+    {
+      p.experience.map((e) => (
+        <li class="exp__item" data-reveal>
+          <div class="exp__head">
+            <span class="exp__role">{e.role}</span>
+            <span class="exp__period">{e.period}</span>
+          </div>
+          <div class="exp__org">{e.org}</div>
+          {e.summary && <p class="exp__summary">{e.summary}</p>}
+          <ul class="exp__highlights">
+            {e.highlights.map((h) => <li>{h}</li>)}
+          </ul>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<section id="projects" class="section">
+  <h2>{t.projectsHeading}</h2>
+  <ul class="project-list">
+    {projects.map((project) => <ProjectCard project={project} locale={locale} />)}
+  </ul>
+</section>
+
+<section id="education" class="section">
+  <h2>{t.educationHeading}</h2>
+  <ol class="edu">
+    {
+      p.education.map((e) => (
+        <li class="edu__item" data-reveal>
+          <div class="exp__head">
+            <span class="exp__role">
+              {e.school} — {e.degree}
+            </span>
+            <span class="exp__period">{e.period}</span>
+          </div>
+          <ul class="exp__highlights">
+            {e.notes.map((n) => <li>{n}</li>)}
+          </ul>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<section id="contact" class="section">
+  <h2>{t.contactHeading}</h2>
+  <ul class="contact">
+    <li><span class="contact__k">{t.contactEmail}</span><a href={`mailto:${p.contact.email}`}>{p.contact.email}</a></li>
+    <li><span class="contact__k">{t.contactGitHub}</span><a href={p.contact.github} target="_blank" rel="noopener noreferrer">{p.contact.github.replace('https://', '')}</a></li>
+    <li><span class="contact__k">{t.contactLocation}</span><span>{p.contact.location}</span></li>
+  </ul>
+</section>
+
+<style>
+  .hero {
+    padding: 3.5rem 0 1.5rem;
+  }
+  .hero h1 {
+    margin: 0 0 0.5rem;
+    font-size: 2.2rem;
+  }
+  .hero__tagline {
+    margin: 0;
+    opacity: 0.8;
+    max-width: 42rem;
+  }
+  .section {
+    padding: 2.5rem 0 0.5rem;
+  }
+  .section > h2 {
+    font-size: 1.4rem;
+    margin: 0 0 1.25rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .about__para {
+    margin: 0 0 1rem;
+    max-width: 46rem;
+  }
+
+  .skills {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .skill {
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+  }
+  .skill__name {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+  .skill__desc {
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+
+  .exp,
+  .edu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.5rem;
+  }
+  .exp__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .exp__role {
+    font-weight: 700;
+  }
+  .exp__period {
+    font-size: 0.85rem;
+    opacity: 0.65;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .exp__org {
+    opacity: 0.8;
+    margin-top: 0.15rem;
+  }
+  .exp__summary {
+    margin: 0.5rem 0 0.25rem;
+    opacity: 0.85;
+    font-size: 0.92rem;
+  }
+  .exp__highlights {
+    margin: 0.5rem 0 0;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.3rem;
+  }
+  .exp__highlights li {
+    font-size: 0.92rem;
+  }
+
+  .project-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .contact {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .contact li {
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+  }
+  .contact__k {
+    min-width: 5rem;
+    opacity: 0.6;
+    font-size: 0.85rem;
+  }
+  .contact a {
+    color: inherit;
+  }
+</style>

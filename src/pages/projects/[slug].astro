@@ -1,11 +1,9 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import MetricCard from '../../components/MetricCard.astro';
-import TagRow from '../../components/TagRow.astro';
-import BeforeAfterBar from '../../components/BeforeAfterBar.astro';
-import Timeline from '../../components/Timeline.astro';
+import ProjectArticle from '../../components/ProjectArticle.astro';
 import { coverUrl } from '../../lib/projects';
+import { strings } from '../../lib/i18n';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -16,82 +14,8 @@ export async function getStaticPaths() {
 }
 
 const { project } = Astro.props;
-const { Content } = await render(project);
 ---
 
-<BaseLayout title={`${project.data.title} ｜ 李孟儒 Lance Lee`} ogImage={coverUrl(project)}>
-  <a class="back-link" href="/">← 回首頁</a>
-
-  <header class="project-header">
-    <h1>{project.data.title}</h1>
-    <p class="project-header__meta">
-      {project.data.role} · {project.data.period}
-    </p>
-    {project.data.metrics && <MetricCard metric={project.data.metrics} />}
-    <TagRow tags={project.data.tags} />
-    {
-      project.data.beforeAfter && (
-        <BeforeAfterBar
-          before={project.data.beforeAfter.before}
-          after={project.data.beforeAfter.after}
-          unit={project.data.beforeAfter.unit}
-          label={project.data.beforeAfter.label}
-          motion={project.data.beforeAfterMotion}
-        />
-      )
-    }
-    {project.data.timeline && <Timeline items={project.data.timeline} />}
-    {
-      project.data.github && (
-        <a class="github-link" href={project.data.github} target="_blank" rel="noopener noreferrer">
-          View on GitHub
-        </a>
-      )
-    }
-  </header>
-
-  <article class="project-body">
-    <Content />
-  </article>
+<BaseLayout title={`${project.data.title}${strings.zh.titleSuffix}`} ogImage={coverUrl(project, 'zh')}>
+  <ProjectArticle project={project} locale="zh" />
 </BaseLayout>
-
-<style>
-  .back-link {
-    display: inline-block;
-    margin: 1.5rem 0 1rem;
-    color: inherit;
-    opacity: 0.7;
-    text-decoration: none;
-  }
-  .back-link:hover {
-    opacity: 1;
-  }
-  .project-header {
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-soft);
-    margin-bottom: 2rem;
-  }
-  .project-header__meta {
-    opacity: 0.7;
-    margin-top: 0.25rem;
-  }
-  .project-header :global(.metric-card) {
-    margin-top: 0.75rem;
-  }
-  .project-header :global(.tag-row) {
-    margin-top: 0.75rem;
-  }
-  .github-link {
-    display: inline-block;
-    margin-top: 1rem;
-    font-weight: 600;
-    text-decoration: none;
-    color: inherit;
-    border: 1px solid currentColor;
-    border-radius: 0.5rem;
-    padding: 0.4rem 0.9rem;
-  }
-  .project-body :global(h2) {
-    margin-top: 2rem;
-  }
-</style>

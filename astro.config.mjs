@@ -14,7 +14,24 @@ const SITE_URL = 'https://leemengju.github.io';
 // https://astro.build/config
 export default defineConfig({
   site: SITE_URL,
-  integrations: [mdx(), sitemap(), react()],
+  // zh-Hant is the default locale at unprefixed URLs (unchanged from launch);
+  // English pages live under /en/ (src/pages/en/**). The sitemap i18n option
+  // emits hreflang alternates for URL pairs that exist in both locales.
+  i18n: {
+    defaultLocale: 'zh-Hant',
+    locales: ['zh-Hant', 'en'],
+    routing: { prefixDefaultLocale: false }
+  },
+  integrations: [
+    mdx(),
+    sitemap({
+      i18n: {
+        defaultLocale: 'zh-Hant',
+        locales: { 'zh-Hant': 'zh-Hant', en: 'en' }
+      }
+    }),
+    react()
+  ],
   markdown: {
     // Turns ```mermaid fences into <pre class="mermaid"> for client-side rendering
     // by mermaid.js (added alongside DiagramBlock, task 4.2). No committed image

@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HomeSections from '../../components/HomeSections.astro';
+import { getSortedProjects } from '../../lib/projects';
+import { strings } from '../../lib/i18n';
+import '../../styles/stats-band.css';
+
+const projects = await getSortedProjects('en');
+---
+
+<BaseLayout title={strings.en.siteTitle}>
+  <HomeSections locale="en" projects={projects} />
+</BaseLayout>

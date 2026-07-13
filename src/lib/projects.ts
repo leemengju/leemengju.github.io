@@ -1,4 +1,8 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import type { Locale } from './i18n';
+
+/** Either locale's project entry — the two collections share one schema. */
+export type ProjectEntry = CollectionEntry<'projects'> | CollectionEntry<'projects-en'>;
 
 /**
  * Ordering convention (see src/content.config.ts): explicit `order` ascending
@@ -9,9 +13,7 @@ function periodStartKey(period: string): string {
   return match ? match[0] : '';
 }
 
-export function sortProjects(
-  entries: CollectionEntry<'projects'>[]
-): CollectionEntry<'projects'>[] {
+export function sortProjects<T extends ProjectEntry>(entries: T[]): T[] {
   return [...entries].sort((a, b) => {
     const orderA = a.data.order ?? Number.POSITIVE_INFINITY;
     const orderB = b.data.order ?? Number.POSITIVE_INFINITY;
@@ -25,13 +27,15 @@ export function sortProjects(
   });
 }
 
-export async function getSortedProjects(): Promise<CollectionEntry<'projects'>[]> {
-  const entries = await getCollection('projects');
+export async function getSortedProjects(locale: Locale = 'zh'): Promise<ProjectEntry[]> {
+  const entries =
+    locale === 'en' ? await getCollection('projects-en') : await getCollection('projects');
   return sortProjects(entries);
 }
 
 /** Cover image URL: the project's own `cover`, or its generated fallback (see
- * src/pages/covers/[slug].svg.ts). */
-export function coverUrl(project: CollectionEntry<'projects'>): string {
-  return project.data.cover ?? `/covers/${project.id}.svg`;
+ * src/pages/covers/[slug].svg.ts and src/pages/covers/en/[slug].svg.ts). */
+export function coverUrl(project: ProjectEntry, locale: Locale = 'zh'): string {
+  if (project.data.cover) return project.data.cover;
+  return locale === 'en' ? `/covers/en/${project.id}.svg` : `/covers/${project.id}.svg`;
 }

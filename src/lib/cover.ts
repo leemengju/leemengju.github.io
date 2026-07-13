@@ -24,21 +24,60 @@ function escapeXml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** Wraps text to a max character width per line (rough, monospace-agnostic estimate). */
-function wrapText(text: string, maxCharsPerLine: number): string[] {
-  const words = text.split(/\s+/);
+/** CJK glyphs render roughly twice as wide as ASCII at the same font size. */
+function isCjk(ch: string): boolean {
+  // CJK radicals/ideographs (U+2E80-U+9FFF), compatibility ideographs (U+F900-U+FAFF),
+  // fullwidth forms & CJK punctuation (U+FF00-U+FF60, U+FE30-U+FE4F, U+3000-U+303F),
+  // Hangul syllables/jamo (U+AC00-U+D7A3, U+1100-U+115F).
+  return /[ᄀ-ᅟ⺀-鿿　-〿가-힣豈-﫿︰-﹏＀-｠￠-￦]/.test(ch);
+}
+
+function visualWidth(text: string): number {
+  let width = 0;
+  for (const ch of text) width += isCjk(ch) ? 2 : 1;
+  return width;
+}
+
+/**
+ * Wraps text to a max VISUAL width per line, counting CJK glyphs as 2 units
+ * and ASCII as 1 — a zh title and an en title of similar rendered width both
+ * fit the same number of lines. Whole-word wrapping for spaced (ASCII) text;
+ * an unspaced run (CJK) longer than a line is broken character-by-character.
+ * Adjacent CJK fragments re-join without an inserted space.
+ */
+function wrapText(text: string, maxUnits: number): string[] {
+  const rawWords = text.split(/\s+/).filter(Boolean);
+  const words: string[] = [];
+  for (const raw of rawWords) {
+    if (visualWidth(raw) <= maxUnits) {
+      words.push(raw);
+      continue;
+    }
+    let chunk = '';
+    for (const ch of raw) {
+      if (chunk && visualWidth(chunk + ch) > maxUnits) {
+        words.push(chunk);
+        chunk = ch;
+      } else {
+        chunk += ch;
+      }
+    }
+    if (chunk) words.push(chunk);
+  }
+
   const lines: string[] = [];
-  let current = '';
+  let line = '';
   for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length > maxCharsPerLine && current) {
-      lines.push(current);
-      current = word;
+    const joiner = line && isCjk(line[line.length - 1]) && isCjk(word[0]) ? '' : ' ';
+    const candidate = line ? line + joiner + word : word;
+    if (line && visualWidth(candidate) > maxUnits) {
+      lines.push(line);
+      line = word;
     } else {
-      current = candidate;
+      line = candidate;
     }
   }
-  if (current) lines.push(current);
+  if (line) lines.push(line);
   return lines;
 }
 
@@ -49,10 +88,9 @@ export interface CoverInput {
 }
 
 export function renderCoverSvg({ title, metric, tags }: CoverInput): string {
-  // 16 chars/line is conservative for a title that's mostly full-width CJK
-  // glyphs at this font-size (each renders roughly as wide as the font-size
-  // itself); mixed CJK/ASCII titles will wrap with extra room to spare.
-  const titleLines = wrapText(title, 16).slice(0, 3);
+  // 32 units ≈ 16 full-width CJK glyphs ≈ 32 ASCII chars — conservative at
+  // this font size for either script (see wrapText's width model).
+  const titleLines = wrapText(title, 32).slice(0, 3);
   const titleY = HEIGHT / 2 - ((titleLines.length - 1) * 34) - (metric ? 20 : 0);
 
   const titleTspans = titleLines

@@ -3,6 +3,7 @@ import '../styles/tokens.css';
 import '../styles/code-blocks.css';
 import DiagramBlock from '../components/DiagramBlock.astro';
 import RevealScript from '../components/RevealScript.astro';
+import { strings, localeFromPath, alternatePath, homePath } from '../lib/i18n';
 
 interface Props {
   title: string;
@@ -10,9 +11,17 @@ interface Props {
   ogImage?: string;
 }
 const { title, description, ogImage } = Astro.props as Props;
+
+// Locale is derived from the URL (en pages live under /en/), so pages don't
+// have to thread a locale prop through the layout. Slugs are identical across
+// locales, making the language switcher a pure path transform.
+const locale = localeFromPath(Astro.url.pathname);
+const t = strings[locale];
+const altPath = alternatePath(Astro.url.pathname);
+const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
 ---
 
-<html lang="zh-Hant">
+<html lang={t.langAttr}>
   <head>
     <meta charset="utf-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -21,10 +30,14 @@ const { title, description, ogImage } = Astro.props as Props;
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     {ogImage && <meta property="og:image" content={new URL(ogImage, Astro.site)} />}
+    <link rel="alternate" hreflang={t.langAttr} href={new URL(Astro.url.pathname, Astro.site)} />
+    <link rel="alternate" hreflang={altLangAttr} href={new URL(altPath, Astro.site)} />
+    <link rel="alternate" hreflang="x-default" href={new URL(locale === 'en' ? altPath : Astro.url.pathname, Astro.site)} />
   </head>
   <body>
     <header class="site-header">
-      <a class="site-header__brand" href="/">李孟儒 Lance Lee</a>
+      <a class="site-header__brand" href={homePath(locale)}>{t.brand}</a>
+      <a class="site-header__lang" href={altPath} aria-label={t.switcherAria}>{t.switcherLabel}</a>
     </header>
     <main>
       <slot />
@@ -44,12 +57,28 @@ const { title, description, ogImage } = Astro.props as Props;
     line-height: 1.6;
   }
   .site-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 1rem 1.5rem;
   }
   .site-header__brand {
     font-weight: 600;
     text-decoration: none;
     color: inherit;
+  }
+  .site-header__lang {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: inherit;
+    opacity: 0.7;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+  }
+  .site-header__lang:hover {
+    opacity: 1;
   }
   main {
     max-width: 960px;

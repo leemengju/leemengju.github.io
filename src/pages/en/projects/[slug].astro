@@ -1,0 +1,21 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProjectArticle from '../../../components/ProjectArticle.astro';
+import { coverUrl } from '../../../lib/projects';
+import { strings } from '../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects-en');
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project }
+  }));
+}
+
+const { project } = Astro.props;
+---
+
+<BaseLayout title={`${project.data.title}${strings.en.titleSuffix}`} ogImage={coverUrl(project, 'en')}>
+  <ProjectArticle project={project} locale="en" />
+</BaseLayout>

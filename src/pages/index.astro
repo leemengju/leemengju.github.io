@@ -1,105 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import TagRow from '../components/TagRow.astro';
-import StatsBand from '../components/StatsBand.tsx';
-import { getSortedProjects, coverUrl } from '../lib/projects';
+import HomeSections from '../components/HomeSections.astro';
+import { getSortedProjects } from '../lib/projects';
+import { strings } from '../lib/i18n';
 import '../styles/stats-band.css';
 
-const projects = await getSortedProjects();
-
-// The project count is always accurate (computed here); the other two are
-// fixed headline numbers from the résumé (ClickHouse migration, automation
-// savings) — see src/content/projects/clickhouse-migration.md.
-const stats = [
-  { value: String(projects.length), label: '篇專案作品' },
-  { value: '~21×', label: 'ClickHouse 查詢提速' },
-  { value: '300+', label: '小時/年 自動化節省' }
-];
+const projects = await getSortedProjects('zh');
 ---
 
-<BaseLayout title="李孟儒 Lance Lee ｜ 作品集">
-  <section class="intro">
-    <h1>李孟儒 Lance Lee</h1>
-    <p>全端工程師。這裡收錄我的專案紀錄 —— 內容以 Markdown 維護、版本控制在 GitHub。</p>
-  </section>
-
-  <StatsBand stats={stats} client:visible />
-
-  <section class="projects">
-    <h2>專案</h2>
-    <ul class="project-list">
-      {
-        projects.map((project) => (
-          <li class="project-card" data-reveal>
-            <a href={`/projects/${project.id}/`}>
-              <img class="project-card__cover" src={coverUrl(project)} alt="" loading="lazy" />
-              <div class="project-card__body">
-                <span class="project-card__title">{project.data.title}</span>
-                <span class="project-card__meta">
-                  {project.data.role} · {project.data.period}
-                </span>
-                {project.data.metrics && (
-                  <span class="project-card__metrics">{project.data.metrics}</span>
-                )}
-                <TagRow tags={project.data.tags} />
-              </div>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
+<BaseLayout title={strings.zh.siteTitle}>
+  <HomeSections locale="zh" projects={projects} />
 </BaseLayout>
-
-<style>
-  .intro {
-    padding: 3rem 0 2rem;
-  }
-  .intro h1 {
-    margin-bottom: 0.5rem;
-  }
-  .project-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 1rem;
-  }
-  .project-card a {
-    display: block;
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: inherit;
-    overflow: hidden;
-  }
-  .project-card__cover {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1200 / 630;
-    object-fit: cover;
-    background: var(--fill-softer);
-  }
-  .project-card__body {
-    padding: 1.25rem 1.5rem;
-  }
-  .project-card__title {
-    display: block;
-    font-size: 1.15rem;
-    font-weight: 600;
-  }
-  .project-card__meta {
-    display: block;
-    opacity: 0.7;
-    font-size: 0.9rem;
-    margin-top: 0.25rem;
-  }
-  .project-card__metrics {
-    display: block;
-    margin-top: 0.5rem;
-    font-weight: 600;
-  }
-  .project-card :global(.tag-row) {
-    margin-top: 0.75rem;
-  }
-</style>

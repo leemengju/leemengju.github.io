@@ -19,8 +19,12 @@
 main pre[data-language] {
   position: relative;
   border-radius: var(--radius);
-  padding: 1.25rem 1rem 1rem;
+  border: 1px solid var(--border-soft);
+  padding: 1.5rem 1.1rem 1.1rem;
   margin: 1.5rem 0;
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.6;
 }
 main pre[data-language]::before {
   content: attr(data-language);
@@ -44,11 +48,55 @@ main pre[data-language='shell']::before {
    DiagramBlock's client script renders them; centered once mermaid.js swaps
    in its <svg>. */
 main pre.mermaid {
-  background: none;
+  background: var(--fill-softer);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   margin: 1.5rem 0;
   overflow-x: auto;
   text-align: center;
+}
+
+/*
+ * GitHub-style callouts (> [!NOTE] / [!WARNING] / [!IMPORTANT] / [!TIP] /
+ * [!CAUTION]) rendered by remark-github-blockquote-alert into
+ * <div class="markdown-alert markdown-alert-note">. Coloured left border +
+ * tinted background per type; the plugin's own title span gets the accent.
+ */
+main .markdown-alert {
+  border-left: 4px solid var(--alert-color, var(--accent));
+  background: color-mix(in srgb, var(--alert-color, var(--accent)) 8%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1.1rem;
+  margin: 1.25rem 0;
+}
+main .markdown-alert > :first-child {
+  margin-top: 0;
+}
+main .markdown-alert > :last-child {
+  margin-bottom: 0;
+}
+main .markdown-alert-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  color: var(--alert-color, var(--accent));
+  margin-bottom: 0.35rem;
+  line-height: 1;
+}
+main .markdown-alert-note {
+  --alert-color: light-dark(#4f6ef0, #7d9bff);
+}
+main .markdown-alert-tip {
+  --alert-color: light-dark(#1a7f52, #4ecb8b);
+}
+main .markdown-alert-important {
+  --alert-color: light-dark(#8250df, #b18cf2);
+}
+main .markdown-alert-warning {
+  --alert-color: light-dark(#bf8700, #e3b341);
+}
+main .markdown-alert-caution {
+  --alert-color: light-dark(#cf222e, #f85149);
 }

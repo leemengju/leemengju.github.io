@@ -52,4 +52,36 @@ The original 4,221 lines were highly coupled — functions, data and computed pr
 
 ## Impact
 
-The main file shrank from 4,221 to 1,963 lines (−54%) — a reduction achieved while the business kept expanding, so the bloat actually avoided is even larger. The new framework was directly reused by the Q-Coin newcomer mechanism in April 2026 (adding a dialog no longer requires changing the main file's structure), proving the split strategy correct — a staged milestone in an effort that is still moving forward.
+The main file shrank from 4,221 to 1,963 lines (−54%) — a reduction achieved while the business kept expanding, so the bloat actually avoided is even larger. The new framework was directly reused by a subsequent new-currency mechanism (Q-Coin) in April 2026 (adding a dialog no longer requires changing the main file's structure), proving the split strategy correct — a staged milestone in an effort that is still moving forward.
+
+## Key Technical Decisions & Pitfalls
+
+### The most painful pitfall: every dialog's `this` broke
+
+The most time-consuming step of the split was extracting the dialogs into standalone components. These dialogs were never real Vue components — they lived inline inside the main file's template, so the `this.xxx` they read was actually **the parent component's data**.
+
+The first guess was wrong: it seemed enough to move the template into a standalone `.vue` and `import` it back in — but data passing failed completely and the dialog opened blank. The real root cause: once a block becomes its own component, `this` points at the component itself and can no longer reach the parent's data.
+
+The fix was to convert, one by one, every piece of data each dialog depended on into **props in**, and every write-back into the parent into an **emit out**:
+
+```js
+// Before: dialog inlined in the parent template, reading parent data directly
+// (the component itself owns none of these fields; it relies on this -> parent)
+this.settingData.amount = 100
+this.saveSetting()
+
+// After: once extracted into a standalone component, the data flow is explicit
+props: { settingData: { type: Object, required: true } }
+// emit the change back to the parent instead of mutating the prop
+this.$emit('update', { ...this.settingData, amount: 100 })
+```
+
+**Reusable rule**: before extracting any dialog from the monolith, first list every `this.xxx` it depends on and turn each into a prop. Doing this inventory up front is what makes the extraction succeed in one pass, instead of discovering the broken data flow only after the cut.
+
+### Trade-off 1: three progressive passes, not a big-bang rewrite
+
+Facing a single 4,221-line, highly coupled file, the obvious move is to split everything at once. That option was rejected: functions, data and computed properties cross-reference one another, so moving it all in one go was extremely risky and hard to verify. Instead the work followed a three-pass rhythm — prove the pattern on one module → ship and validate → split the next batch — so every pass could go live and be regression-tested on its own, spreading the risk across time and matching the "staged milestone" framing.
+
+### Trade-off 2: split by functional boundary, not by code structure
+
+There were two ways to cut: by code structure (grouping methods and computed properties together) or by functional boundary (advanced settings, game-currency and deposit management each as its own block). The latter was chosen — **functional boundaries map to real business needs**, and permissions can later be granted per feature; a structural split has only engineering meaning, is invisible to the business, and cannot be mapped to "which team owns which block." This decision let the later new-currency mechanism slot straight in, adding settings without ever having to reach back and alter the main file's structure.

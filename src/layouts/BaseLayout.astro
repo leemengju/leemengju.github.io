@@ -3,6 +3,7 @@ import '../styles/tokens.css';
 import '../styles/code-blocks.css';
 import DiagramBlock from '../components/DiagramBlock.astro';
 import RevealScript from '../components/RevealScript.astro';
+import BackToTop from '../components/BackToTop.astro';
 import { strings, localeFromPath, alternatePath, homePath } from '../lib/i18n';
 
 interface Props {
@@ -44,46 +45,57 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     </main>
     <RevealScript />
     <DiagramBlock />
+    <BackToTop />
   </body>
 </html>
 
 <style is:global>
-  :root {
-    color-scheme: light dark;
-    font-family: system-ui, -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-  }
   body {
     margin: 0;
-    line-height: 1.6;
   }
   .site-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 1.25rem 1.5rem;
   }
   .site-header__brand {
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: -0.01em;
     text-decoration: none;
     color: inherit;
   }
   .site-header__lang {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     text-decoration: none;
     color: inherit;
-    opacity: 0.7;
-    padding: 0.25rem 0.7rem;
+    opacity: 0.75;
+    padding: 0.3rem 0.8rem;
     border: 1px solid var(--border-soft);
     border-radius: 999px;
+    transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
   }
   .site-header__lang:hover {
     opacity: 1;
+    background: var(--fill-soft);
+    border-color: var(--border-strong);
   }
   main {
-    max-width: 960px;
+    max-width: var(--content-width);
     margin: 0 auto;
-    padding: 0 1.5rem 4rem;
+    padding: 0 1.5rem 5rem;
+  }
+
+  /* Shared card surface used by project/skill/stat cards + article header. */
+  .card,
+  .u-card {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
   }
 
   /* Motion tier L0: default reveal-on-scroll, no framework (src script below). */

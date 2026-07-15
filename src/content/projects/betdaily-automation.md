@@ -34,3 +34,48 @@ beforeAfter:
 ## 專案結果與影響
 
 每日人工作業由 20 分鐘降為 0(Kernel 全自動),6 個痛點全數解決,數字直接來自 DB 明細、可驗證可審計。
+
+## 關鍵技術決策與踩坑
+
+### 最痛的坑 1:`update()` 回傳 0 筆被誤判成「找不到資料」
+
+範本編輯時,如果使用者送出的內容跟現有資料完全相同,API 會回傳失敗,使用者困惑「我明明沒改什麼,為什麼不能存」。
+
+根因是原本的程式碼把 update 的 affected rows = 0 當成「找不到資料」而回報失敗。但實際上 Laravel 的 `update()` 在資料無變動時本來就回傳 0 affected rows —— 這代表「什麼都沒變」,不代表「找不到」。修法是直接移除這個判斷:update 沒拋例外就視為成功。
+
+```php
+// 錯誤:允許送同值的設定頁,不能用 affected rows 判斷成功
+$affected = DB::table('bet_report_template')
+    ->where('id', $id)
+    ->update($data);
+if ($affected === 0) {
+    return $this->fail('NO_RESULTS'); // 送同值時誤判!
+}
+
+// 正確:update() 未拋例外即成功;affected=0 只代表 nothing changed
+DB::table('bet_report_template')->where('id', $id)->update($data);
+return $this->success();
+```
+
+教訓:ORM 的 affected rows = 0 等於「nothing changed」而非「not found」。任何允許送出同值的設定型編輯,都不該用 affected rows 判斷成敗。
+
+### 最痛的坑 2:el-select 清空事件把已選遊戲清光
+
+主頁的範本 el-select 加了 `clearable`,使用者點叉叉清空後,先前手動勾選的遊戲整批消失。
+
+根因是 `@change` 在清空時也會觸發,此時傳入的 value 是 `null`,下游用它去 `find()` 範本得到 undefined,再 parse 就變成空陣列,把既有選擇覆蓋掉了。修法是在 handler 開頭對 null 直接 early return。
+
+```js
+function onTemplateChange (id) {
+  if (id == null) return          // 清空事件 → 不動既有選擇
+  const tpl = templateOptions.find(t => t.id === id)
+  games = parseSelectGameList(tpl.selectGameList)
+}
+```
+
+教訓:`clearable` + `@change` 的元件,清空會以 `null` 觸發同一個事件,handler 一定要在開頭處理 null,否則下游的 find/parse 會反過來清掉使用者既有的資料。
+
+### 關鍵取捨
+
+- **老遊戲用前端注入,而非改 DB schema**:有幾款早期上線的遊戲不在標準遊戲清單邏輯內。與其為這幾款去改資料表結構或污染統計 pipeline,選擇在前端以常數定義並透過遊戲選擇器的參數注入。代價是這幾個 id 硬編碼在前端、未來若要新增需改 code,但這批老遊戲沒有新增計畫,以最小侵入換取 pipeline 邏輯乾淨。
+- **排程 class 命名不動,只重整 controller 命名空間**:功能長大後,原本以「60 天押注額」命名的控制器職責已擴及範本、重跑,於是把 controller 收進統一命名空間與子資料夾。但排程 job 的 class 名稱維持原樣 —— 因為 class 名稱不影響路由與使用者,改它反而有中斷既有每日排程的風險,不值得。

@@ -1,0 +1,147 @@
+---
+/**
+ * Floating side navigation for the home page's single-page section layout
+ * (About/Skills/Experience/Projects/Education/Contact) — carried over from
+ * the original Framer site. Highlights the section currently in view via
+ * IntersectionObserver (no framework, consistent with the L0 motion tier).
+ * Collapses to dot-only on narrow viewports.
+ */
+import { strings, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props as Props;
+const t = strings[locale];
+
+const items = [
+  { id: 'about', label: t.aboutHeading },
+  { id: 'skills', label: t.skillsHeading },
+  { id: 'experience', label: t.experienceHeading },
+  { id: 'projects', label: t.projectsHeading },
+  { id: 'education', label: t.educationHeading },
+  { id: 'contact', label: t.contactHeading }
+];
+---
+
+<nav class="floating-nav" aria-label="Section navigation">
+  <ul>
+    {
+      items.map((item) => (
+        <li>
+          <a href={`#${item.id}`} data-nav-link={item.id}>
+            <span class="floating-nav__dot" />
+            <span class="floating-nav__label">{item.label}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<script>
+  const links = document.querySelectorAll('[data-nav-link]');
+  if (links.length > 0) {
+    const sections = Array.from(links)
+      .map((link) => document.getElementById(link.getAttribute('data-nav-link') || ''))
+      .filter((el): el is HTMLElement => el !== null);
+
+    const setActive = (id: string) => {
+      links.forEach((link) => {
+        link.classList.toggle('is-active', link.getAttribute('data-nav-link') === id);
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActive(visible.target.id);
+      },
+      { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] }
+    );
+    sections.forEach((el) => observer.observe(el));
+  }
+</script>
+
+<style>
+  /* Compact vertical dot rail pinned to the right edge. Labels don't sit in
+     the layout — they fly out to the LEFT of each dot on hover (position:
+     absolute), so the rail itself only needs ~1rem of width and never pushes
+     or overlaps content in its resting state. */
+  .floating-nav {
+    position: fixed;
+    right: 1.4rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+  }
+  .floating-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .floating-nav a {
+    position: relative;
+    display: block;
+    padding: 0.25rem;
+    text-decoration: none;
+    color: inherit;
+  }
+  .floating-nav__dot {
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, currentColor 30%, transparent);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .floating-nav a:hover .floating-nav__dot {
+    background: color-mix(in srgb, currentColor 60%, transparent);
+  }
+  .floating-nav a.is-active .floating-nav__dot {
+    background: var(--accent);
+    transform: scale(1.5);
+  }
+  .floating-nav__label {
+    position: absolute;
+    right: calc(100% + 0.6rem);
+    top: 50%;
+    transform: translateY(-50%) translateX(0.25rem);
+    white-space: nowrap;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .floating-nav a:hover .floating-nav__label,
+  .floating-nav a.is-active .floating-nav__label {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .floating-nav__dot,
+    .floating-nav__label {
+      transition: none;
+    }
+  }
+
+  /* content is max-width 1100px + padding (~1148px); a dot rail at right:1.4rem
+     needs the side margin to stay clear of content. Below ~1160px that margin
+     is gone, so hide the rail (it's a convenience, not the only nav — the
+     header brand still returns home, and normal scrolling works). */
+  @media (max-width: 1160px) {
+    .floating-nav {
+      display: none;
+    }
+  }
+</style>

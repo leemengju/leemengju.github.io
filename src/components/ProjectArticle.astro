@@ -95,4 +95,24 @@ const { Content } = await render(project);
   .project-body :global(h2) {
     margin-top: 2rem;
   }
+  .project-body :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.92rem;
+  }
+  .project-body :global(th),
+  .project-body :global(td) {
+    border: 1px solid var(--border-soft);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  .project-body :global(th) {
+    background: var(--fill-softer);
+    font-weight: 600;
+  }
+  .project-body :global(tr:nth-child(even) td) {
+    background: var(--fill-softer);
+  }
 </style>

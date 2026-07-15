@@ -30,13 +30,34 @@ const { project, locale = 'zh' } = Astro.props as Props;
 </li>
 
 <style>
+  .project-card {
+    height: 100%;
+  }
   .project-card a {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface);
     border: 1px solid var(--border-soft);
     border-radius: var(--radius);
     text-decoration: none;
     color: inherit;
     overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .project-card a:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border-strong);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project-card a {
+      transition: none;
+    }
+    .project-card a:hover {
+      transform: none;
+    }
   }
   .project-card__cover {
     display: block;
@@ -44,27 +65,36 @@ const { project, locale = 'zh' } = Astro.props as Props;
     aspect-ratio: 1200 / 630;
     object-fit: cover;
     background: var(--fill-softer);
+    border-bottom: 1px solid var(--border-soft);
   }
   .project-card__body {
-    padding: 1.25rem 1.5rem;
+    padding: 1.25rem 1.4rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
   }
   .project-card__title {
     display: block;
-    font-size: 1.15rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
   }
   .project-card__meta {
     display: block;
-    opacity: 0.7;
-    font-size: 0.9rem;
-    margin-top: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
   }
   .project-card__metrics {
     display: block;
-    margin-top: 0.5rem;
+    margin-top: 0.6rem;
     font-weight: 600;
+    color: var(--accent);
+    font-size: 0.92rem;
   }
   .project-card :global(.tag-row) {
-    margin-top: 0.75rem;
+    margin-top: auto;
+    padding-top: 0.9rem;
   }
 </style>

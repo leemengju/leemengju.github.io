@@ -4,6 +4,7 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import rehypeMermaidBlocks from './src/lib/rehype-mermaid-blocks.mjs';
+import { remarkAlert } from 'remark-github-blockquote-alert';
 
 import react from '@astrojs/react';
 
@@ -33,6 +34,12 @@ export default defineConfig({
     react()
   ],
   markdown: {
+    // remarkAlert renders GitHub-style callouts (> [!NOTE] / [!WARNING] /
+    // [!IMPORTANT] ...) into <div class="markdown-alert ..."> — styled in
+    // src/styles/code-blocks.css. Astro's default markdown leaves them as
+    // plain blockquotes with literal "[!NOTE]" text, which is why they
+    // weren't rendering.
+    remarkPlugins: [remarkAlert],
     // Turns ```mermaid fences into <pre class="mermaid"> for client-side rendering
     // by mermaid.js (added alongside DiagramBlock, task 4.2). No committed image
     // files, no build-time headless-browser dependency — see the plugin's own

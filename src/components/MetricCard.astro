@@ -17,12 +17,16 @@ const { metric } = Astro.props as Props;
 
 <style>
   .metric-card {
-    display: inline-block;
+    display: block;
     margin: 0;
-    padding: 0.6rem 1rem;
-    font-size: 1.1rem;
-    font-weight: 700;
+    padding: 0.9rem 1.15rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    color: var(--accent);
     border-radius: var(--radius-sm);
-    background: var(--fill-soft);
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
   }
 </style>

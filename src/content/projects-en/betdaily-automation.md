@@ -34,3 +34,50 @@ All 6 pain points (manual time cost, no verification, difficult query comparison
 ## Impact
 
 Daily manual work dropped from 20 minutes to 0 (fully automated via Kernel); all 6 pain points solved, with numbers sourced directly from DB detail tables — verifiable and auditable.
+
+## Key Technical Decisions & Pitfalls
+
+### Worst pitfall 1: `update()` returning 0 rows misread as "record not found"
+
+When editing a template, if the user submitted content identical to the existing data, the API returned a failure — leaving users confused: "I didn't change anything, why can't I save?"
+
+The root cause was that the original code treated `update()`'s affected rows = 0 as "record not found" and reported failure. But Laravel's `update()` returns 0 affected rows whenever the data is unchanged — that means "nothing changed," not "not found." The fix was to drop that check entirely: if `update()` doesn't throw, it succeeded.
+
+```php
+// Wrong: a settings page that allows submitting the same value
+// must NOT judge success by affected rows
+$affected = DB::table('bet_report_template')
+    ->where('id', $id)
+    ->update($data);
+if ($affected === 0) {
+    return $this->fail('NO_RESULTS'); // false failure on identical submit!
+}
+
+// Right: no exception from update() means success;
+// affected=0 only means nothing changed
+DB::table('bet_report_template')->where('id', $id)->update($data);
+return $this->success();
+```
+
+Lesson: an ORM's affected rows = 0 means "nothing changed," not "not found." Any settings-style edit that allows resubmitting the same value must never gauge success by affected rows.
+
+### Worst pitfall 2: el-select clear event wiping all selected games
+
+The template el-select on the main page had `clearable`; after the user clicked the clear (×) icon, the entire set of manually selected games vanished.
+
+The root cause: `@change` also fires on clear, passing a value of `null`; downstream code used it to `find()` the template, got `undefined`, then parsed that into an empty array — overwriting the existing selection. The fix was to early-return on `null` at the top of the handler.
+
+```js
+function onTemplateChange (id) {
+  if (id == null) return          // clear event → leave existing selection alone
+  const tpl = templateOptions.find(t => t.id === id)
+  games = parseSelectGameList(tpl.selectGameList)
+}
+```
+
+Lesson: with a `clearable` + `@change` component, clearing fires the same event with `null`, so the handler must handle `null` up front — otherwise the downstream find/parse turns around and wipes the user's existing data.
+
+### Key trade-offs
+
+- **Inject legacy games from the front-end rather than change the DB schema**: a few early-launched games fell outside the standard game-list logic. Rather than alter the table structure or pollute the statistics pipeline for those few, they were defined as a front-end constant and injected via the game selector's parameter. The cost is that these ids are hard-coded in the front-end and adding more would require a code change — but there's no plan to add to this legacy batch, so this trades minimal intrusion for a clean pipeline.
+- **Keep the scheduled-job class names, only reorganize controller namespaces**: as the feature grew, the controller originally named after "60-day bet amounts" had taken on template and re-run responsibilities, so it was folded into a unified namespace and subfolder. But the scheduled job's class names were left untouched — class names don't affect routing or users, and renaming them would only risk disrupting the existing daily schedule, which isn't worth it.

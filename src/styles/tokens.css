@@ -1,14 +1,59 @@
 /*
- * Shared design tokens for the visual-vocabulary components (MetricCard,
- * BeforeAfterBar, DiagramBlock, CodeBlock, LogBlock, Timeline, TagRow).
- * Kept separate from BaseLayout's own styles so component files can rely on
- * these variables without redefining color-mix() expressions everywhere.
+ * Shared design tokens + base typography for the whole site. Component files
+ * rely on these variables rather than redefining color-mix()/shadow values.
+ * Everything is theme-adaptive (color-scheme: light dark) via light-dark()
+ * and currentColor-based mixes, so a single set of tokens serves both themes.
  */
 :root {
-  --border-soft: color-mix(in srgb, currentColor 15%, transparent);
-  --fill-soft: color-mix(in srgb, currentColor 10%, transparent);
-  --fill-softer: color-mix(in srgb, currentColor 6%, transparent);
-  --accent: #3a6df0;
-  --radius: 0.75rem;
+  color-scheme: light dark;
+
+  /* Surfaces & lines — derived from currentColor so they adapt to the theme. */
+  --border-soft: color-mix(in srgb, currentColor 12%, transparent);
+  --border-strong: color-mix(in srgb, currentColor 22%, transparent);
+  --fill-soft: color-mix(in srgb, currentColor 8%, transparent);
+  --fill-softer: color-mix(in srgb, currentColor 5%, transparent);
+  /* Card surface: a hair lighter in light theme, a hair lighter than the near-
+     black page in dark theme, so cards read as gently raised in both. */
+  --surface: light-dark(#ffffff, #191b21);
+  --page-bg: light-dark(#fbfbfc, #101216);
+  --text: light-dark(#1a1c22, #e8eaf0);
+  --text-muted: color-mix(in srgb, currentColor 62%, transparent);
+
+  /* Accent — softer, less "dead" than the old pure #3a6df0; a touch lighter
+     in dark theme so it stays legible on the near-black background. */
+  --accent: light-dark(#4f6ef0, #7d9bff);
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+
+  /* Elevation — subtle in light theme; in dark theme a ring does more work
+     than a shadow, so the hover state leans on the border. */
+  --shadow: light-dark(0 1px 2px rgba(17, 20, 28, 0.05), 0 1px 2px rgba(0, 0, 0, 0.3));
+  --shadow-hover: light-dark(0 8px 24px -8px rgba(17, 20, 28, 0.18), 0 8px 24px -8px rgba(0, 0, 0, 0.55));
+
+  --radius: 0.85rem;
   --radius-sm: 0.5rem;
+
+  --content-width: 1100px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--accent);
 }

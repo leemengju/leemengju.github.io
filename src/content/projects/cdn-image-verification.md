@@ -5,6 +5,7 @@ period: "2026.02"
 tags: [Laravel, Akamai CDN, 問題排查工具]
 metrics: "排查時間由 1 小時以上 → 輸入 itemId 即時定位"
 order: 8
+categories: [integration]
 ---
 
 ## 背景

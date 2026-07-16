@@ -1,14 +1,14 @@
 ---
 /**
  * The full home-page structure carried over from the old Framer site:
- * Hero → About → Skills → Experience → Projects → Education → Contact.
- * Shared by the zh (/) and en (/en/) home pages so the two locales stay
- * structurally identical; only content (via getProfile/strings) differs.
+ * Hero → About(+stats carousel) → Skills → Experience → Projects(+filter) →
+ * Education → Contact. Shared by the zh (/) and en (/en/) home pages so the
+ * two locales stay structurally identical; only content differs.
  */
 import ProjectCard from './ProjectCard.astro';
 import StatsBand from './StatsBand.tsx';
 import FloatingNav from './FloatingNav.astro';
-import { strings, type Locale } from '../lib/i18n';
+import { strings, categoryLabels, type Locale } from '../lib/i18n';
 import { getProfile } from '../lib/profile';
 import type { ProjectEntry } from '../lib/projects';
 
@@ -20,25 +20,75 @@ const { locale, projects } = Astro.props as Props;
 const t = strings[locale];
 const p = getProfile(locale);
 
-const stats = [
-  { value: String(projects.length), label: t.statProjects },
-  { value: '~21×', label: t.statClickhouse },
-  { value: '300+', label: t.statAutomation }
+const navItems = [
+  { id: 'about', label: t.aboutHeading },
+  { id: 'skills', label: t.skillsHeading },
+  { id: 'experience', label: t.experienceHeading },
+  { id: 'projects', label: t.projectsHeading },
+  { id: 'education', label: t.educationHeading },
+  { id: 'contact', label: t.contactHeading }
 ];
+
+// Filter pills: only categories actually used by at least one project.
+const usedCategories = Object.keys(categoryLabels).filter((key) =>
+  projects.some((project) => (project.data.categories ?? []).includes(key))
+);
+
+// Inline stroke icons for skill cards (24×24, stroke = currentColor). Hover
+// styling (accent stroke + soft fill) lives in CSS below.
+const skillIcons: Record<string, string> = {
+  refactor:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><path d="M6.5 10v4a2 2 0 0 0 2 2H14"/></svg>',
+  database:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></svg>',
+  chart:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="0.8"/><rect x="12" y="8" width="3" height="10" rx="0.8"/><rect x="17" y="5" width="3" height="13" rx="0.8"/></svg>',
+  plug:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7V3M15 7V3"/><path d="M7 7h10v4a5 5 0 0 1-5 5 5 5 0 0 1-5-5V7Z"/><path d="M12 16v5"/></svg>',
+  stack:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5"/></svg>',
+  kanban:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7v10M12.5 7v6M17 7v8"/></svg>'
+};
+
+const githubIcon =
+  '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.66.41.35.77 1.05.77 2.12 0 1.53-.01 2.76-.01 3.14 0 .3.2.67.8.55A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>';
+const linkedinIcon =
+  '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.55V9h3.57v11.45Z"/></svg>';
 ---
 
-<FloatingNav locale={locale} />
+<FloatingNav items={navItems} />
 
 <section class="hero">
+  <div class="hero__blob hero__blob--a" aria-hidden="true"></div>
+  <div class="hero__blob hero__blob--b" aria-hidden="true"></div>
   <h1>{t.introHeading}</h1>
   <p class="hero__tagline">{t.introText}</p>
+  <div class="hero__cta">
+    {
+      p.contact.resume && (
+        <a class="btn btn--primary" href={p.contact.resume} target="_blank" rel="noopener noreferrer">
+          {t.resumeButton}
+        </a>
+      )
+    }
+    <a class="btn btn--icon" href={p.contact.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+      <Fragment set:html={githubIcon} />
+    </a>
+    {
+      p.contact.linkedin && (
+        <a class="btn btn--icon" href={p.contact.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+          <Fragment set:html={linkedinIcon} />
+        </a>
+      )
+    }
+  </div>
 </section>
-
-<StatsBand stats={stats} client:visible />
 
 <section id="about" class="section">
   <h2>{t.aboutHeading}</h2>
   {p.about.map((para) => <p class="about__para" data-reveal>{para}</p>)}
+  <StatsBand stats={p.stats} client:visible />
 </section>
 
 <section id="skills" class="section">
@@ -47,6 +97,9 @@ const stats = [
     {
       p.skills.map((s) => (
         <li class="skill" data-reveal>
+          <span class="skill__icon" aria-hidden="true">
+            <Fragment set:html={skillIcons[s.icon]} />
+          </span>
           <span class="skill__name">{s.name}</span>
           <span class="skill__desc">{s.desc}</span>
         </li>
@@ -78,6 +131,16 @@ const stats = [
 
 <section id="projects" class="section">
   <h2>{t.projectsHeading}</h2>
+  <div class="filter" role="group">
+    <button class="filter__pill is-active" data-filter="all" type="button">{t.filterAll}</button>
+    {
+      usedCategories.map((key) => (
+        <button class="filter__pill" data-filter={key} type="button">
+          {categoryLabels[key][locale]}
+        </button>
+      ))
+    }
+  </div>
   <ul class="project-list">
     {projects.map((project) => <ProjectCard project={project} locale={locale} />)}
   </ul>
@@ -113,11 +176,69 @@ const stats = [
   </ul>
 </section>
 
+<script>
+  // Project-category filter: pills toggle visibility of cards by the
+  // data-categories attribute ProjectCard emits (space-separated keys).
+  const pills = document.querySelectorAll<HTMLButtonElement>('.filter__pill');
+  const cards = document.querySelectorAll<HTMLElement>('.project-card[data-categories]');
+  pills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const key = pill.dataset.filter;
+      pills.forEach((b) => b.classList.toggle('is-active', b === pill));
+      cards.forEach((card) => {
+        const cats = (card.dataset.categories || '').split(' ');
+        card.hidden = key !== 'all' && !cats.includes(key!);
+      });
+    });
+  });
+</script>
+
 <style>
   .hero {
-    padding: 4.5rem 0 2rem;
+    position: relative;
+    padding: 4.5rem 0 2.5rem;
     border-bottom: 1px solid var(--border-soft);
     margin-bottom: 0.5rem;
+    overflow: visible;
+  }
+  /* Micro-motion: two slow-floating blurred gradient blobs behind the hero. */
+  .hero__blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .hero__blob--a {
+    width: 22rem;
+    height: 22rem;
+    right: 5%;
+    top: -6rem;
+    background: radial-gradient(circle at 30% 30%, var(--accent), transparent 70%);
+    animation: blob-float-a 14s ease-in-out infinite alternate;
+  }
+  .hero__blob--b {
+    width: 16rem;
+    height: 16rem;
+    right: 28%;
+    top: 2rem;
+    background: radial-gradient(circle at 60% 40%, light-dark(#c78bf2, #8f6bd8), transparent 70%);
+    opacity: 0.3;
+    animation: blob-float-b 18s ease-in-out infinite alternate;
+  }
+  @keyframes blob-float-a {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(-3rem, 2rem) scale(1.12); }
+  }
+  @keyframes blob-float-b {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(2.5rem, -1.5rem) scale(0.92); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero__blob {
+      animation: none;
+    }
   }
   .hero h1 {
     margin: 0 0 0.75rem;
@@ -126,14 +247,60 @@ const stats = [
   }
   .hero__tagline {
     margin: 0;
-    opacity: 0.8;
+    opacity: 0.85;
     max-width: 42rem;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     line-height: 1.7;
   }
+  .hero__cta {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 1.75rem;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-weight: 600;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+  .btn--primary {
+    padding: 0.6rem 1.4rem;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-size: 0.95rem;
+  }
+  .btn--primary:hover {
+    filter: brightness(1.08);
+  }
+  .btn--icon {
+    width: 2.6rem;
+    height: 2.6rem;
+    padding: 0;
+  }
+  .btn--icon :global(svg) {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  .btn--icon:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
   .section {
     padding: 3.5rem 0 0.5rem;
-    scroll-margin-top: 1.5rem;
+    scroll-margin-top: 4.5rem;
   }
   .section > h2 {
     display: flex;
@@ -142,6 +309,7 @@ const stats = [
     font-size: 1.25rem;
     font-weight: 700;
     margin: 0 0 1.75rem;
+    color: var(--accent);
   }
   .section > h2::before {
     content: '';
@@ -179,11 +347,39 @@ const stats = [
     box-shadow: var(--shadow-hover);
     border-color: var(--border-strong);
   }
+  .skill__icon {
+    display: inline-flex;
+    width: 2.6rem;
+    height: 2.6rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.7rem;
+    background: var(--fill-softer);
+    border: 1px solid var(--border-soft);
+    margin-bottom: 0.8rem;
+    color: var(--text-muted);
+    transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  }
+  .skill__icon :global(svg) {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+  /* Hover: outline icon "fills in" with the accent treatment. */
+  .skill:hover .skill__icon {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    transform: scale(1.08) rotate(-3deg);
+  }
   @media (prefers-reduced-motion: reduce) {
-    .skill {
+    .skill,
+    .skill__icon {
       transition: none;
     }
     .skill:hover {
+      transform: none;
+    }
+    .skill:hover .skill__icon {
       transform: none;
     }
   }
@@ -191,16 +387,6 @@ const stats = [
     display: block;
     font-weight: 700;
     margin-bottom: 0.4rem;
-  }
-  .skill__name::before {
-    content: '';
-    display: inline-block;
-    width: 0.35rem;
-    height: 0.35rem;
-    border-radius: 50%;
-    background: var(--accent);
-    margin-right: 0.5rem;
-    vertical-align: middle;
   }
   .skill__desc {
     font-size: 0.9rem;
@@ -257,14 +443,58 @@ const stats = [
     opacity: 0.85;
     font-size: 0.92rem;
   }
+  /* Custom accent bullets: `display:grid` on a UL suppresses native ::marker
+     rendering in some engines — the 1440px "no bullets" bug — so draw our own. */
   .exp__highlights {
+    list-style: none;
     margin: 0.5rem 0 0;
-    padding-left: 1.2rem;
+    padding-left: 0;
     display: grid;
     gap: 0.3rem;
   }
   .exp__highlights li {
     font-size: 0.92rem;
+    position: relative;
+    padding-left: 1.1rem;
+  }
+  .exp__highlights li::before {
+    content: '';
+    position: absolute;
+    left: 0.15rem;
+    top: 0.55em;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.75;
+  }
+
+  .filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .filter__pill {
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--fill-softer);
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    padding: 0.35rem 0.95rem;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+  .filter__pill:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .filter__pill.is-active {
+    color: #fff;
+    background: var(--accent);
+    border-color: var(--accent);
   }
 
   .project-list {

@@ -5,6 +5,7 @@ period: "2026.03 - 2026.05"
 tags: [LINE Bot SDK, Slack, cloudflared, 自動化]
 metrics: "風管人工回報 → 全自動推送,約省 304 小時/年"
 order: 2
+categories: [integration, data-automation]
 beforeAfter:
   label: "風管人工回報耗時(單班)"
   before: 50

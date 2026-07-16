@@ -31,6 +31,9 @@ const projectSchema = z.object({
   cover: z.string().optional(),
   // Optional explicit sort position (ascending); undefined sorts last.
   order: z.number().optional(),
+  // Filter-category KEYS for the home-page Projects filter (locale-independent,
+  // byte-identical across zh/en; labels live in src/lib/i18n.ts categoryLabels).
+  categories: z.array(z.string()).optional(),
   // Optional to-scale numeric comparison, rendered as a BeforeAfterBar.
   // Keep this separate from `metrics` (free text) since a bar needs real numbers.
   beforeAfter: z

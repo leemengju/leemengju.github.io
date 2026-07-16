@@ -33,9 +33,11 @@ export async function getSortedProjects(locale: Locale = 'zh'): Promise<ProjectE
   return sortProjects(entries);
 }
 
-/** Cover image URL: the project's own `cover`, or its generated fallback (see
- * src/pages/covers/[slug].svg.ts and src/pages/covers/en/[slug].svg.ts). */
-export function coverUrl(project: ProjectEntry, locale: Locale = 'zh'): string {
-  if (project.data.cover) return project.data.cover;
-  return locale === 'en' ? `/covers/en/${project.id}.svg` : `/covers/${project.id}.svg`;
+/** Cover image URL: the project's own `cover`, or its generated fallback
+ * (src/pages/covers/[slug].svg.ts). The generated artwork is abstract and
+ * text-free, seeded purely by slug, so one URL serves both locales — this
+ * also fixes the earlier bug where en pages pointed at a /covers/en/ route
+ * that was never implemented. */
+export function coverUrl(project: ProjectEntry, _locale: Locale = 'zh'): string {
+  return project.data.cover ?? `/covers/${project.id}.svg`;
 }

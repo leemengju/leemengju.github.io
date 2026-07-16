@@ -13,7 +13,8 @@ export const strings = {
     siteTitle: '李孟儒 Lance Lee ｜ 作品集',
     titleSuffix: ' ｜ 李孟儒 Lance Lee',
     introHeading: '李孟儒 Lance Lee',
-    introText: '全端工程師。這裡收錄我的專案紀錄 —— 內容以 Markdown 維護、版本控制在 GitHub。',
+    introText: '理解使用者，讓每個細節都成為體驗的最佳註腳。',
+    resumeButton: '查看履歷',
     aboutHeading: '關於我',
     skillsHeading: '專業技能',
     experienceHeading: '工作經歷',
@@ -26,9 +27,7 @@ export const strings = {
     navProjects: '專案',
     backToHome: '← 回首頁',
     viewOnGitHub: 'View on GitHub',
-    statProjects: '篇專案作品',
-    statClickhouse: 'ClickHouse 查詢提速',
-    statAutomation: '小時/年 自動化節省',
+    filterAll: '全部',
     // Label shown on the switcher = the language you would switch TO.
     switcherLabel: 'EN',
     switcherAria: 'Switch to English'
@@ -39,8 +38,8 @@ export const strings = {
     siteTitle: 'Meng-Ju Lee (Lance) | Portfolio',
     titleSuffix: ' | Meng-Ju Lee (Lance)',
     introHeading: 'Meng-Ju Lee (Lance)',
-    introText:
-      'Full-stack engineer. A record of my projects — content maintained in Markdown, version-controlled on GitHub.',
+    introText: 'Understand the users and make every detail the best footnote of the experience.',
+    resumeButton: 'View Résumé',
     aboutHeading: 'About',
     skillsHeading: 'Skills',
     experienceHeading: 'Experience',
@@ -53,13 +52,27 @@ export const strings = {
     navProjects: 'Projects',
     backToHome: '← Back to home',
     viewOnGitHub: 'View on GitHub',
-    statProjects: 'projects',
-    statClickhouse: 'ClickHouse query speed-up',
-    statAutomation: 'hrs/yr saved via automation',
+    filterAll: 'All',
     switcherLabel: '中文',
     switcherAria: '切換為中文'
   }
 } as const;
+
+/**
+ * Project category filter (home-page Projects section). Frontmatter stores
+ * locale-independent KEYS (`categories: [db-performance, ...]`, byte-identical
+ * across zh/en files); labels are looked up here per locale. Keys mirror the
+ * six skill areas plus PM and UI/UX.
+ */
+export const categoryLabels: Record<string, { zh: string; en: string }> = {
+  refactor: { zh: '系統重構', en: 'System Refactoring' },
+  'db-performance': { zh: '資料庫與效能', en: 'DB & Performance' },
+  'data-automation': { zh: '數據可視與自動化', en: 'Data Viz & Automation' },
+  integration: { zh: '第三方串接', en: 'Integration' },
+  fullstack: { zh: '全端開發', en: 'Full-Stack' },
+  pm: { zh: '專案管理', en: 'Project Management' },
+  uiux: { zh: 'UI/UX', en: 'UI/UX' }
+};
 
 export function homePath(locale: Locale): string {
   return locale === 'en' ? '/en/' : '/';

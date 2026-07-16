@@ -13,6 +13,12 @@ import type { Locale } from './i18n';
 export interface SkillItem {
   name: string;
   desc: string;
+  /** Icon key rendered by HomeSections' inline-SVG icon map. */
+  icon: 'refactor' | 'database' | 'chart' | 'plug' | 'stack' | 'kanban';
+}
+export interface StatItem {
+  value: string;
+  label: string;
 }
 export interface ExperienceItem {
   role: string;
@@ -29,10 +35,22 @@ export interface EducationItem {
 }
 export interface Profile {
   about: string[];
+  /** Headline numbers for the About stats carousel — every figure must be
+   * traceable to an achievement record (see E:\personalInfo\履歷維護原則.md). */
+  stats: StatItem[];
   skills: SkillItem[];
   experience: ExperienceItem[];
   education: EducationItem[];
-  contact: { email: string; github: string; location: string };
+  contact: {
+    email: string;
+    github: string;
+    location: string;
+    /** Public résumé PDF path (under public/). Button renders only when set —
+     * drop the exported PDF at public/resume.pdf then fill this in. */
+    resume?: string;
+    /** LinkedIn profile URL. Button renders only when set. */
+    linkedin?: string;
+  };
 }
 
 const zh: Profile = {
@@ -41,13 +59,21 @@ const zh: Profile = {
     '曾主導總勝分報表由 MySQL 遷移至 ClickHouse，將玩家整月查詢時間由約 104 秒大幅降至約 5 秒（約 21 倍）；並持續推動報表與監控作業自動化，年省逾 300 小時人力，同時重構大型 Vue 模組（4221 行縮減 54%），提升系統可維護性。',
     '除了扎實的工程實作能力，設計與專案管理背景更讓我能精準掌握需求脈絡與使用者體驗，有效降低跨部門溝通的轉譯成本，讓技術決策直接對接商業目標。'
   ],
+  stats: [
+    { value: '~21×', label: 'ClickHouse 查詢提速' },
+    { value: '300+', label: '小時/年 自動化節省' },
+    { value: '−54%', label: '巨型 Vue 主檔瘦身(4221→1963 行)' },
+    { value: '8週', label: '從零交付新貨幣後台(34 項工項)' },
+    { value: '17+', label: '篇專案作品' },
+    { value: '3.2×', label: '批量金流查詢提速(QA 實測)' }
+  ],
   skills: [
-    { name: '系統重構', desc: '主導共用設定模組化，4221 行巨型 Vue 檔分三波拆為 10 檔、主檔縮減 54%；並重構線上會員頁，將單一混亂 API 拆成 3 支職責清晰 API、前端主檔由 712 行降至約 190 行。' },
-    { name: '資料庫遷移與效能優化', desc: '熟悉 MySQL/MariaDB/ClickHouse 設計與操作，獨立主導 MySQL→ClickHouse 遷移（MV + AggregatingMergeTree），查詢提速約 21 倍，零停機切換、資料一致。' },
-    { name: '數據可視與自動化', desc: '將重複性人工作業轉為自動化排程與資料視覺化，以 v-charts 折線圖與可拖拉表格呈現多維趨勢，並將日報表、監控回報改為 Kernel 排程，年省逾 300 小時人力。' },
-    { name: '第三方串接', desc: '具備 LINE/Slack Bot SDK 串接與 cloudflared 內網穿透經驗，擅長打通防火牆內網限制，將訊息與資料即時同步推送。' },
-    { name: '全端開發技術', desc: 'React、Vue 前端框架與 PHP、Laravel 後端框架開發經驗，熟悉 MVC 與前後端串接，能獨立完成從資料庫設計到前端呈現的完整開發。' },
-    { name: '專案管理', desc: '熟練使用 Notion、Trello、Redmine 進行專案管理，掌控進度與任務、提高執行效率。' }
+    { icon: 'refactor', name: '系統重構', desc: '主導共用設定模組化，4221 行巨型 Vue 檔分三波拆為 10 檔、主檔縮減 54%；並重構線上會員頁，將單一混亂 API 拆成 3 支職責清晰 API、前端主檔由 712 行降至約 190 行。' },
+    { icon: 'database', name: '資料庫遷移與效能優化', desc: '熟悉 MySQL/MariaDB/ClickHouse 設計與操作，獨立主導 MySQL→ClickHouse 遷移（MV + AggregatingMergeTree），查詢提速約 21 倍，零停機切換、資料一致。' },
+    { icon: 'chart', name: '數據可視與自動化', desc: '將重複性人工作業轉為自動化排程與資料視覺化，以 v-charts 折線圖與可拖拉表格呈現多維趨勢，並將日報表、監控回報改為 Kernel 排程，年省逾 300 小時人力。' },
+    { icon: 'plug', name: '第三方串接', desc: '具備 LINE/Slack Bot SDK 串接與 cloudflared 內網穿透經驗，擅長打通防火牆內網限制，將訊息與資料即時同步推送。' },
+    { icon: 'stack', name: '全端開發技術', desc: 'React、Vue 前端框架與 PHP、Laravel 後端框架開發經驗，熟悉 MVC 與前後端串接，能獨立完成從資料庫設計到前端呈現的完整開發。' },
+    { icon: 'kanban', name: '專案管理', desc: '熟練使用 Notion、Trello、Redmine 進行專案管理，掌控進度與任務、提高執行效率。' }
   ],
   experience: [
     {
@@ -125,6 +151,8 @@ const zh: Profile = {
     email: 'emy0526@gmail.com',
     github: 'https://github.com/leemengju',
     location: '臺北市'
+    // resume: '/resume.pdf',           // TODO: 把履歷 PDF 放到 public/resume.pdf 後取消註解
+    // linkedin: 'https://www.linkedin.com/in/...'  // TODO: 補上 LinkedIn 個人頁網址
   }
 };
 
@@ -134,13 +162,21 @@ const en: Profile = {
     "I led the migration of the platform's win-score report from MySQL to ClickHouse, cutting a player's full-month query time from ~104s to ~5s (~21×), and continuously drive report and monitoring automation that saves 300+ hours of manual work per year, alongside refactoring a large Vue module (4,221 lines cut by 54%) to improve maintainability.",
     'Beyond solid engineering execution, my design and project-management background lets me stay closely attuned to requirements and user experience, meaningfully cutting the communication overhead between teams and tying technical decisions directly to business goals.'
   ],
+  stats: [
+    { value: '~21×', label: 'ClickHouse query speed-up' },
+    { value: '300+', label: 'hrs/yr saved via automation' },
+    { value: '−54%', label: 'monolith Vue slimmed (4221→1963 lines)' },
+    { value: '8wk', label: 'new-currency back office from zero (34 items)' },
+    { value: '17+', label: 'project write-ups' },
+    { value: '3.2×', label: 'batch cash-flow query speed-up (QA)' }
+  ],
   skills: [
-    { name: 'System Refactoring', desc: 'Led the shared-settings modularization (a 4,221-line monolithic Vue file split into 10 files across three passes, main file cut 54%) and the online member page refactor (one tangled API split into 3, front-end main file from 712 to ~190 lines).' },
-    { name: 'Database Migration & Performance', desc: 'MySQL/MariaDB/ClickHouse design and operation; independently led a MySQL→ClickHouse migration (Materialized View + AggregatingMergeTree) for ~21× query speed-up with zero-downtime cutover and full data consistency.' },
-    { name: 'Data Visualization & Automation', desc: 'Turns repetitive manual work into scheduled automation and visualized reporting — v-charts line charts with a draggable table, and daily reports / monitoring moved to Kernel-scheduled jobs, saving 300+ hours/year.' },
-    { name: 'Third-Party Integration', desc: 'LINE/Slack Bot SDKs and cloudflared tunneling; routes messages and data through firewalled internal networks with real-time sync.' },
-    { name: 'Full-Stack Development', desc: 'React and Vue on the front end, PHP and Laravel on the back end; comfortable with the MVC pattern and front-to-back integration, from database design through to the front end.' },
-    { name: 'Project Management', desc: 'Uses Notion, Trello, and Redmine to manage schedules and tasks and keep execution on track.' }
+    { icon: 'refactor', name: 'System Refactoring', desc: 'Led the shared-settings modularization (a 4,221-line monolithic Vue file split into 10 files across three passes, main file cut 54%) and the online member page refactor (one tangled API split into 3, front-end main file from 712 to ~190 lines).' },
+    { icon: 'database', name: 'Database Migration & Performance', desc: 'MySQL/MariaDB/ClickHouse design and operation; independently led a MySQL→ClickHouse migration (Materialized View + AggregatingMergeTree) for ~21× query speed-up with zero-downtime cutover and full data consistency.' },
+    { icon: 'chart', name: 'Data Visualization & Automation', desc: 'Turns repetitive manual work into scheduled automation and visualized reporting — v-charts line charts with a draggable table, and daily reports / monitoring moved to Kernel-scheduled jobs, saving 300+ hours/year.' },
+    { icon: 'plug', name: 'Third-Party Integration', desc: 'LINE/Slack Bot SDKs and cloudflared tunneling; routes messages and data through firewalled internal networks with real-time sync.' },
+    { icon: 'stack', name: 'Full-Stack Development', desc: 'React and Vue on the front end, PHP and Laravel on the back end; comfortable with the MVC pattern and front-to-back integration, from database design through to the front end.' },
+    { icon: 'kanban', name: 'Project Management', desc: 'Uses Notion, Trello, and Redmine to manage schedules and tasks and keep execution on track.' }
   ],
   experience: [
     {
@@ -218,6 +254,8 @@ const en: Profile = {
     email: 'emy0526@gmail.com',
     github: 'https://github.com/leemengju',
     location: 'Taipei, Taiwan'
+    // resume: '/resume.pdf',           // TODO: uncomment once the PDF lands at public/resume.pdf
+    // linkedin: 'https://www.linkedin.com/in/...'  // TODO: fill in the LinkedIn profile URL
   }
 };
 

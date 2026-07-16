@@ -1,123 +1,111 @@
 /**
- * Renders a self-contained typographic cover as an SVG string. Used for
- * projects with no `cover` image (see src/pages/covers/[slug].svg.ts).
+ * Generative abstract cover art (SVG string) for projects with no `cover`
+ * image — used by src/pages/covers/[slug].svg.ts (and the /en/ variant).
  *
- * Colors are hardcoded (not CSS custom properties) because this SVG is served
- * as a standalone file — referenced from <img> and <meta property="og:image">
- * — with no access to the page's stylesheet.
- *
- * Trade-off: most social-media link-preview crawlers (Facebook, Twitter/X,
- * LinkedIn) don't reliably rasterize SVG og:image files. This keeps the whole
- * pipeline dependency-free (no satori/resvg native binaries); if broad OG
- * preview support is needed later, swap this for a satori+resvg (or
- * @vercel/og-style) PNG render at the same call site.
+ * Design intent (see WORKFLOW.md): the card BODY already shows title, role,
+ * metrics and tags, so the cover deliberately carries NO text — repeating the
+ * title there was redundant. Instead each project gets a unique, deterministic
+ * gradient composition seeded from its slug (landing.love-style color art):
+ * a dark base, two hue-paired glow blobs, a sweeping arc ring, and a fine
+ * grain pass for texture. Colors are hardcoded (not CSS variables) because
+ * the SVG is served standalone (also used as og:image).
  */
 
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-/** CJK glyphs render roughly twice as wide as ASCII at the same font size. */
-function isCjk(ch: string): boolean {
-  // CJK radicals/ideographs (U+2E80-U+9FFF), compatibility ideographs (U+F900-U+FAFF),
-  // fullwidth forms & CJK punctuation (U+FF00-U+FF60, U+FE30-U+FE4F, U+3000-U+303F),
-  // Hangul syllables/jamo (U+AC00-U+D7A3, U+1100-U+115F).
-  return /[ᄀ-ᅟ⺀-鿿　-〿가-힣豈-﫿︰-﹏＀-｠￠-￦]/.test(ch);
-}
-
-function visualWidth(text: string): number {
-  let width = 0;
-  for (const ch of text) width += isCjk(ch) ? 2 : 1;
-  return width;
-}
-
-/**
- * Wraps text to a max VISUAL width per line, counting CJK glyphs as 2 units
- * and ASCII as 1 — a zh title and an en title of similar rendered width both
- * fit the same number of lines. Whole-word wrapping for spaced (ASCII) text;
- * an unspaced run (CJK) longer than a line is broken character-by-character.
- * Adjacent CJK fragments re-join without an inserted space.
- */
-function wrapText(text: string, maxUnits: number): string[] {
-  const rawWords = text.split(/\s+/).filter(Boolean);
-  const words: string[] = [];
-  for (const raw of rawWords) {
-    if (visualWidth(raw) <= maxUnits) {
-      words.push(raw);
-      continue;
-    }
-    let chunk = '';
-    for (const ch of raw) {
-      if (chunk && visualWidth(chunk + ch) > maxUnits) {
-        words.push(chunk);
-        chunk = ch;
-      } else {
-        chunk += ch;
-      }
-    }
-    if (chunk) words.push(chunk);
+/** Deterministic 32-bit hash so a slug always renders the same artwork. */
+function hashSlug(slug: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < slug.length; i++) {
+    h ^= slug.charCodeAt(i);
+    h = Math.imul(h, 16777619);
   }
+  return h >>> 0;
+}
 
-  const lines: string[] = [];
-  let line = '';
-  for (const word of words) {
-    const joiner = line && isCjk(line[line.length - 1]) && isCjk(word[0]) ? '' : ' ';
-    const candidate = line ? line + joiner + word : word;
-    if (line && visualWidth(candidate) > maxUnits) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = candidate;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
+/** Cheap seeded PRNG (mulberry32) — deterministic per slug. */
+function prng(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 export interface CoverInput {
-  title: string;
-  metric?: string;
-  tags: string[];
+  /** Slug string that seeds the artwork. */
+  seed: string;
 }
 
-export function renderCoverSvg({ title, metric, tags }: CoverInput): string {
-  // 32 units ≈ 16 full-width CJK glyphs ≈ 32 ASCII chars — conservative at
-  // this font size for either script (see wrapText's width model).
-  const titleLines = wrapText(title, 32).slice(0, 3);
-  const titleY = HEIGHT / 2 - ((titleLines.length - 1) * 34) - (metric ? 20 : 0);
+export function renderCoverSvg({ seed }: CoverInput): string {
+  const rand = prng(hashSlug(seed));
 
-  const titleTspans = titleLines
-    .map((line, i) => `<tspan x="80" y="${titleY + i * 68}">${escapeXml(line)}</tspan>`)
-    .join('');
+  // Two paired hues 40–140° apart, medium-high saturation on a dark ground.
+  const h1 = Math.floor(rand() * 360);
+  const h2 = (h1 + 40 + Math.floor(rand() * 100)) % 360;
+  const h3 = (h1 + 180 + Math.floor(rand() * 40)) % 360;
 
-  const metricText = metric
-    ? `<text x="80" y="${titleY + titleLines.length * 68 + 40}" font-size="32" font-weight="700" fill="#6ea8fe" font-family="system-ui, sans-serif">${escapeXml(metric)}</text>`
-    : '';
-
-  const tagChips = tags
-    .slice(0, 4)
-    .map((tag, i) => {
-      const x = 80 + i * 150;
-      return `
-        <rect x="${x}" y="${HEIGHT - 120}" width="${Math.min(140, 20 + tag.length * 14)}" height="36" rx="18" fill="#2a2f3a" />
-        <text x="${x + 14}" y="${HEIGHT - 96}" font-size="16" fill="#c9d1d9" font-family="system-ui, sans-serif">${escapeXml(tag)}</text>
-      `;
-    })
-    .join('');
+  const blobA = {
+    cx: 250 + rand() * 350,
+    cy: 120 + rand() * 260,
+    r: 260 + rand() * 140
+  };
+  const blobB = {
+    cx: 650 + rand() * 400,
+    cy: 220 + rand() * 300,
+    r: 220 + rand() * 160
+  };
+  const ringR = 150 + rand() * 110;
+  const ringCx = 300 + rand() * 600;
+  const ringCy = 150 + rand() * 330;
+  const ringRot = Math.floor(rand() * 360);
+  const dash = Math.floor(ringR * 2 * Math.PI * (0.55 + rand() * 0.25));
+  const gap = Math.floor(ringR * 2 * Math.PI) - dash;
 
   return `<svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="#12151c" />
-  <rect width="${WIDTH}" height="8" fill="#3a6df0" />
-  <text x="80" y="72" font-size="22" fill="#8b949e" font-family="system-ui, sans-serif">李孟儒 Lance Lee</text>
-  <text font-size="56" font-weight="700" fill="#f0f2f5" font-family="system-ui, 'PingFang TC', 'Microsoft JhengHei', sans-serif">${titleTspans}</text>
-  ${metricText}
-  ${tagChips}
+  <defs>
+    <radialGradient id="ga" cx="35%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="hsl(${h1} 85% 62%)" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="hsl(${h1} 85% 62%)" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gb" cx="60%" cy="45%" r="75%">
+      <stop offset="0%" stop-color="hsl(${h2} 80% 58%)" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="hsl(${h2} 80% 58%)" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(${h1} 40% 10%)"/>
+      <stop offset="100%" stop-color="hsl(${h2} 45% 14%)"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(${h3} 90% 72%)"/>
+      <stop offset="100%" stop-color="hsl(${h2} 90% 68%)"/>
+    </linearGradient>
+    <filter id="blur1"><feGaussianBlur stdDeviation="55"/></filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.06"/></feComponentTransfer>
+      <feComposite operator="over" in2="SourceGraphic"/>
+    </filter>
+  </defs>
+
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bg)"/>
+
+  <g filter="url(#blur1)">
+    <circle cx="${blobA.cx.toFixed(0)}" cy="${blobA.cy.toFixed(0)}" r="${blobA.r.toFixed(0)}" fill="url(#ga)"/>
+    <circle cx="${blobB.cx.toFixed(0)}" cy="${blobB.cy.toFixed(0)}" r="${blobB.r.toFixed(0)}" fill="url(#gb)"/>
+  </g>
+
+  <g transform="rotate(${ringRot} ${ringCx.toFixed(0)} ${ringCy.toFixed(0)})">
+    <circle cx="${ringCx.toFixed(0)}" cy="${ringCy.toFixed(0)}" r="${ringR.toFixed(0)}"
+      fill="none" stroke="url(#ring)" stroke-width="3.5" stroke-linecap="round"
+      stroke-dasharray="${dash} ${gap}" opacity="0.85"/>
+  </g>
+
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="hsl(${h1} 30% 8%)" filter="url(#grain)" opacity="0.5"/>
 </svg>`;
 }

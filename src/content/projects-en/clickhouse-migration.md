@@ -5,6 +5,7 @@ period: "2026.05 - 2026.06"
 tags: [ClickHouse, MySQL, Laravel, Performance]
 metrics: "Full-month query ~104s → ~5s (~21×)"
 order: 5
+categories: [db-performance]
 beforeAfter:
   label: "Full-month player query time"
   before: 104

@@ -3,6 +3,10 @@
  * One listing card, shared by the zh and en home pages so the two locales
  * can't drift apart visually. Locale only affects link targets and which
  * generated cover is used.
+ *
+ * Motion: cursor-tracked 3D tilt (voku.studio-style, small vanilla script
+ * below, disabled for touch/reduced-motion) + cover zoom on hover. The
+ * `data-categories` attribute feeds the home page's filter pills.
  */
 import TagRow from './TagRow.astro';
 import { coverUrl, type ProjectEntry } from '../lib/projects';
@@ -13,11 +17,14 @@ interface Props {
   locale?: Locale;
 }
 const { project, locale = 'zh' } = Astro.props as Props;
+const categories = (project.data.categories ?? []).join(' ');
 ---
 
-<li class="project-card" data-reveal>
+<li class="project-card" data-reveal data-categories={categories} data-tilt>
   <a href={projectPath(project.id, locale)}>
-    <img class="project-card__cover" src={coverUrl(project, locale)} alt="" loading="lazy" />
+    <div class="project-card__cover-wrap">
+      <img class="project-card__cover" src={coverUrl(project, locale)} alt="" loading="lazy" />
+    </div>
     <div class="project-card__body">
       <span class="project-card__title">{project.data.title}</span>
       <span class="project-card__meta">
@@ -29,9 +36,38 @@ const { project, locale = 'zh' } = Astro.props as Props;
   </a>
 </li>
 
+<script>
+  // Cursor-tracked tilt. Module scripts dedupe, so this runs once per page
+  // even though the component renders 17×.
+  const MAX_DEG = 5;
+  const fine = window.matchMedia('(pointer: fine)').matches;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (fine && !reduced) {
+    document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((card) => {
+      let raf = 0;
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width - 0.5;
+        const py = (e.clientY - rect.top) / rect.height - 0.5;
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          card.style.transform = `perspective(800px) rotateY(${px * MAX_DEG}deg) rotateX(${-py * MAX_DEG}deg)`;
+        });
+      });
+      card.addEventListener('mouseleave', () => {
+        cancelAnimationFrame(raf);
+        card.style.transform = '';
+      });
+    });
+  }
+</script>
+
 <style>
   .project-card {
     height: 100%;
+    transition: transform 0.25s ease;
+    transform-style: preserve-3d;
+    will-change: transform;
   }
   .project-card a {
     display: flex;
@@ -44,20 +80,15 @@ const { project, locale = 'zh' } = Astro.props as Props;
     color: inherit;
     overflow: hidden;
     box-shadow: var(--shadow);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
   }
-  .project-card a:hover {
-    transform: translateY(-3px);
+  .project-card:hover a {
     box-shadow: var(--shadow-hover);
     border-color: var(--border-strong);
   }
-  @media (prefers-reduced-motion: reduce) {
-    .project-card a {
-      transition: none;
-    }
-    .project-card a:hover {
-      transform: none;
-    }
+  .project-card__cover-wrap {
+    overflow: hidden;
+    border-bottom: 1px solid var(--border-soft);
   }
   .project-card__cover {
     display: block;
@@ -65,7 +96,20 @@ const { project, locale = 'zh' } = Astro.props as Props;
     aspect-ratio: 1200 / 630;
     object-fit: cover;
     background: var(--fill-softer);
-    border-bottom: 1px solid var(--border-soft);
+    transform: scale(1.01);
+    transition: transform 0.45s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .project-card:hover .project-card__cover {
+    transform: scale(1.07);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project-card,
+    .project-card__cover {
+      transition: none;
+    }
+    .project-card:hover .project-card__cover {
+      transform: none;
+    }
   }
   .project-card__body {
     padding: 1.25rem 1.4rem 1.4rem;

@@ -5,6 +5,7 @@ period: "2024.07 - 2024.08"
 tags: [UI/UX, Prototype, Project Management]
 metrics: "MVP feature UI, design guideline and prototype delivered in two months"
 order: 14
+categories: [uiux, pm]
 ---
 
 ## Background

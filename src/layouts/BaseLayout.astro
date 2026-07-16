@@ -4,6 +4,7 @@ import '../styles/code-blocks.css';
 import DiagramBlock from '../components/DiagramBlock.astro';
 import RevealScript from '../components/RevealScript.astro';
 import BackToTop from '../components/BackToTop.astro';
+import CursorArc from '../components/CursorArc.astro';
 import { strings, localeFromPath, alternatePath, homePath } from '../lib/i18n';
 
 interface Props {
@@ -46,6 +47,7 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     <RevealScript />
     <DiagramBlock />
     <BackToTop />
+    <CursorArc />
   </body>
 </html>
 

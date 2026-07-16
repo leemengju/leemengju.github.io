@@ -5,6 +5,7 @@ period: "2026.03 - 2026.05"
 tags: [LINE Bot SDK, Slack, cloudflared, Automation]
 metrics: "Risk-control manual reporting → fully automated push, ~304 hours/year saved"
 order: 2
+categories: [integration, data-automation]
 beforeAfter:
   label: "Risk-control manual reporting time (per shift)"
   before: 50

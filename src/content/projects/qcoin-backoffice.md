@@ -5,6 +5,7 @@ period: "2026.03 - 2026.05"
 tags: [Laravel, Vue, MySQL, 專案管理]
 metrics: "8 週從零交付,34 項工項上線,個人 69 commits"
 order: 4
+categories: [fullstack, pm]
 timeline:
   - date: "2026-03-10"
     label: "從零建立 Q 幣存摺(第一個 commit)"

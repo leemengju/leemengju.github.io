@@ -1,47 +1,44 @@
 import { motion } from 'framer-motion';
 
 /**
- * Motion tier L2 (see design.md "Progressive motion tiers"): the one place
- * on the site that uses a Framer Motion island. Deliberately kept separate
- * from the SEO-critical project listing (which stays plain static HTML) —
- * this is a small, supplementary "quantified impact" strip on the home page,
- * hydrated with `client:visible` so it costs nothing until scrolled to.
+ * Motion tier L2 (see design.md "Progressive motion tiers"): the one Framer
+ * Motion island on the site, hydrated with `client:visible` inside the About
+ * section. Renders the headline stats as an auto-scrolling marquee carousel
+ * (track duplicated ×2, CSS keyframes scroll −50%, pauses on hover) — each
+ * value gets a distinct "material" treatment (gradient ink / metallic emboss /
+ * hue-shifting / serif / neon mono / extruded 3D) via per-index CSS classes
+ * in stats-band.css.
  */
 interface Stat {
   value: string;
   label: string;
 }
 
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.12 } }
-};
-
-const item = {
-  hidden: { opacity: 0, y: 16, scale: 0.96 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 260, damping: 22 } }
-};
-
 export default function StatsBand({ stats }: { stats: Stat[] }) {
+  const track = [...stats, ...stats]; // duplicate for a seamless loop
   return (
-    <motion.ul
+    <motion.div
       className="stats-band"
-      variants={container}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, amount: 0.4 }}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.5 }}
+      aria-label="Highlight statistics"
     >
-      {stats.map((stat) => (
-        <motion.li
-          key={stat.label}
-          className="stats-band__item"
-          variants={item}
-          whileHover={{ scale: 1.04 }}
-        >
-          <span className="stats-band__value">{stat.value}</span>
-          <span className="stats-band__label">{stat.label}</span>
-        </motion.li>
-      ))}
-    </motion.ul>
+      <ul className="stats-band__track">
+        {track.map((stat, i) => (
+          <li
+            className="stats-band__item"
+            key={`${stat.label}-${i}`}
+            aria-hidden={i >= stats.length ? true : undefined}
+          >
+            <span className={`stats-band__value stats-band__value--v${(i % stats.length) % 6}`}>
+              {stat.value}
+            </span>
+            <span className="stats-band__label">{stat.label}</span>
+          </li>
+        ))}
+      </ul>
+    </motion.div>
   );
 }

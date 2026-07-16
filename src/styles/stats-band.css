@@ -1,14 +1,46 @@
-/* Styles for the StatsBand.tsx island (home page only) — plain CSS since a
-   .tsx file has no Astro scoped <style>. */
+/* Styles for the StatsBand.tsx island — plain CSS since a .tsx file has no
+   Astro scoped <style>.
+
+   Layout: an auto-scrolling marquee. The track holds the stat list twice;
+   the keyframe scrolls it by exactly -50% so the loop is seamless. Hover
+   pauses it; reduced-motion turns it into a static wrapping row.
+
+   "Materials": each value gets a distinct treatment (v0..v5) — gradient ink,
+   metallic emboss, hue-shifting, serif italic, neon mono, extruded 3D — per
+   the "數字要立體、不同材質、會變色、字型不同" request. */
+
 .stats-band {
-  list-style: none;
-  margin: 2rem 0 1rem;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+  margin: 2.25rem 0 1rem;
+  overflow: hidden;
+  position: relative;
+  /* soft fade at both edges so cards slide in/out gracefully */
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
 }
+
+.stats-band__track {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  animation: stats-marquee 32s linear infinite;
+}
+.stats-band:hover .stats-band__track {
+  animation-play-state: paused;
+}
+@keyframes stats-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 .stats-band__item {
+  width: 13.5rem;
+  flex-shrink: 0;
   padding: 1.4rem 1.25rem;
   background: var(--surface);
   border: 1px solid var(--border-soft);
@@ -16,18 +48,102 @@
   box-shadow: var(--shadow);
   text-align: center;
   cursor: default;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
+.stats-band__item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+}
+
 .stats-band__value {
   display: block;
-  font-size: 1.9rem;
+  font-size: 2.1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--accent);
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
 }
 .stats-band__label {
   display: block;
-  margin-top: 0.35rem;
-  font-size: 0.82rem;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* v0 — gradient ink */
+.stats-band__value--v0 {
+  background: linear-gradient(120deg, var(--accent), light-dark(#b06ee8, #d9a8ff));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* v1 — brushed metal + emboss */
+.stats-band__value--v1 {
+  background: linear-gradient(175deg, light-dark(#9aa3b2, #e6ebf2) 0%, light-dark(#5b6472, #9aa3b2) 45%, light-dark(#c3cad4, #ffffff) 55%, light-dark(#78818f, #b7bfcb) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 light-dark(rgba(255, 255, 255, 0.7), rgba(0, 0, 0, 0.55)));
+}
+
+/* v2 — slow hue-shifting ink */
+.stats-band__value--v2 {
+  color: var(--accent);
+  animation: stat-hue 6s linear infinite;
+}
+@keyframes stat-hue {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* v3 — serif italic (editorial) */
+.stats-band__value--v3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* v4 — neon monospace */
+.stats-band__value--v4 {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-weight: 700;
+  color: light-dark(#0f9d6c, #4ecb8b);
+  text-shadow: 0 0 14px light-dark(rgba(15, 157, 108, 0.35), rgba(78, 203, 139, 0.5));
+}
+
+/* v5 — extruded 3D stack */
+.stats-band__value--v5 {
+  color: var(--accent);
+  text-shadow:
+    0 1px 0 color-mix(in srgb, var(--accent) 70%, #000),
+    0 2px 0 color-mix(in srgb, var(--accent) 55%, #000),
+    0 3px 0 color-mix(in srgb, var(--accent) 40%, #000),
+    0 5px 8px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stats-band {
+    mask-image: none;
+  }
+  .stats-band__track {
+    animation: none;
+    flex-wrap: wrap;
+    width: auto;
+  }
+  /* hide the duplicated second half when static */
+  .stats-band__track li[aria-hidden='true'] {
+    display: none;
+  }
+  .stats-band__value--v2 {
+    animation: none;
+  }
+  .stats-band__item,
+  .stats-band__item:hover {
+    transform: none;
+    transition: none;
+  }
 }

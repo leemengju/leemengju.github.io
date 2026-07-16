@@ -5,6 +5,7 @@ period: "2026.05 - 2026.06"
 tags: [ClickHouse, MySQL, Laravel, 效能優化]
 metrics: "整月查詢 約104s → 約5s(~21×)"
 order: 5
+categories: [db-performance]
 beforeAfter:
   label: "玩家整月查詢時間"
   before: 104

@@ -5,6 +5,7 @@ period: "2026.03"
 tags: [Laravel, MySQL, Database Schema Design]
 metrics: "Single role → unlimited multi-role combinations; zero-downtime hot upgrade"
 order: 9
+categories: [fullstack, db-performance]
 ---
 
 ## Background

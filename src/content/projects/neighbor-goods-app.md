@@ -5,6 +5,7 @@ period: "2024.07 - 2024.08"
 tags: [UI/UX, Prototype, 專案管理]
 metrics: "兩個月完成 MVP 功能介面、design guideline、prototype"
 order: 14
+categories: [uiux, pm]
 ---
 
 ## 背景

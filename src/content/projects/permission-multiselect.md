@@ -5,6 +5,7 @@ period: "2026.03"
 tags: [Laravel, MySQL, 資料庫設計]
 metrics: "單一角色 → 不限數量多角色組合;零停機熱升級"
 order: 9
+categories: [fullstack, db-performance]
 ---
 
 ## 背景

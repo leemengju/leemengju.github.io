@@ -1,27 +1,23 @@
 ---
 /**
- * Floating side navigation for the home page's single-page section layout
- * (About/Skills/Experience/Projects/Education/Contact) — carried over from
- * the original Framer site. Highlights the section currently in view via
- * IntersectionObserver (no framework, consistent with the L0 motion tier).
- * Collapses to dot-only on narrow viewports.
+ * Section navigation with scrollspy (IntersectionObserver highlights the
+ * section currently in view). Generic over `items` so it serves both the
+ * home page (About/Skills/...) and project articles (per-heading TOC).
+ *
+ * Two responsive layouts from one markup:
+ *  - ≥1160px: fixed right-edge dot rail; labels fly out to the left on hover.
+ *  - <1160px: sticky top chip bar (horizontally scrollable) — the mobile
+ *    "top menu" collapse. The element is rendered in-flow at the top of the
+ *    content so position:sticky works.
  */
-import { strings, type Locale } from '../lib/i18n';
-
-interface Props {
-  locale: Locale;
+interface NavItem {
+  id: string;
+  label: string;
 }
-const { locale } = Astro.props as Props;
-const t = strings[locale];
-
-const items = [
-  { id: 'about', label: t.aboutHeading },
-  { id: 'skills', label: t.skillsHeading },
-  { id: 'experience', label: t.experienceHeading },
-  { id: 'projects', label: t.projectsHeading },
-  { id: 'education', label: t.educationHeading },
-  { id: 'contact', label: t.contactHeading }
-];
+interface Props {
+  items: NavItem[];
+}
+const { items } = Astro.props as Props;
 ---
 
 <nav class="floating-nav" aria-label="Section navigation">
@@ -48,7 +44,12 @@ const items = [
 
     const setActive = (id: string) => {
       links.forEach((link) => {
-        link.classList.toggle('is-active', link.getAttribute('data-nav-link') === id);
+        const active = link.getAttribute('data-nav-link') === id;
+        link.classList.toggle('is-active', active);
+        // Keep the active chip in view when the bar is in horizontal mode.
+        if (active && window.matchMedia('(max-width: 1160px)').matches) {
+          link.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+        }
       });
     };
 
@@ -59,17 +60,14 @@ const items = [
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
         if (visible) setActive(visible.target.id);
       },
-      { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] }
+      { rootMargin: '-35% 0px -55% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] }
     );
     sections.forEach((el) => observer.observe(el));
   }
 </script>
 
 <style>
-  /* Compact vertical dot rail pinned to the right edge. Labels don't sit in
-     the layout — they fly out to the LEFT of each dot on hover (position:
-     absolute), so the rail itself only needs ~1rem of width and never pushes
-     or overlaps content in its resting state. */
+  /* ---------- Desktop (≥1161px): fixed right dot rail ---------- */
   .floating-nav {
     position: fixed;
     right: 1.4rem;
@@ -135,13 +133,57 @@ const items = [
     }
   }
 
-  /* content is max-width 1100px + padding (~1148px); a dot rail at right:1.4rem
-     needs the side margin to stay clear of content. Below ~1160px that margin
-     is gone, so hide the rail (it's a convenience, not the only nav — the
-     header brand still returns home, and normal scrolling works). */
+  /* ---------- ≤1160px: sticky top chip bar ---------- */
   @media (max-width: 1160px) {
     .floating-nav {
+      position: sticky;
+      top: 0;
+      right: auto;
+      transform: none;
+      margin: 0 -1.5rem 0.5rem;
+      padding: 0.5rem 1.5rem;
+      background: color-mix(in srgb, var(--page-bg) 88%, transparent);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .floating-nav ul {
+      display: flex;
+      gap: 0.4rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .floating-nav ul::-webkit-scrollbar {
       display: none;
+    }
+    .floating-nav a {
+      display: inline-block;
+      padding: 0.3rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: var(--fill-softer);
+      white-space: nowrap;
+    }
+    .floating-nav__dot {
+      display: none;
+    }
+    .floating-nav__label {
+      position: static;
+      transform: none;
+      opacity: 1;
+      pointer-events: auto;
+      padding: 0;
+      border: none;
+      background: none;
+      box-shadow: none;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .floating-nav a.is-active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .floating-nav a.is-active .floating-nav__label {
+      color: #fff;
     }
   }
 </style>

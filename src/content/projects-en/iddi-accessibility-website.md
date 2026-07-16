@@ -5,6 +5,7 @@ period: "2024.06 - 2024.09"
 tags: [WCAG, UI/UX, Project Management]
 metrics: "Built a landing page + two feature modules from scratch in four months"
 order: 15
+categories: [uiux, pm]
 ---
 
 ## Background

@@ -10,6 +10,7 @@ import MetricCard from './MetricCard.astro';
 import TagRow from './TagRow.astro';
 import BeforeAfterBar from './BeforeAfterBar.astro';
 import Timeline from './Timeline.astro';
+import FloatingNav from './FloatingNav.astro';
 import type { ProjectEntry } from '../lib/projects';
 import { strings, homePath, type Locale } from '../lib/i18n';
 
@@ -19,8 +20,15 @@ interface Props {
 }
 const { project, locale = 'zh' } = Astro.props as Props;
 const t = strings[locale];
-const { Content } = await render(project);
+const { Content, headings } = await render(project);
+
+// Per-article TOC for the floating nav: the markdown's ## sections.
+const tocItems = headings
+  .filter((h) => h.depth === 2)
+  .map((h) => ({ id: h.slug, label: h.text }));
 ---
+
+{tocItems.length > 1 && <FloatingNav items={tocItems} />}
 
 <a class="back-link" href={homePath(locale)}>{t.backToHome}</a>
 
@@ -94,6 +102,9 @@ const { Content } = await render(project);
   }
   .project-body :global(h2) {
     margin-top: 2rem;
+    color: var(--accent);
+    /* keep anchor targets clear of the sticky chip bar on <1160px layouts */
+    scroll-margin-top: 4rem;
   }
   .project-body :global(table) {
     width: 100%;

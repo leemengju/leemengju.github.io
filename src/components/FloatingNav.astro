@@ -9,6 +9,8 @@
  *  - ≤1160px: a pinned top-right hamburger button; tap opens a dropdown panel
  *    of section links (closes on select / outside click / Escape).
  */
+import ChapterRail from './effects/ChapterRail.tsx';
+
 interface NavItem {
   id: string;
   label: string;
@@ -20,19 +22,10 @@ const { items } = Astro.props as Props;
 ---
 
 <nav class="floating-nav" aria-label="Section navigation">
-  {/* Desktop dot rail */}
-  <ul class="floating-nav__rail">
-    {
-      items.map((item) => (
-        <li>
-          <a href={`#${item.id}`} data-nav-link={item.id}>
-            <span class="floating-nav__dot" />
-            <span class="floating-nav__label">{item.label}</span>
-          </a>
-        </li>
-      ))
-    }
-  </ul>
+  {/* Desktop: magnifying chapter rail (item 5). Own scrollspy + scroll-on-select. */}
+  <div class="floating-nav__rail">
+    <ChapterRail client:visible items={items} />
+  </div>
 
   {/* Mobile hamburger + dropdown */}
   <div class="floating-nav__mobile">
@@ -106,7 +99,7 @@ const { items } = Astro.props as Props;
 </script>
 
 <style>
-  /* ---------- Desktop (≥1161px): fixed right dot rail ---------- */
+  /* ---------- Desktop (≥1161px): fixed right chapter rail ---------- */
   .floating-nav {
     position: fixed;
     right: 1.4rem;
@@ -117,62 +110,9 @@ const { items } = Astro.props as Props;
   .floating-nav__mobile {
     display: none;
   }
+  /* wrapper for the ChapterRail island (styles itself); hidden on mobile */
   .floating-nav__rail {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 1rem;
-  }
-  .floating-nav__rail a {
-    position: relative;
     display: block;
-    padding: 0.25rem;
-    text-decoration: none;
-    color: inherit;
-  }
-  .floating-nav__dot {
-    display: block;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: color-mix(in srgb, currentColor 30%, transparent);
-    transition: background 0.2s var(--ease-out-quart, ease), transform 0.2s var(--ease-out-quart, ease);
-  }
-  .floating-nav__rail a:hover .floating-nav__dot {
-    background: color-mix(in srgb, currentColor 60%, transparent);
-  }
-  .floating-nav__rail a.is-active .floating-nav__dot {
-    background: var(--accent);
-    transform: scale(1.5);
-  }
-  .floating-nav__label {
-    position: absolute;
-    right: calc(100% + 0.6rem);
-    top: 50%;
-    transform: translateY(-50%) translateX(0.25rem);
-    white-space: nowrap;
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 0.25rem 0.6rem;
-    border-radius: 999px;
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    box-shadow: var(--shadow);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-  .floating-nav__rail a:hover .floating-nav__label,
-  .floating-nav__rail a.is-active .floating-nav__label {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .floating-nav__dot,
-    .floating-nav__label {
-      transition: none;
-    }
   }
 
   /* ---------- ≤1160px: pinned top-right hamburger + dropdown ---------- */

@@ -9,6 +9,9 @@ import ProjectCard from './ProjectCard.astro';
 import StatsBand from './StatsBand.tsx';
 import FloatingNav from './FloatingNav.astro';
 import KineticGrid from './effects/KineticGrid.tsx';
+import LetterSwapTitle from './effects/LetterSwapTitle.tsx';
+import SmokyText from './effects/SmokyText.tsx';
+import MeshTextHeading from './effects/MeshTextHeading.tsx';
 import { strings, categoryLabels, type Locale } from '../lib/i18n';
 import { getProfile } from '../lib/profile';
 import type { ProjectEntry } from '../lib/projects';
@@ -62,7 +65,7 @@ const linkedinIcon =
 
 <section class="hero">
   <KineticGrid client:visible />
-  <h1>{t.introHeading}</h1>
+  <h1><MeshTextHeading client:visible text={t.introHeading} /></h1>
   <p class="hero__tagline">{t.introText}</p>
   <div class="hero__cta">
     {
@@ -86,13 +89,13 @@ const linkedinIcon =
 </section>
 
 <section id="about" class="section">
-  <h2>{t.aboutHeading}</h2>
+  <h2><LetterSwapTitle client:visible text={t.aboutHeading} /></h2>
   {p.about.map((para) => <p class="about__para" data-reveal>{para}</p>)}
   <StatsBand stats={p.stats} client:visible />
 </section>
 
 <section id="skills" class="section">
-  <h2>{t.skillsHeading}</h2>
+  <h2><LetterSwapTitle client:visible text={t.skillsHeading} /></h2>
   <ul class="skills">
     {
       p.skills.map((s) => (
@@ -109,7 +112,7 @@ const linkedinIcon =
 </section>
 
 <section id="experience" class="section">
-  <h2>{t.experienceHeading}</h2>
+  <h2><LetterSwapTitle client:visible text={t.experienceHeading} /></h2>
   <ol class="exp">
     {
       p.experience.map((e) => (
@@ -130,7 +133,7 @@ const linkedinIcon =
 </section>
 
 <section id="projects" class="section">
-  <h2>{t.projectsHeading}</h2>
+  <h2><LetterSwapTitle client:visible text={t.projectsHeading} /></h2>
   <div class="filter" role="group">
     <button class="filter__pill is-active" data-filter="all" type="button">{t.filterAll}</button>
     {
@@ -147,7 +150,7 @@ const linkedinIcon =
 </section>
 
 <section id="education" class="section">
-  <h2>{t.educationHeading}</h2>
+  <h2><LetterSwapTitle client:visible text={t.educationHeading} /></h2>
   <ol class="edu">
     {
       p.education.map((e) => (
@@ -168,12 +171,15 @@ const linkedinIcon =
 </section>
 
 <section id="contact" class="section">
-  <h2>{t.contactHeading}</h2>
+  <h2><LetterSwapTitle client:visible text={t.contactHeading} /></h2>
   <ul class="contact">
     <li><span class="contact__k">{t.contactEmail}</span><a href={`mailto:${p.contact.email}`}>{p.contact.email}</a></li>
     <li><span class="contact__k">{t.contactGitHub}</span><a href={p.contact.github} target="_blank" rel="noopener noreferrer">{p.contact.github.replace('https://', '')}</a></li>
     <li><span class="contact__k">{t.contactLocation}</span><span>{p.contact.location}</span></li>
   </ul>
+  <div class="footer-sign">
+    <SmokyText client:visible text={t.brand} colorVar="var(--accent)" intensity={14} />
+  </div>
 </section>
 
 <script>
@@ -504,5 +510,20 @@ const linkedinIcon =
   }
   .contact a {
     color: inherit;
+  }
+
+  /* Footer sign-off (item 15): the name drifts in as smoke on scroll. */
+  .footer-sign {
+    margin-top: 4.5rem;
+    text-align: center;
+    font-weight: 800;
+    font-size: clamp(2.25rem, 8vw, 5.5rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  @media (max-width: 600px) {
+    .footer-sign {
+      margin-top: 3rem;
+    }
   }
 </style>

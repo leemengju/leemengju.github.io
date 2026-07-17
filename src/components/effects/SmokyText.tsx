@@ -1,0 +1,166 @@
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
+
+type Phase = 'hidden' | 'appearing' | 'visible';
+
+/**
+ * Build the two smoke-in keyframe sets (a/b variants alternate per glyph).
+ * intensity 1 = crisp quick puff, 20 = heavy diffuse smoke. Ported from the
+ * Originkit "Smoky Text" buildKF, keeping only the bottomLeft drift variants
+ * used for the sign-off. The color must be a concrete value — the visible
+ * glyph is drawn by `text-shadow` while the element's own color is transparent.
+ */
+function buildKF(id: string, color: string, intensity: number): string {
+  const n = (Math.max(1, Math.min(20, intensity)) - 1) / 19; // 0–1
+  const r = (v: number) => +v.toFixed(2);
+  const peakB = Math.round(6 + n * 200); // 6px → 206px
+  const initB = Math.round(2 + n * 70); // 2px → 72px
+  const layers = 1 + Math.round(n * 3); // 1 → 4 shadow layers = more "mass"
+  const stack = (blur: number) =>
+    Array.from(
+      { length: layers },
+      (_, i) => `0 0 ${Math.round((blur * (i + 1)) / layers)}px ${color}`
+    ).join(',');
+  const peak = stack(peakB);
+  const init = stack(initB);
+  const d = 0.7 + n * 0.8; // drift distance mult 0.7 → 1.5
+  return `
+@keyframes ${id}-a{from{opacity:0;text-shadow:${init};transform:translate3d(${r(-15 * d)}rem,${r(8 * d)}rem,0) rotate(40deg) skewX(-70deg) scale(0.7)}40%{text-shadow:${peak}}to{opacity:1;text-shadow:0 0 0 ${color};transform:none}}
+@keyframes ${id}-b{from{opacity:0;text-shadow:${init};transform:translate3d(${r(-18 * d)}rem,${r(8 * d)}rem,0) rotate(40deg) skewX(70deg) scale(0.5)}40%{text-shadow:${peak}}to{opacity:1;text-shadow:0 0 0 ${color};transform:none}}
+`;
+}
+
+/**
+ * SmokyText (item 15) — text that materialises out of drifting smoke the first
+ * time it scrolls into view, used for the contact-area sign-off ("footer
+ * smoky"). Ported from the Originkit "Smoky Text" component, trimmed to the
+ * single-line, scroll-triggered case.
+ *
+ * Each glyph is a transparent character whose visible form is painted by a
+ * `text-shadow` of the resolved color, so the sign-off stays real, selectable
+ * text (an aria-label carries it for assistive tech since the glyph spans are
+ * aria-hidden). `colorVar` is resolved to a concrete rgb through a throwaway
+ * probe — the keyframes need a real color, not `currentColor`, because the
+ * element's own color is transparent. Theme-adaptive at load, like KineticGrid.
+ *
+ * Degrades to plain static text under prefers-reduced-motion.
+ */
+export default function SmokyText({
+  text,
+  colorVar = 'var(--text)',
+  intensity = 13,
+  stagger = 0.08,
+  className,
+  style,
+}: {
+  text: string;
+  colorVar?: string;
+  intensity?: number;
+  stagger?: number;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const rawId = useId();
+  const kfId = 'smt' + rawId.replace(/[^a-zA-Z0-9]/g, '');
+  const chars = useMemo(() => Array.from(text), [text]);
+  const [phase, setPhase] = useState<Phase>('hidden');
+  const [motion, setMotion] = useState(true);
+  const ref = useRef<HTMLSpanElement>(null);
+  const colorRef = useRef('#888');
+
+  // Resolve color + inject smoke keyframes. Bail (static text) on reduced-motion.
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      setMotion(false);
+      setPhase('visible');
+      return;
+    }
+    const probe = document.createElement('span');
+    probe.style.color = colorVar;
+    probe.style.display = 'none';
+    document.body.appendChild(probe);
+    const color = getComputedStyle(probe).color || '#888';
+    document.body.removeChild(probe);
+    colorRef.current = color;
+
+    const el = document.createElement('style');
+    el.textContent = buildKF(kfId, color, intensity);
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, [kfId, colorVar, intensity]);
+
+  // Fire the smoke-in once, when the sign-off scrolls into view.
+  useEffect(() => {
+    if (!motion) return;
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          setPhase('appearing');
+          const settle = 1100 + chars.length * stagger * 1000 + 900;
+          window.setTimeout(() => setPhase('visible'), settle);
+        }
+      },
+      { threshold: 0.35 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [motion, chars.length, stagger]);
+
+  // Static / reduced-motion: plain text, no shadow trick.
+  if (!motion) {
+    return (
+      <span className={className} style={{ display: 'inline-block', ...style }}>
+        {text}
+      </span>
+    );
+  }
+
+  const color = colorRef.current;
+  return (
+    <span
+      ref={ref}
+      aria-label={text}
+      className={className}
+      style={{ display: 'inline-block', color: 'transparent', ...style }}
+    >
+      {chars.map((c, i) => {
+        if (c === ' ')
+          return (
+            <span key={i} aria-hidden style={{ whiteSpace: 'pre' }}>
+              {' '}
+            </span>
+          );
+        const base: CSSProperties = { display: 'inline-block', textShadow: `0 0 0 ${color}` };
+        if (phase === 'visible')
+          return (
+            <span key={i} aria-hidden style={{ ...base, opacity: 1 }}>
+              {c}
+            </span>
+          );
+        if (phase === 'hidden')
+          return (
+            <span key={i} aria-hidden style={{ ...base, opacity: 0 }}>
+              {c}
+            </span>
+          );
+        // appearing: alternate the two smoke variants, sequential left→right stagger
+        const variant = i % 2 === 0 ? 'a' : 'b';
+        return (
+          <span
+            key={i}
+            aria-hidden
+            style={{
+              ...base,
+              animation: `${kfId}-${variant} 1.1s ${i * stagger}s cubic-bezier(0,0,0.58,1) both`,
+            }}
+          >
+            {c}
+          </span>
+        );
+      })}
+    </span>
+  );
+}

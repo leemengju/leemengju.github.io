@@ -25,3 +25,10 @@ pnpm-debug.log*
 
 # local Claude Code tooling state (not project source)
 .claude/
+
+# local work-in-progress checkpoint (never ship)
+.wip-status.md
+
+# source material only — effect snippets, logo source, CV template SVGs (not site output)
+effectsForProtfolio/
+REDESIGN-PLAN.md

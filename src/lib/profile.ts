@@ -150,9 +150,9 @@ const zh: Profile = {
   contact: {
     email: 'emy0526@gmail.com',
     github: 'https://github.com/leemengju',
-    location: '臺北市'
-    // resume: '/resume.pdf',           // TODO: 把履歷 PDF 放到 public/resume.pdf 後取消註解
-    // linkedin: 'https://www.linkedin.com/in/...'  // TODO: 補上 LinkedIn 個人頁網址
+    location: '臺北市',
+    // resume: '/resume.pdf',  // TODO: CV 由你重新規劃後放 public/resume.pdf
+    linkedin: 'https://www.linkedin.com/in/meng-ju-lee-902204231/'
   }
 };
 
@@ -253,9 +253,9 @@ const en: Profile = {
   contact: {
     email: 'emy0526@gmail.com',
     github: 'https://github.com/leemengju',
-    location: 'Taipei, Taiwan'
-    // resume: '/resume.pdf',           // TODO: uncomment once the PDF lands at public/resume.pdf
-    // linkedin: 'https://www.linkedin.com/in/...'  // TODO: fill in the LinkedIn profile URL
+    location: 'Taipei, Taiwan',
+    // resume: '/resume.pdf',  // TODO: résumé PDF at public/resume.pdf once you replan the CV
+    linkedin: 'https://www.linkedin.com/in/meng-ju-lee-902204231/'
   }
 };
 

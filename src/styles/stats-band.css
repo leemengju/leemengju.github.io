@@ -55,6 +55,8 @@
   box-shadow: var(--shadow-hover);
 }
 
+/* Uniform treatment: all values same font, same weight, accent color, no 3D
+   (per user: 數字改回主色、統一字形字體、不用立體). */
 .stats-band__value {
   display: block;
   font-size: 2.1rem;
@@ -62,6 +64,7 @@
   letter-spacing: -0.02em;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
+  color: var(--accent);
 }
 .stats-band__label {
   display: block;
@@ -69,60 +72,6 @@
   font-size: 0.8rem;
   color: var(--text-muted);
   line-height: 1.45;
-}
-
-/* v0 — gradient ink */
-.stats-band__value--v0 {
-  background: linear-gradient(120deg, var(--accent), light-dark(#b06ee8, #d9a8ff));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* v1 — brushed metal + emboss */
-.stats-band__value--v1 {
-  background: linear-gradient(175deg, light-dark(#9aa3b2, #e6ebf2) 0%, light-dark(#5b6472, #9aa3b2) 45%, light-dark(#c3cad4, #ffffff) 55%, light-dark(#78818f, #b7bfcb) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 1px 0 light-dark(rgba(255, 255, 255, 0.7), rgba(0, 0, 0, 0.55)));
-}
-
-/* v2 — slow hue-shifting ink */
-.stats-band__value--v2 {
-  color: var(--accent);
-  animation: stat-hue 6s linear infinite;
-}
-@keyframes stat-hue {
-  to {
-    filter: hue-rotate(360deg);
-  }
-}
-
-/* v3 — serif italic (editorial) */
-.stats-band__value--v3 {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-style: italic;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-/* v4 — neon monospace */
-.stats-band__value--v4 {
-  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
-  font-weight: 700;
-  color: light-dark(#0f9d6c, #4ecb8b);
-  text-shadow: 0 0 14px light-dark(rgba(15, 157, 108, 0.35), rgba(78, 203, 139, 0.5));
-}
-
-/* v5 — extruded 3D stack */
-.stats-band__value--v5 {
-  color: var(--accent);
-  text-shadow:
-    0 1px 0 color-mix(in srgb, var(--accent) 70%, #000),
-    0 2px 0 color-mix(in srgb, var(--accent) 55%, #000),
-    0 3px 0 color-mix(in srgb, var(--accent) 40%, #000),
-    0 5px 8px rgba(0, 0, 0, 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -137,9 +86,6 @@
   /* hide the duplicated second half when static */
   .stats-band__track li[aria-hidden='true'] {
     display: none;
-  }
-  .stats-band__value--v2 {
-    animation: none;
   }
   .stats-band__item,
   .stats-band__item:hover {

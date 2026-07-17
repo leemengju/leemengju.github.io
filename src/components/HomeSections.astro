@@ -60,8 +60,6 @@ const linkedinIcon =
 <FloatingNav items={navItems} />
 
 <section class="hero">
-  <div class="hero__blob hero__blob--a" aria-hidden="true"></div>
-  <div class="hero__blob hero__blob--b" aria-hidden="true"></div>
   <h1>{t.introHeading}</h1>
   <p class="hero__tagline">{t.introText}</p>
   <div class="hero__cta">
@@ -200,45 +198,6 @@ const linkedinIcon =
     border-bottom: 1px solid var(--border-soft);
     margin-bottom: 0.5rem;
     overflow: visible;
-  }
-  /* Micro-motion: two slow-floating blurred gradient blobs behind the hero. */
-  .hero__blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.45;
-    pointer-events: none;
-    z-index: -1;
-  }
-  .hero__blob--a {
-    width: 22rem;
-    height: 22rem;
-    right: 5%;
-    top: -6rem;
-    background: radial-gradient(circle at 30% 30%, var(--accent), transparent 70%);
-    animation: blob-float-a 14s ease-in-out infinite alternate;
-  }
-  .hero__blob--b {
-    width: 16rem;
-    height: 16rem;
-    right: 28%;
-    top: 2rem;
-    background: radial-gradient(circle at 60% 40%, light-dark(#c78bf2, #8f6bd8), transparent 70%);
-    opacity: 0.3;
-    animation: blob-float-b 18s ease-in-out infinite alternate;
-  }
-  @keyframes blob-float-a {
-    from { transform: translate(0, 0) scale(1); }
-    to { transform: translate(-3rem, 2rem) scale(1.12); }
-  }
-  @keyframes blob-float-b {
-    from { transform: translate(0, 0) scale(1); }
-    to { transform: translate(2.5rem, -1.5rem) scale(0.92); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .hero__blob {
-      animation: none;
-    }
   }
   .hero h1 {
     margin: 0 0 0.75rem;
@@ -469,32 +428,43 @@ const linkedinIcon =
     opacity: 0.75;
   }
 
+  /* Segmented control: one inset track holding all pills, with a single
+     sliding accent "thumb" behind the active one — reads as a considered
+     control rather than a row of loose chips. */
   .filter {
-    display: flex;
+    display: inline-flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-  .filter__pill {
-    font: inherit;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-muted);
+    gap: 0.15rem;
+    margin-bottom: 1.75rem;
+    padding: 0.3rem;
     background: var(--fill-softer);
     border: 1px solid var(--border-soft);
     border-radius: 999px;
-    padding: 0.35rem 0.95rem;
+  }
+  .filter__pill {
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    padding: 0.4rem 0.95rem;
     cursor: pointer;
-    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    transition: color 0.25s ease, background 0.25s ease;
   }
   .filter__pill:hover {
     color: var(--text);
-    border-color: var(--border-strong);
+    background: var(--fill-soft);
   }
   .filter__pill.is-active {
     color: #fff;
     background: var(--accent);
-    border-color: var(--accent);
+    box-shadow: 0 2px 8px -2px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  .filter__pill:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .project-list {

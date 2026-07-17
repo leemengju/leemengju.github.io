@@ -38,7 +38,10 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
   </head>
   <body>
     <header class="site-header">
-      <a class="site-header__brand" href={homePath(locale)}>{t.brand}</a>
+      <a class="site-header__brand" href={homePath(locale)}>
+        <img class="site-header__logo" src="/logo.svg" alt="" width="28" height="28" />
+        <span>{t.brand}</span>
+      </a>
       <a class="site-header__lang" href={altPath} aria-label={t.switcherAria}>{t.switcherLabel}</a>
     </header>
     <main>
@@ -64,10 +67,19 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     padding: 1.25rem 1.5rem;
   }
   .site-header__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
     font-weight: 700;
     letter-spacing: -0.01em;
     text-decoration: none;
     color: inherit;
+  }
+  .site-header__logo {
+    display: block;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 6px;
   }
   .site-header__lang {
     font-size: 0.8rem;

@@ -13,7 +13,7 @@ export const strings = {
     siteTitle: '李孟儒 Lance Lee ｜ 作品集',
     titleSuffix: ' ｜ 李孟儒 Lance Lee',
     introHeading: '李孟儒 Lance Lee',
-    introText: '理解使用者，讓每個細節都成為體驗的最佳註腳。',
+    introText: '讀懂使用者，讓每個細節都成為體驗的最佳註腳。',
     resumeButton: '查看履歷',
     aboutHeading: '關於我',
     skillsHeading: '專業技能',

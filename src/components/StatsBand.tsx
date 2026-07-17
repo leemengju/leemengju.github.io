@@ -32,9 +32,7 @@ export default function StatsBand({ stats }: { stats: Stat[] }) {
             key={`${stat.label}-${i}`}
             aria-hidden={i >= stats.length ? true : undefined}
           >
-            <span className={`stats-band__value stats-band__value--v${(i % stats.length) % 6}`}>
-              {stat.value}
-            </span>
+            <span className="stats-band__value">{stat.value}</span>
             <span className="stats-band__label">{stat.label}</span>
           </li>
         ))}

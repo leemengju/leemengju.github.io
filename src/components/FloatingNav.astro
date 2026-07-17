@@ -1,14 +1,13 @@
 ---
 /**
  * Section navigation with scrollspy (IntersectionObserver highlights the
- * section currently in view). Generic over `items` so it serves both the
- * home page (About/Skills/...) and project articles (per-heading TOC).
+ * section in view). Generic over `items`, so it serves both the home page
+ * and project-article TOCs.
  *
- * Two responsive layouts from one markup:
- *  - ≥1160px: fixed right-edge dot rail; labels fly out to the left on hover.
- *  - <1160px: sticky top chip bar (horizontally scrollable) — the mobile
- *    "top menu" collapse. The element is rendered in-flow at the top of the
- *    content so position:sticky works.
+ * Two layouts:
+ *  - ≥1161px: fixed right-edge dot rail; labels fly out to the left on hover.
+ *  - ≤1160px: a pinned top-right hamburger button; tap opens a dropdown panel
+ *    of section links (closes on select / outside click / Escape).
  */
 interface NavItem {
   id: string;
@@ -21,7 +20,8 @@ const { items } = Astro.props as Props;
 ---
 
 <nav class="floating-nav" aria-label="Section navigation">
-  <ul>
+  {/* Desktop dot rail */}
+  <ul class="floating-nav__rail">
     {
       items.map((item) => (
         <li>
@@ -33,36 +33,75 @@ const { items } = Astro.props as Props;
       ))
     }
   </ul>
+
+  {/* Mobile hamburger + dropdown */}
+  <div class="floating-nav__mobile">
+    <button
+      type="button"
+      class="floating-nav__toggle"
+      aria-label="Sections menu"
+      aria-expanded="false"
+      aria-controls="floating-nav-menu"
+    >
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="floating-nav__menu" id="floating-nav-menu" hidden>
+      {
+        items.map((item) => (
+          <li>
+            <a href={`#${item.id}`} data-nav-link={item.id}>{item.label}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
 </nav>
 
 <script>
-  const links = document.querySelectorAll('[data-nav-link]');
-  if (links.length > 0) {
-    const sections = Array.from(links)
-      .map((link) => document.getElementById(link.getAttribute('data-nav-link') || ''))
-      .filter((el): el is HTMLElement => el !== null);
+  // One .floating-nav per page (home OR a project article, never both).
+  const root = document.querySelector<HTMLElement>('.floating-nav');
+  if (root) {
+    const links = root.querySelectorAll<HTMLAnchorElement>('[data-nav-link]');
+    const toggle = root.querySelector<HTMLButtonElement>('.floating-nav__toggle');
+    const menu = root.querySelector<HTMLUListElement>('.floating-nav__menu');
 
-    const setActive = (id: string) => {
-      links.forEach((link) => {
-        const active = link.getAttribute('data-nav-link') === id;
-        link.classList.toggle('is-active', active);
-        // Keep the active chip in view when the bar is in horizontal mode.
-        if (active && window.matchMedia('(max-width: 1160px)').matches) {
-          link.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
-        }
+    // Scrollspy — highlight active section across BOTH rail and menu.
+    const ids = [...new Set([...links].map((l) => l.dataset.navLink!))];
+    const sections = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
+    const setActive = (id: string) =>
+      links.forEach((l) => l.classList.toggle('is-active', l.dataset.navLink === id));
+    if (sections.length) {
+      const obs = new IntersectionObserver(
+        (entries) => {
+          const vis = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (vis) setActive(vis.target.id);
+        },
+        { rootMargin: '-35% 0px -55% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] }
+      );
+      sections.forEach((el) => obs.observe(el));
+    }
+
+    // Mobile dropdown open/close.
+    if (toggle && menu) {
+      const setOpen = (open: boolean) => {
+        toggle.setAttribute('aria-expanded', String(open));
+        menu.hidden = !open;
+        root.classList.toggle('is-open', open);
+      };
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setOpen(menu.hidden);
       });
-    };
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible) setActive(visible.target.id);
-      },
-      { rootMargin: '-35% 0px -55% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] }
-    );
-    sections.forEach((el) => observer.observe(el));
+      menu.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a')) setOpen(false);
+      });
+      document.addEventListener('click', (e) => {
+        if (!root.contains(e.target as Node)) setOpen(false);
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setOpen(false);
+      });
+    }
   }
 </script>
 
@@ -73,16 +112,19 @@ const { items } = Astro.props as Props;
     right: 1.4rem;
     top: 50%;
     transform: translateY(-50%);
-    z-index: 40;
+    z-index: var(--z-nav, 40);
   }
-  .floating-nav ul {
+  .floating-nav__mobile {
+    display: none;
+  }
+  .floating-nav__rail {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
     gap: 1rem;
   }
-  .floating-nav a {
+  .floating-nav__rail a {
     position: relative;
     display: block;
     padding: 0.25rem;
@@ -95,12 +137,12 @@ const { items } = Astro.props as Props;
     height: 0.5rem;
     border-radius: 50%;
     background: color-mix(in srgb, currentColor 30%, transparent);
-    transition: background 0.2s ease, transform 0.2s ease;
+    transition: background 0.2s var(--ease-out-quart, ease), transform 0.2s var(--ease-out-quart, ease);
   }
-  .floating-nav a:hover .floating-nav__dot {
+  .floating-nav__rail a:hover .floating-nav__dot {
     background: color-mix(in srgb, currentColor 60%, transparent);
   }
-  .floating-nav a.is-active .floating-nav__dot {
+  .floating-nav__rail a.is-active .floating-nav__dot {
     background: var(--accent);
     transform: scale(1.5);
   }
@@ -121,8 +163,8 @@ const { items } = Astro.props as Props;
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
-  .floating-nav a:hover .floating-nav__label,
-  .floating-nav a.is-active .floating-nav__label {
+  .floating-nav__rail a:hover .floating-nav__label,
+  .floating-nav__rail a.is-active .floating-nav__label {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
   }
@@ -133,57 +175,83 @@ const { items } = Astro.props as Props;
     }
   }
 
-  /* ---------- ≤1160px: sticky top chip bar ---------- */
+  /* ---------- ≤1160px: pinned top-right hamburger + dropdown ---------- */
   @media (max-width: 1160px) {
     .floating-nav {
-      position: sticky;
-      top: 0;
-      right: auto;
+      position: fixed;
+      top: 0.85rem;
+      right: 0.85rem;
+      left: auto;
       transform: none;
-      margin: 0 -1.5rem 0.5rem;
-      padding: 0.5rem 1.5rem;
-      background: color-mix(in srgb, var(--page-bg) 88%, transparent);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border-soft);
     }
-    .floating-nav ul {
+    .floating-nav__rail {
+      display: none;
+    }
+    .floating-nav__mobile {
+      display: block;
+      position: relative;
+    }
+    .floating-nav__toggle {
       display: flex;
-      gap: 0.4rem;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .floating-nav ul::-webkit-scrollbar {
-      display: none;
-    }
-    .floating-nav a {
-      display: inline-block;
-      padding: 0.3rem 0.85rem;
-      border-radius: 999px;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0 0.7rem;
       border: 1px solid var(--border-soft);
-      background: var(--fill-softer);
-      white-space: nowrap;
+      border-radius: 0.7rem;
+      background: color-mix(in srgb, var(--surface) 85%, transparent);
+      backdrop-filter: blur(8px);
+      cursor: pointer;
     }
-    .floating-nav__dot {
-      display: none;
+    .floating-nav__toggle span {
+      display: block;
+      height: 2px;
+      width: 100%;
+      background: currentColor;
+      border-radius: 2px;
+      transition: transform 0.25s ease, opacity 0.2s ease;
     }
-    .floating-nav__label {
-      position: static;
-      transform: none;
-      opacity: 1;
-      pointer-events: auto;
-      padding: 0;
-      border: none;
-      background: none;
-      box-shadow: none;
-      font-size: 0.8rem;
-      color: var(--text-muted);
+    .floating-nav.is-open .floating-nav__toggle span:nth-child(1) {
+      transform: translateY(6px) rotate(45deg);
     }
-    .floating-nav a.is-active {
-      background: var(--accent);
-      border-color: var(--accent);
+    .floating-nav.is-open .floating-nav__toggle span:nth-child(2) {
+      opacity: 0;
     }
-    .floating-nav a.is-active .floating-nav__label {
-      color: #fff;
+    .floating-nav.is-open .floating-nav__toggle span:nth-child(3) {
+      transform: translateY(-6px) rotate(-45deg);
+    }
+    .floating-nav__menu {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      min-width: 11rem;
+      list-style: none;
+      margin: 0;
+      padding: 0.4rem;
+      display: grid;
+      gap: 0.1rem;
+      background: var(--surface);
+      border: 1px solid var(--border-soft);
+      border-radius: 0.85rem;
+      box-shadow: var(--shadow-hover);
+    }
+    .floating-nav__menu a {
+      display: block;
+      padding: 0.55rem 0.85rem;
+      border-radius: 0.55rem;
+      text-decoration: none;
+      color: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .floating-nav__menu a:hover {
+      background: var(--fill-soft);
+    }
+    .floating-nav__menu a.is-active {
+      color: var(--accent);
+      background: var(--accent-soft);
     }
   }
 </style>

@@ -8,6 +8,7 @@
 import ProjectCard from './ProjectCard.astro';
 import StatsBand from './StatsBand.tsx';
 import FloatingNav from './FloatingNav.astro';
+import KineticGrid from './effects/KineticGrid.tsx';
 import { strings, categoryLabels, type Locale } from '../lib/i18n';
 import { getProfile } from '../lib/profile';
 import type { ProjectEntry } from '../lib/projects';
@@ -60,6 +61,7 @@ const linkedinIcon =
 <FloatingNav items={navItems} />
 
 <section class="hero">
+  <KineticGrid client:visible />
   <h1>{t.introHeading}</h1>
   <p class="hero__tagline">{t.introText}</p>
   <div class="hero__cta">
@@ -197,7 +199,14 @@ const linkedinIcon =
     padding: 4.5rem 0 2.5rem;
     border-bottom: 1px solid var(--border-soft);
     margin-bottom: 0.5rem;
-    overflow: visible;
+    overflow: hidden;
+  }
+  /* keep hero content above the KineticGrid canvas background */
+  .hero > h1,
+  .hero > .hero__tagline,
+  .hero > .hero__cta {
+    position: relative;
+    z-index: 1;
   }
   .hero h1 {
     margin: 0 0 0.75rem;

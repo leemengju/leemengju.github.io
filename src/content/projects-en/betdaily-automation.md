@@ -15,34 +15,85 @@ beforeAfter:
 
 ## Background
 
-Risk-control had to manually query the prior day's per-game bet amounts each dawn, converting and entering them into Excel game by game — ~20 min/day, with no way to tell whether the entries were even correct. Numbers were filled in by "days-since-launch" by hand, so mis-entries and omissions went completely undetected, and the fixed Excel columns meant games could not be reordered for cross-game comparison. After launch, new pain points surfaced: a re-launched game required recomputation from that day, query combinations could not be remembered, and export ordering was unintuitive.
+> [!IMPORTANT]
+> **Core pain point: 20 minutes a day filling in Excel — and no way to know whether the entries were even correct.**
 
-## Scope
+The report touched three tiers of users:
 
-Replaced manual entry with a Kernel scheduled job that auto-computes the statistics each dawn, plus line-chart + draggable-table visualization, one-click UI re-run recovery, and query template memory.
+- **Risk-control (execution layer)**: each dawn had to manually query the prior day's per-game bet amounts, fill Excel, and convert game by game — 20 minutes of repetitive labor. After automation they moved from "data mover" back to their actual job of analysis and reporting.
+- **Head of operations (strategy layer)**: relied on risk-control's Excel to set strategy, but the fixed Excel columns meant games could not be compared or reordered, and the numbers could not be verified. After the rework they can read line charts directly for cross-game trend comparison, with export order aligned to launch date.
+- **Chief executive (review layer)**: periodically reviews the report and previously had to accept numbers that "might or might not be right." Once the data came straight from a system tally against the DB, mis-entry was eliminated at the source and the reviewed numbers are trustworthy.
 
-## Challenges
+Original pain points:
 
-All 6 pain points (manual time cost, no verification, difficult query comparison, re-run needs, no memory of query combinations, export ordering issues) had to be solved at once, without disrupting the correctness of the existing daily schedule.
+- **Daily repetitive labor**: each dawn, manually query the prior day's per-game bet amounts and enter them into Excel, converting one game at a time — 20 minutes a day.
+- **No verification**: numbers were filled in by "days-since-launch" by hand, so mis-entries and omissions went undetected and confidence was low.
+- **Hard to query and compare**: fixed Excel columns meant games could not be reordered, making game-anchored cross-comparison a chore.
 
-## Contributions
+New pain points surfaced after launch:
 
-- Built the daily statistics pipeline (covering 40 games, ~10 s per run) sourcing data directly from DB detail tables, eliminating mis-entry at the source.
-- Front-end 60-day trends via v-charts line charts, paired with vuedraggable so table columns can be freely dragged and reordered, supporting cross-game comparison decisions.
-- Added one-click UI re-run (triggered by selecting a game + launch date; operations are written to the back-office log for auditability) and template management (create common game combinations, apply with one click).
-- Resolved the pitfall of Laravel `update()` returning 0 affected rows when data is unchanged, which was misread as "record not found" and made template edits fail; and the pitfall of el-select clear triggering `onChange(null)` and wiping all selected games.
+- **Re-run need**: a game was re-launched and management wanted the count restarted from that day, but the report still queried from the old launch date and couldn't be corrected.
+- **No memory of query combinations**: every time the page opened, games had to be re-selected from scratch; common combinations couldn't be saved.
+- **Export ordering**: exported columns weren't intuitively ordered — the oldest game should be on the left, the newest on the right.
 
-## Impact
+## Goals
 
-Daily manual work dropped from 20 minutes to 0 (fully automated via Kernel); all 6 pain points solved, with numbers sourced directly from DB detail tables — verifiable and auditable.
+- Replace manual entry with a Kernel scheduled job, solving the daily labor and the lack of verification.
+- Use v-charts line charts + a vuedraggable draggable table, solving the query/compare difficulty and export ordering.
+- Add a re-run feature (UI + CLI) for recomputation after a re-launch.
+- Add template management to remember query combinations.
 
-## Key Technical Decisions & Pitfalls
+## Key Highlights
 
-### Worst pitfall 1: `update()` returning 0 rows misread as "record not found"
+1. **Daily manual work zeroed out**: a Kernel job runs the statistics pipeline automatically at 01:00, accumulating 60 days of bet amounts from launch date with no human involvement.
+2. **Verifiable numbers**: data comes straight from the game detail database — a DB tally replaces manual Excel entry, eliminating mis-entry at the source.
+3. **Multi-game visual analysis**: v-charts line charts show each game's 60-day trend, and vuedraggable lets table columns be dragged and reordered at will, supporting cross-game comparison decisions.
+4. **Re-run recovery for any game**: selecting a game + launch date in the UI triggers a re-run; the operation is written to the back-office operation log so history is auditable.
+5. **Template-remembered query combinations**: users can create game templates (a template name + a game list) and apply one from the main page via el-select with a single click, with no re-selecting.
 
-When editing a template, if the user submitted content identical to the existing data, the API returned a failure — leaving users confused: "I didn't change anything, why can't I save?"
+## Solution & Architecture
 
-The root cause was that the original code treated `update()`'s affected rows = 0 as "record not found" and reported failure. But Laravel's `update()` returns 0 affected rows whenever the data is unchanged — that means "nothing changed," not "not found." The fix was to drop that check entirely: if `update()` doesn't throw, it succeeded.
+### Back-end pipeline (Kernel, daily at 01:00)
+
+```mermaid
+flowchart LR
+  K["Kernel schedule<br/>daily 01:00"] --> A["Add newly launched games"]
+  A --> B["Confirm each game's launch date"]
+  B --> C["Tally yesterday's bets"]
+  C --> D["shift 60-day array<br/>write to record table"]
+```
+
+| Step | Description |
+|------|-------------|
+| 1 Add new games | Add games not yet recorded from the master game list into the launch-date marker table |
+| 2 Confirm launch date | Query the game database (open=1) + each game's first created-time to confirm the launch date |
+| 3 Tally bets | For games in `finished` state, tally yesterday's bets and shift them into the 60-day array |
+| 4 Chain | Chain 1 → 2 → 3 into a single pipeline |
+
+> [!NOTE]
+> Currently covers 40 games; a single pipeline run takes ~10 s. A Slack alert fires on Kernel failure; if data looks off, a one-click UI re-run recomputes it.
+
+### Data tables
+
+| Table | Purpose |
+|-------|---------|
+| Bet-record table | One row per game, storing a 60-day array of bet-amount floats as JSON (unit: 100M, floored to 1 decimal) |
+| Launch-date marker table | Records each game's launch date and tally state (notYet / finished) |
+| Template-settings table | Template name + a comma-separated list of game ids |
+
+### Front-end components & visualization
+
+- **Main page**: game selector + template el-select + line chart (v-charts) + draggable table (vuedraggable) + el-table + export. The line chart auto-renders 60-day trends, and when comparing a few games the tooltip shows each game's bet amount for a given day precisely; in the table the day column is pinned on the left while game columns drag freely, with a chip row showing the current column order.
+- **Re-run**: game el-select + launch-date el-date-picker + a confirmation dialog + an operation-log table.
+- **Templates**: a template-list management dialog + an add/edit template dialog (filtering out discontinued and non-listed games).
+
+Multi-version log compatibility: the re-run operation log spanned a column change, so the read side displays with a fallback like `gameName ?? gameId` to keep old records from showing blanks.
+
+## Worst Pitfalls
+
+### Pitfall 1: `update()` returning 0 rows misread as "record not found"
+
+When editing a template, if the user submitted content identical to the existing data, the API returned a failure — leaving users confused: "I didn't change anything, why can't I save?" The root cause was that the original code treated `update()`'s affected rows = 0 as "record not found" and reported failure. But Laravel's `update()` returns 0 affected rows whenever the data is unchanged — that means "nothing changed," not "not found." The fix drops that check entirely: if `update()` doesn't throw, it succeeded. And precisely because affected rows = 0 means nothing changed rather than not found, any settings-style edit that allows resubmitting the same value must never gauge success by affected rows.
 
 ```php
 // Wrong: a settings page that allows submitting the same value
@@ -60,13 +111,9 @@ DB::table('bet_report_template')->where('id', $id)->update($data);
 return $this->success();
 ```
 
-Lesson: an ORM's affected rows = 0 means "nothing changed," not "not found." Any settings-style edit that allows resubmitting the same value must never gauge success by affected rows.
+### Pitfall 2: el-select clear event wiping all selected games
 
-### Worst pitfall 2: el-select clear event wiping all selected games
-
-The template el-select on the main page had `clearable`; after the user clicked the clear (×) icon, the entire set of manually selected games vanished.
-
-The root cause: `@change` also fires on clear, passing a value of `null`; downstream code used it to `find()` the template, got `undefined`, then parsed that into an empty array — overwriting the existing selection. The fix was to early-return on `null` at the top of the handler.
+The template el-select on the main page had `clearable`; after the user clicked the clear (×) icon, the entire set of manually selected games vanished. The root cause: `@change` also fires on clear, passing a value of `null`; downstream code used it to `find()` the template, got `undefined`, then parsed that into an empty array — overwriting the existing selection. The fix is to early-return on `null` at the top of the handler — with a `clearable` + `@change` component, clearing fires the same event with `null`, so the handler must handle `null` up front, or the downstream find/parse turns around and wipes the user's existing data.
 
 ```js
 function onTemplateChange (id) {
@@ -76,9 +123,60 @@ function onTemplateChange (id) {
 }
 ```
 
-Lesson: with a `clearable` + `@change` component, clearing fires the same event with `null`, so the handler must handle `null` up front — otherwise the downstream find/parse turns around and wipes the user's existing data.
+## Key Trade-offs
 
-### Key trade-offs
+1. **Inject legacy games from the front-end rather than change the DB schema**: a few early-launched games fell outside the standard game-list logic. Rather than alter the table structure or pollute the statistics pipeline for those few, they were defined as a front-end constant and injected via the game selector's parameter. The cost is that these ids are hard-coded in the front-end and adding more would require a code change — but there's no plan to add to this legacy batch, so this trades minimal intrusion for a clean pipeline.
+2. **Keep the scheduled-job class names, only reorganize controller namespaces**: as the feature grew, the controller originally named after "60-day bet amounts" had taken on template and re-run responsibilities, so it was folded into a unified namespace and subfolder. But the scheduled job's class names were left untouched — class names don't affect routing or users, and renaming them would only risk disrupting the existing daily schedule, which isn't worth it.
 
-- **Inject legacy games from the front-end rather than change the DB schema**: a few early-launched games fell outside the standard game-list logic. Rather than alter the table structure or pollute the statistics pipeline for those few, they were defined as a front-end constant and injected via the game selector's parameter. The cost is that these ids are hard-coded in the front-end and adding more would require a code change — but there's no plan to add to this legacy batch, so this trades minimal intrusion for a clean pipeline.
-- **Keep the scheduled-job class names, only reorganize controller namespaces**: as the feature grew, the controller originally named after "60-day bet amounts" had taken on template and re-run responsibilities, so it was folded into a unified namespace and subfolder. But the scheduled job's class names were left untouched — class names don't affect routing or users, and renaming them would only risk disrupting the existing daily schedule, which isn't worth it.
+## Quantified Results
+
+| Item | Before | After |
+|------|--------|-------|
+| Daily manual work time | ~20 hours accumulated over a game's 60-day cycle | 0 hours (fully automated via Kernel) |
+| Verifiability | Manual entry; mis-entry undetectable | Tallied straight from DB detail; auditable |
+| Reorderable games | Fixed Excel columns | Freely draggable via vuedraggable |
+| Re-run / launch-date fix | Not possible | One-click UI re-run + back-office operation log audit |
+| Remembered query combinations | Re-selected every time | Applied from a template in one click |
+| Export ordering | No rule | Ordered by launch time (oldest on the left) |
+| Game coverage | — | 40 games, ~10 s per pipeline run |
+| Pain points solved | 0/6 | 6/6 |
+
+## Future Plans
+
+- **Games beyond 60 days**: the bet-record table is a fixed 60-day array and keeps shifting off the earliest day past 60 days; if a "query all history" need arises, it would move to a partitioned table or a separate history table.
+- **Paginated re-run operation log**: each dialog open currently loads the first page; if re-runs become frequent the history could grow long, so a date filter can be added later.
+
+## Code Structure Reorganization
+
+Illustrated by one reorganization done as the feature grew: what began as a single controller + a flat page was folded into a module namespace with subfolders.
+
+**Before (flat)**
+
+```
+app/Http/Controllers/
+  ReportController.php        # named after "60-day bet amounts", single responsibility
+
+src/page/report/
+  MainReport.vue              # flat page, no sub-component separation
+```
+
+**After (module namespace + subfolders)**
+
+```
+app/Http/Controllers/betDaily/
+  ReportController.php         # all original methods + re-run / back-office log read
+  TemplateSettingsController.php  # template CRUD
+
+src/page/report/betDaily/
+  MainReport.vue               # main page (split toolbar, template selection)
+  rerun/
+    RerunPanel.vue             # re-run dialog + confirmation
+    OperationLogTable.vue      # paginated back-office operation log table
+  template/
+    TemplateManager.vue        # template list management
+    TemplateEditor.vue         # add / edit template
+    templateApi.js             # template API + parsing
+```
+
+> [!NOTE]
+> Any module spanning more than one Vue/JS file is wrapped in its own subfolder (rerun/ has 2, template/ has 3), so the page directory doesn't flatten into something hard to maintain.

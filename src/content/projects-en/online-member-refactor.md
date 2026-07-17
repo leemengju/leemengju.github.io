@@ -15,32 +15,75 @@ beforeAfter:
 
 ## Background
 
-The legacy version was a single page component (712 lines) with five years of accumulated patches, plus a 232-line auxiliary settings file. One tangled API returned three kinds of data — summary, game list, and player list — all mixed together, so a problem in any one block broke the whole page, and none of them could be paged or cached independently. Worse, the summary values were not plain numbers but color-coded HTML strings (e.g. `<span style="color:red">123</span>`), and figures from different versions were joined by direct string concatenation, leaving the front end unable to do any arithmetic on them. Four teams each had very different pain points: the CEO wanted the whole thing readable at a glance on a phone, operations wanted to clearly understand what each number meant, the tech lead needed a data structure that could sustain over a hundred games with up to 11 multipliers, and risk-control wanted column meanings they could read without asking an engineer every time.
+The legacy version was a single page component (712 lines) with five years of accumulated patches, plus a 232-line auxiliary settings file. One tangled API returned three kinds of data — summary, game list, and player list — all mixed together, so a problem in any one block broke the whole page, and none of them could be paged or cached independently. Worse, the summary values were not plain numbers but color-coded HTML strings (e.g. `<span style="color:red">123</span>`), and figures from different versions were joined by direct string concatenation, leaving the front end unable to do any arithmetic on them.
 
-## Scope
+Four teams each raised very different pain points:
 
-Split the page into three independent modules — summary, game detail, and member live status — each with a dedicated API, independent pagination logic and column definitions, and made the summary aggregation formula adjustable on the front end in real time, so requirement changes no longer required touching the back end. The originally planned auto-refresh countdown was dropped.
+- **CEO**: to preview everything at a glance on a phone, all games' headcount and bet amounts were crammed into a single row — information density too high, hard to read.
+- **Operations director**: the report used color strings (`<span style="color:red">123</span>`) to distinguish parameters, figures from different versions were concatenated as strings, and the output was unrecognizable — impossible to tell what each number meant.
+- **Tech lead**: the columns were originally designed for only four multiplier (gainRate) slots, but there are now over a hundred games with up to 11 distinct multipliers, which the old framework simply could not hold; combined with five years of patches, the data structure was unreadable and badly needed a refactor.
+- **Risk-control**: needs to report figures regularly, but because column meanings were unclear, often had to ask a developer to confirm what a column meant.
 
-## Challenges
+> [!IMPORTANT]
+> The legacy tangled API returned summary, game list, and player list all in one response, and summary values came back as color-coded strings — leaving the front end unable to handle any one block independently.
 
-The core challenge was satisfying four teams' heterogeneous needs in a single release without adding any user training cost. The thorniest part was root-causing the summary bug where "color strings added together turned into one strange long string": operations reported the total headcount was sometimes correct and sometimes a very long string that started with the right number. It was initially assumed to be an intermittent API anomaly, but after checking the back-end logs and confirming the numbers were all correct, the real cause turned out to be that the summary values were wrapped as HTML strings, so the front-end `+` operator concatenated two strings instead of adding them. A second challenge was the huge variance in multiplier columns across games (anywhere from 1 to 11), which the old four-column framework simply could not hold.
+## Goals
 
-## Contributions
+Split the "online member" page into three independent modules (summary / game detail / member live status), each with a dedicated API, independent pagination logic, and column definitions; and make the summary formula adjustable on the front end, so the back end no longer has to change on every request.
 
-- On the back end, split the single tangled API into 3 APIs with clear responsibilities (summary aggregation, game detail list, player live status), each independently pageable and cacheable, with independent call timing and error handling.
-- On the front end, reduced the main file from 712 lines to a ~190-line parent coordinator plus 7 sub-modules; each module owns only its own template and column definitions, so new requirements go into the relevant sub-module without affecting other tabs.
-- Added a formula-adjustment dialog letting users check "which columns to sum" directly in the UI — adjusting the definition of the main-lobby headcount without any code change.
-- Dynamically supported each game's 1–11 multipliers: unified the output to four multiplier columns padded with 0, and mapped by index rather than by value name (the same index maps to different multiplier values across games); card-and-board games with more than four multipliers are silently filtered in game-detail mode without affecting the headcount-overview mode.
+Out of scope: the auto-refresh countdown (requirement withdrawn, removed).
 
-## Impact
+## Highlights
 
-The CEO's mobile-friendly layout, operations' clear numeric columns, the tech lead's structural refactor, and risk-control's explicit column meanings all shipped in the same release, with no extra UI training required. With summary values now pure numbers, the front end can do arithmetic directly and the string-concatenation corruption is gone; and with the API split into 3, a problem in one block no longer drags down the whole page.
+- **Four teams satisfied in one release**: the CEO's mobile-friendly row, operations' clear columns, the tech lead's structural refactor, and risk-control's explicit numbers — all shipped in the same release.
+- **Batch filtering by hall category**: the game selector can batch-filter by "hall category" (multiplier / type), far better for analysis than ticking games one by one, sharply cutting the cost of filtering.
+- **Front-end-adjustable summary formula**: the CEO frequently changes the definition of "total lobby headcount"; a formula-adjustment dialog lets anyone tweak the aggregation logic live in the UI, no code change needed.
+- **Multi-view game detail**: added a per-hall headcount (game detail) mode where each of the hundred-plus games shows four per-hall headcount columns (`gainRate1`~`gainRate4`), padded with 0 when fewer than four, with card-and-board games excluded automatically.
+- **Color coding removed**: summary values changed from color strings to pure numeric columns, so the front end does arithmetic directly and the string-concatenation corruption is gone.
 
-## Key Technical Decisions & Pitfalls
+## Quantified Results
 
-**Worst pitfall — the summary values were "HTML strings concatenated," not numbers added**
+| Metric | Before | After |
+|------|--------|--------|
+| Front-end main file lines | 712 lines (single page component) | ~190 lines (parent) + 7 sub-modules |
+| Auxiliary settings file | 232 lines (mixed into one file) | 3 independent column-definition files |
+| API count | 1 (all-in-one) | 3 (each with a clear responsibility) |
+| Supported multiplier columns | 4 (hard-coded) | dynamic gainRate1~4 (auto-padded with 0) |
+| Summary formula adjustment | change back-end code | live front-end UI adjustment |
+| Color-coding dependency | yes (no arithmetic possible) | none (pure numbers) |
+| Export coverage | player list only | player list + game detail |
 
-The summary values were originally returned as color-tagged HTML strings, with figures from different versions joined together as strings. When the front end applied `+`, the result was concatenation, not addition:
+## Solution & Architecture
+
+### API Split (Laravel)
+
+The legacy tangled API packed all three blocks into one response, so a problem in any one block affected the whole page and none could be paged or cached individually. After the split, each API has a single responsibility, with independent call timing, pagination logic, and error handling.
+
+| Old API | New API | Responsibility |
+|--------|--------|------|
+| single tangled API (all-in-one) | summary-aggregation API | three-metric summary |
+| same as above | game-detail-list API | game detail (supports headcount overview / bet amount / game detail — three views) |
+| same as above | player-live-status API | player live-status list (with pagination + export) |
+
+### Vue Component Split
+
+The legacy version concentrated all logic in a single page component, so any change meant locating it within 700 lines; after splitting into sub-components, each module owns only its own template and columns, the parent only coordinates, and new requirements go into the relevant sub-module without affecting other tabs.
+
+| Old structure | New structure | Responsibility |
+|--------|--------|------|
+| single page component (712 lines) | parent coordinator component | parent coordination |
+| auxiliary settings file (232 lines) | summary-render component + summary-normalization module + column definitions | summary rendering and formula |
+| same as above (game-detail part) | game-detail component + column definitions | game-detail three views |
+| same as above (player-list part) | player-live-status component + column definitions | player live status |
+
+## Difficulties & Pitfalls
+
+**Worst pitfall — summary values were concatenated as strings**
+
+- *Symptom*: the operations director reported that "the total game headcount is sometimes `123456`, sometimes a weird long string starting with `1234`."
+- *Misdiagnosis*: assumed an intermittent API response-format anomaly; checked the server log and confirmed the numbers were correct.
+- *Real root cause*: the legacy summary value was assembled directly into `"<span>123</span><span>456</span>"`, and the front-end `+` operator joined the two strings instead of adding them.
+- *Fix*: the back end returns pure numbers only, and the front end does the aggregation uniformly.
 
 ```js
 // Symptom: the back end returned tagged strings, not numbers
@@ -50,12 +93,60 @@ a + b;            // "…123…456" → a weird long string on screen, not 579
 Number(123) + Number(456); // 579 → fix: back end returns pure numbers, front end does the math
 ```
 
-Because the back-end logs showed correct numbers, it was first misdiagnosed as an intermittent API glitch; the real root cause was a front-end type issue. The fix was to have the back end return pure numbers and let the front end do the aggregation. The lesson is simple: summary values must be `number`, never carrying any HTML tags.
+Because the back-end logs showed correct numbers, it was first misdiagnosed as an intermittent API glitch, and it took a detour to trace the real cause to a front-end type issue; that is exactly why the fix hardened the rule that summary values may only be returned as `number` and must never carry any HTML tag.
 
-**Trade-off 1 — formula adjustment on the front end, not the back end**
+A few other pitfalls cleared along the way:
 
-The rejected option was to have the back end compute the "total headcount" and let the front end just display it. It was rejected because the CEO frequently changes the definition of "which kinds of people count toward the total" — on the back end, every change would mean a code change plus a redeploy, whereas on the front end it is just a config change the user makes in the UI. The checkbox state intentionally resets on refresh — the CEO's adjustments are mostly ad hoc and don't need to be persisted.
+- **Removing color strings**: the legacy summary values were strings carrying `<span>` tags, so splitting them required changing the Laravel response format, the Vue display logic, and the aggregation calculation all at once — three places that had to move together.
+- **Asymmetric gainRate columns**: the multiplier list length varies across games (1–11); the old version padded some with 0 and simply didn't show others, an inconsistent logic. This was unified to output `gainRate1`~`gainRate4`, always padding with 0 when fewer than four, mapped by the multiplier list's index (not by value name, since the same index maps to different multiplier values across games).
+- **Excluding card-and-board games**: card-and-board games have more than four gainRate values and must be silently filtered in game-detail mode (excluded on the back end, still selectable in the UI), but the filtering must not affect the headcount-overview mode.
 
-**Trade-off 2 — game detail is not paginated; full client-side sort instead**
+## Key Trade-offs
 
-The rejected option was pagination plus server-side sort (mirroring the existing headcount overview). It was rejected because the game-detail dataset is just the number of games (roughly 50–100 rows after excluding card-and-board games), so a full client-side sort is more than sufficient; whereas a paginated sort only sorts the current page, contrary to the user's expectation of sorting everything. So the back end returns the full set at once and the front end does the client-side sort.
+**Formula adjustment on the front end, not the back end**
+
+- Rejected option: have the back end compute the "total headcount" and let the front end just display the result.
+- Reason for rejection: the CEO frequently changes "which kinds of people count toward the total"; on the back end each change would mean a code change plus a deploy, whereas on the front end it is just a config change.
+- Choice: a formula-adjustment dialog lets the user tick "which columns to sum" in the UI, with the result held in front-end state and reset on refresh (intentional design, since the CEO's adjustments are mostly ad hoc and don't need to be persisted).
+
+**Game detail is not paginated**
+
+- Rejected option: pagination + server-side sort (mirroring the existing headcount overview).
+- Reason for rejection: the game-detail dataset is just the number of games (roughly 50–100 rows after excluding card-and-board), so a full front-end sort is more than enough; a paginated sort only sorts the current page, contrary to the user's expectation of sorting everything.
+- Choice: the back end returns the full set at once and hides pagination, and the front end does the client-side sort.
+
+## Future Plans
+
+- The per-hall headcount column labels (named by multiplier / hall) are currently hard-coded in the column-definition file, and would need updating in sync if the gainRate order changes in the future.
+- The formula-adjustment dialog's checkbox state resets on refresh, which is an intentional design (the CEO's adjustments are ad hoc and don't need to be persisted).
+- Game detail currently aggregates all member types (formal + offline + trial + no-account + personal-seat); splitting them out by type would require additional columns.
+
+## File Structure
+
+**Before (deleted)**
+
+```
+Online Member page/
+├── single page component   (712 lines, everything mixed together)
+└── auxiliary settings file (232 lines)
+```
+
+**After (added)**
+
+```
+Online Member page/
+├── parent coordinator component    (~190 lines, coordination only)
+├── summary module/
+│   ├── summary-render component
+│   ├── summary-normalization module
+│   └── column definitions
+├── game-detail module/
+│   ├── game-detail component       (three-view switching)
+│   └── column definitions          (headcount overview / game detail)
+├── player-live-status module/
+│   ├── player-live-status component
+│   └── column definitions
+└── formula-adjustment dialog       (formula-adjustment UI)
+```
+
+The single refactor touched 13 files with a net change of about +928 / -1068 lines, with the new structure fully replacing the old monolithic file.

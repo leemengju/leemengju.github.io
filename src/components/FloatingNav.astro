@@ -177,6 +177,11 @@ const { items } = Astro.props as Props;
       border-radius: 0.85rem;
       box-shadow: var(--shadow-hover);
     }
+    /* the display:grid above outranks the UA [hidden]{display:none}; restore it
+       so the menu is collapsed by default and the toggle can close it */
+    .floating-nav__menu[hidden] {
+      display: none;
+    }
     .floating-nav__menu a {
       display: block;
       padding: 0.55rem 0.85rem;

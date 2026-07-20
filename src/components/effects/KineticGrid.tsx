@@ -205,7 +205,16 @@ export default function KineticGrid({
     <div
       ref={hostRef}
       aria-hidden="true"
-      style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        // fade the mesh out toward the bottom so it dissolves into the next
+        // section instead of ending on a hard edge (item 2)
+        WebkitMaskImage: 'linear-gradient(to bottom, #000 40%, transparent 94%)',
+        maskImage: 'linear-gradient(to bottom, #000 40%, transparent 94%)',
+      }}
     >
       <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
     </div>

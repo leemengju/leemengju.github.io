@@ -17,7 +17,7 @@ const { project, locale = 'zh' } = Astro.props as Props;
 const categories = (project.data.categories ?? []).join(' ');
 ---
 
-<li class="project-card" data-reveal data-categories={categories} data-tilt>
+<li class="project-card" data-reveal data-categories={categories}>
   <a href={projectPath(project.id, locale)}>
     <div class="project-card__body">
       <span class="project-card__title">{project.data.title}</span>
@@ -29,36 +29,18 @@ const categories = (project.data.categories ?? []).join(' ');
   </a>
 </li>
 
-<script>
-  const MAX_DEG = 4;
-  const fine = window.matchMedia('(pointer: fine)').matches;
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (fine && !reduced) {
-    document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((card) => {
-      let raf = 0;
-      card.addEventListener('mousemove', (e) => {
-        const r = card.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width - 0.5;
-        const py = (e.clientY - r.top) / r.height - 0.5;
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => {
-          card.style.transform = `perspective(800px) rotateY(${px * MAX_DEG}deg) rotateX(${-py * MAX_DEG}deg)`;
-        });
-      });
-      card.addEventListener('mouseleave', () => {
-        cancelAnimationFrame(raf);
-        card.style.transform = '';
-      });
-    });
-  }
-</script>
-
 <style>
   .project-card {
     height: 100%;
     transition: transform 0.25s ease;
-    transform-style: preserve-3d;
-    will-change: transform;
+  }
+  .project-card:hover {
+    transform: translateY(-4px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project-card:hover {
+      transform: none;
+    }
   }
   .project-card a {
     position: relative;

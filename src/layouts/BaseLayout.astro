@@ -4,7 +4,6 @@ import '../styles/code-blocks.css';
 import DiagramBlock from '../components/DiagramBlock.astro';
 import RevealScript from '../components/RevealScript.astro';
 import BackToTop from '../components/BackToTop.astro';
-import CursorArc from '../components/CursorArc.astro';
 import { strings, localeFromPath, alternatePath, homePath } from '../lib/i18n';
 
 interface Props {
@@ -29,6 +28,10 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
+    {/* "Oi" display face — used for the stat-card numbers (items 5/6) */}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Oi&display=swap" rel="stylesheet" />
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     {ogImage && <meta property="og:image" content={new URL(ogImage, Astro.site)} />}
@@ -50,7 +53,6 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     <RevealScript />
     <DiagramBlock />
     <BackToTop />
-    <CursorArc />
   </body>
 </html>
 

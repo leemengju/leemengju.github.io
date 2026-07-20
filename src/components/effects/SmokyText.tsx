@@ -62,12 +62,16 @@ export default function SmokyText({
   const rawId = useId();
   const kfId = 'smt' + rawId.replace(/[^a-zA-Z0-9]/g, '');
   const chars = useMemo(() => Array.from(text), [text]);
-  const [phase, setPhase] = useState<Phase>('hidden');
+  // Start 'visible' so SSR / no-JS renders the sign-off as plain visible text —
+  // if hydration never runs, the name is still shown (never a blank footer).
+  // On mount we drop to 'hidden' and smoke it in when it scrolls into view.
+  const [phase, setPhase] = useState<Phase>('visible');
   const [motion, setMotion] = useState(true);
   const ref = useRef<HTMLSpanElement>(null);
   const colorRef = useRef('#888');
 
-  // Resolve color + inject smoke keyframes. Bail (static text) on reduced-motion.
+  // Resolve color, inject keyframes, and arm the scroll-triggered smoke-in.
+  // Reduced motion → stay as plain visible text.
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
@@ -83,31 +87,33 @@ export default function SmokyText({
     document.body.removeChild(probe);
     colorRef.current = color;
 
-    const el = document.createElement('style');
-    el.textContent = buildKF(kfId, color, intensity);
-    document.head.appendChild(el);
-    return () => el.remove();
-  }, [kfId, colorVar, intensity]);
+    const styleEl = document.createElement('style');
+    styleEl.textContent = buildKF(kfId, color, intensity);
+    document.head.appendChild(styleEl);
 
-  // Fire the smoke-in once, when the sign-off scrolls into view.
-  useEffect(() => {
-    if (!motion) return;
+    // hide, then reveal via smoke when scrolled into view
+    setPhase('hidden');
     const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          io.disconnect();
-          setPhase('appearing');
-          const settle = 1100 + chars.length * stagger * 1000 + 900;
-          window.setTimeout(() => setPhase('visible'), settle);
-        }
-      },
-      { threshold: 0.35 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [motion, chars.length, stagger]);
+    let io: IntersectionObserver | null = null;
+    if (el) {
+      io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            io?.disconnect();
+            setPhase('appearing');
+            const settle = 1100 + chars.length * stagger * 1000 + 900;
+            window.setTimeout(() => setPhase('visible'), settle);
+          }
+        },
+        { threshold: 0.35 }
+      );
+      io.observe(el);
+    }
+    return () => {
+      styleEl.remove();
+      io?.disconnect();
+    };
+  }, [kfId, colorVar, intensity, chars.length, stagger]);
 
   // Static / reduced-motion: plain text, no shadow trick.
   if (!motion) {

@@ -55,14 +55,18 @@
   box-shadow: var(--shadow-hover);
 }
 
-/* Uniform treatment: all values same font, same weight, accent color, no 3D
-   (per user: 數字改回主色、統一字形字體、不用立體). */
+/* Uniform treatment: accent color, no 3D (per user: 數字改回主色、統一字形、
+   不用立體). Only the value — the number + its accent symbols/affixes — uses
+   the "Oi" display face; the label description keeps the body font. Oi ships a
+   single 400 weight and covers Latin only, so any CJK unit char (週 etc.) falls
+   back to serif gracefully. */
 .stats-band__value {
   display: block;
-  font-size: 2.1rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  font-family: 'Oi', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
 }

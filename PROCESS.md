@@ -55,3 +55,6 @@
   - [x] 12 維護 process → 本檔 PROCESS.md
   - [x] 13 主題切換(原版/impeccable/暗色)→ `ThemeVariantSwitch.astro`(首頁專用、右上角、存 localStorage);impeccable 建議寫進 `plan.md`。已確認 build 後只有首頁有、專案頁 0 命中。
 - **待使用者目視**:mesh(hero)、chapter rail(桌機導覽)、letter_down、smoky、三變體切換 — 我無法目視驗證,push 後請 hard-refresh 確認。
+- **部署插曲**:當天遇 **GitHub Actions 全平台部分中斷**(runner 派不出來,build job 一直 `queued`),今日各次部署卡住、線上一度看不到新版。臨時走 **gh-pages 分支繞道**(本機 build → 推 gh-pages → Pages 切 `build_type=legacy`)先上線;稍後 Actions 恢復、`main` 的 workflow run 成功,即**切回 `workflow`/`main` 並刪除 gh-pages 分支**,回到正常流程。全部改動已在 `main`(HEAD `324b1f6`),線上已確認含全部項目。
+  - 繞道 SOP(下次再遇 Actions 當機可重用):`npx astro build` → `touch dist/.nojekyll` → 在 `dist/` 建 orphan `gh-pages` 分支 force-push → `gh api -X PUT repos/<owner>/<repo>/pages` 設 `build_type=legacy, source.branch=gh-pages`。**還原**:同 API 設回 `build_type=workflow, source.branch=main`(一個呼叫、完全可逆)。
+- **跨 session 記憶**:已在 Claude memory 建 3 檔(`portfolio-project` / `portfolio-deidentification` / `feedback-portfolio-maintenance`)+ `MEMORY.md` 索引,重點是去識別化紅線與「本檔是 living log」的指向,斷線後可快速接回。

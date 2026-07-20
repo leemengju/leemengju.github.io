@@ -53,5 +53,5 @@
   - [x] 10 footer smoky(同上,本批 push 才會出現);另修 SSR 隱形 bug(改成先可見再煙霧)
   - [x] 11 檔案框架文件 → ARCHITECTURE.md(已更新)
   - [x] 12 維護 process → 本檔 PROCESS.md
-  - [ ] 13 主題切換(原版/impeccable/暗色)+ impeccable 建議寫進 plan → 進行中
-- **待使用者目視**:mesh(hero)、chapter rail(桌機導覽)、letter_down、smoky — 我無法目視驗證,push 後請 hard-refresh 確認。
+  - [x] 13 主題切換(原版/impeccable/暗色)→ `ThemeVariantSwitch.astro`(首頁專用、右上角、存 localStorage);impeccable 建議寫進 `plan.md`。已確認 build 後只有首頁有、專案頁 0 命中。
+- **待使用者目視**:mesh(hero)、chapter rail(桌機導覽)、letter_down、smoky、三變體切換 — 我無法目視驗證,push 後請 hard-refresh 確認。

@@ -1,0 +1,141 @@
+---
+/**
+ * ThemeVariantSwitch (item 13) — a home-only comparison toggle: 原版 /
+ * impeccable / 暗色版. Rendered inside HomeSections, so it exists ONLY on the
+ * home page; project pages never include it, never set `data-variant`, and are
+ * therefore untouched.
+ *
+ *  - 原版:      no `data-variant` — the site as shipped (follows OS light/dark)
+ *  - impeccable: `data-variant="impeccable"` — refined type / spacing / contrast
+ *                per plan.md's impeccable audit
+ *  - 暗色版:    `data-variant="dark"` — forces `color-scheme: dark` so every
+ *                light-dark() token resolves to its dark value
+ *
+ * The choice persists in localStorage['home-variant']. The inline script runs
+ * during parse (before the hero below it) to apply the saved variant early.
+ */
+---
+
+<div class="variant-switch" role="group" aria-label="首頁樣式比較(僅供比較)">
+  <button type="button" data-variant-set="original" class="is-active">原版</button>
+  <button type="button" data-variant-set="impeccable">impeccable</button>
+  <button type="button" data-variant-set="dark">暗色</button>
+</div>
+
+<script is:inline>
+  (function () {
+    var KEY = 'home-variant';
+    var root = document.documentElement;
+    var apply = function (v) {
+      if (v === 'impeccable' || v === 'dark') root.setAttribute('data-variant', v);
+      else root.removeAttribute('data-variant');
+      var btns = document.querySelectorAll('.variant-switch button');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.toggle('is-active', btns[i].getAttribute('data-variant-set') === (v || 'original'));
+      }
+    };
+    var saved;
+    try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+    apply(saved || 'original');
+    var btns = document.querySelectorAll('.variant-switch button');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener('click', function () {
+        var v = this.getAttribute('data-variant-set');
+        try { localStorage.setItem(KEY, v); } catch (e) {}
+        apply(v);
+      });
+    }
+  })();
+</script>
+
+<style is:global>
+  /* ---------- the switch chrome ---------- */
+  .variant-switch {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 60;
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    font-size: 0.72rem;
+  }
+  .variant-switch button {
+    font: inherit;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+  .variant-switch button:hover {
+    color: var(--text);
+  }
+  .variant-switch button.is-active {
+    color: #fff;
+    background: var(--accent);
+  }
+  /* mobile: top-right holds the nav hamburger and top-left the brand, so drop
+     the comparison switch to the free bottom-left corner */
+  @media (max-width: 1160px) {
+    .variant-switch {
+      top: auto;
+      right: auto;
+      bottom: 1rem;
+      left: 1rem;
+    }
+  }
+
+  /* ================= impeccable variant (home only) ================= *
+   * Refined typography hierarchy, spacing rhythm, and text contrast — see
+   * plan.md. Overrides win over Astro's scoped component styles because the
+   * :root[data-variant] prefix raises specificity. */
+  :root[data-variant='impeccable'] {
+    --text-muted: color-mix(in srgb, currentColor 74%, transparent);
+  }
+  :root[data-variant='impeccable'] .hero {
+    padding-top: 5.5rem;
+    padding-bottom: 4rem;
+  }
+  :root[data-variant='impeccable'] .hero h1 {
+    font-size: clamp(2.75rem, 7vw, 4.25rem);
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+  :root[data-variant='impeccable'] .hero__tagline {
+    font-size: 1.25rem;
+    max-width: 40rem;
+  }
+  :root[data-variant='impeccable'] .section {
+    padding-top: 5rem;
+  }
+  :root[data-variant='impeccable'] .section > h2 {
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 2.25rem;
+  }
+  :root[data-variant='impeccable'] .about__para:first-of-type {
+    font-size: 1.15rem;
+    line-height: 1.8;
+  }
+
+  /* ================= dark variant (home only) ================= *
+   * Force the dark end of every light-dark() token. */
+  :root[data-variant='dark'] {
+    color-scheme: dark;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .variant-switch button {
+      transition: none;
+    }
+  }
+</style>

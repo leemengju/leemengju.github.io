@@ -96,41 +96,54 @@
 
   /* ================= impeccable variant (home only) ================= *
    * Refined typography hierarchy, spacing rhythm, and text contrast — see
-   * plan.md. Overrides win over Astro's scoped component styles because the
-   * :root[data-variant] prefix raises specificity. */
+   * plan.md. `!important` is required: these descendant selectors tie on
+   * specificity with Astro's scoped component styles, and source order would
+   * otherwise let the scoped rules win (which made the variant look identical
+   * to the original). */
   :root[data-variant='impeccable'] {
-    --text-muted: color-mix(in srgb, currentColor 74%, transparent);
+    --text-muted: color-mix(in srgb, currentColor 72%, transparent);
   }
   :root[data-variant='impeccable'] .hero {
-    padding-top: 5.5rem;
-    padding-bottom: 4rem;
+    padding-top: 6rem !important;
+    padding-bottom: 4.5rem !important;
   }
   :root[data-variant='impeccable'] .hero h1 {
-    font-size: clamp(2.75rem, 7vw, 4.25rem);
-    letter-spacing: -0.035em;
+    font-size: clamp(2.9rem, 7.5vw, 4.5rem) !important;
+    letter-spacing: -0.038em !important;
+    line-height: 1.03 !important;
     text-wrap: balance;
   }
   :root[data-variant='impeccable'] .hero__tagline {
-    font-size: 1.25rem;
-    max-width: 40rem;
+    font-size: 1.3rem !important;
+    max-width: 40rem !important;
+    opacity: 0.9 !important;
   }
   :root[data-variant='impeccable'] .section {
-    padding-top: 5rem;
+    padding-top: 5.5rem !important;
   }
   :root[data-variant='impeccable'] .section > h2 {
-    font-size: 1.5rem;
-    letter-spacing: -0.02em;
-    margin-bottom: 2.25rem;
+    font-size: 1.6rem !important;
+    letter-spacing: -0.025em !important;
+    margin-bottom: 2.5rem !important;
   }
   :root[data-variant='impeccable'] .about__para:first-of-type {
-    font-size: 1.15rem;
-    line-height: 1.8;
+    font-size: 1.2rem !important;
+    line-height: 1.85 !important;
+  }
+  :root[data-variant='impeccable'] .project-card__title {
+    letter-spacing: -0.02em !important;
   }
 
   /* ================= dark variant (home only) ================= *
-   * Force the dark end of every light-dark() token. */
+   * MediaTek orange accent on a deep-navy ground; color-scheme:dark keeps the
+   * remaining light-dark() tokens (shadows etc.) on their dark values. Token
+   * overrides sit on :root[data-variant] so they outrank tokens.css's :root. */
   :root[data-variant='dark'] {
     color-scheme: dark;
+    --accent: #ee7623;        /* MediaTek orange */
+    --page-bg: #0a1330;       /* deep navy */
+    --surface: #141f49;       /* navy card, a step lighter than the ground */
+    --text: #eaf0ff;
   }
 
   @media (prefers-reduced-motion: reduce) {

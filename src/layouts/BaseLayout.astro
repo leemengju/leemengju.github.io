@@ -99,6 +99,14 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     background: var(--fill-soft);
     border-color: var(--border-strong);
   }
+  /* On narrow screens the FloatingNav hamburger is fixed at the top-right and
+     was covering the language switch — pad the header so the switch sits to
+     its left and stays visible/tappable (A1). */
+  @media (max-width: 1160px) {
+    .site-header {
+      padding-right: 4.25rem;
+    }
+  }
   main {
     max-width: var(--content-width);
     margin: 0 auto;

@@ -137,19 +137,39 @@ const linkedinIcon =
 
 <section id="projects" class="section">
   <h2><LetterSwapTitle client:visible text={t.projectsHeading} /></h2>
-  <div class="filter" role="group">
-    <button class="filter__pill is-active" data-filter="all" type="button">{t.filterAll}</button>
-    {
-      usedCategories.map((key) => (
-        <button class="filter__pill" data-filter={key} type="button">
-          {categoryLabels[key][locale]}
-        </button>
-      ))
-    }
+  <div class="projects-toolbar">
+    <div class="filter" role="group">
+      <button class="filter__pill is-active" data-filter="all" type="button">{t.filterAll}</button>
+      {
+        usedCategories.map((key) => (
+          <button class="filter__pill" data-filter={key} type="button">
+            {categoryLabels[key][locale]}
+          </button>
+        ))
+      }
+    </div>
+    <div class="view-toggle" role="group" aria-label={locale === 'en' ? 'View mode' : '檢視方式'}>
+      <button type="button" data-view="list" class="is-active" aria-pressed="true" aria-label={locale === 'en' ? 'List view' : '清單檢視'}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="8" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="20" y2="12" /><line x1="8" y1="18" x2="20" y2="18" />
+          <circle cx="4" cy="6" r="1" /><circle cx="4" cy="12" r="1" /><circle cx="4" cy="18" r="1" />
+        </svg>
+      </button>
+      <button type="button" data-view="card" aria-pressed="false" aria-label={locale === 'en' ? 'Card view' : '卡片檢視'}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+      </button>
+    </div>
   </div>
-  <ul class="project-list">
+  <ul class="project-list is-list" data-page-size="6">
     {projects.map((project) => <ProjectCard project={project} locale={locale} />)}
   </ul>
+  <div class="projects-more" hidden>
+    <button class="btn-more" type="button">{locale === 'en' ? 'More projects' : '更多專案'}</button>
+  </div>
+  <nav class="projects-pager" aria-label={locale === 'en' ? 'Pagination' : '分頁'} hidden></nav>
 </section>
 
 <section id="education" class="section">
@@ -176,30 +196,113 @@ const linkedinIcon =
 <section id="contact" class="section">
   <h2><LetterSwapTitle client:visible text={t.contactHeading} /></h2>
   <ul class="contact">
-    <li><span class="contact__k">{t.contactEmail}</span><a href={`mailto:${p.contact.email}`}>{p.contact.email}</a></li>
-    <li><span class="contact__k">{t.contactGitHub}</span><a href={p.contact.github} target="_blank" rel="noopener noreferrer">{p.contact.github.replace('https://', '')}</a></li>
-    <li><span class="contact__k">{t.contactLocation}</span><span>{p.contact.location}</span></li>
+    <li><span class="contact__k">{t.contactEmail}</span><a href={`mailto:${p.contact.email}`}><SmokyText client:visible text={p.contact.email} colorVar="var(--text)" intensity={11} /></a></li>
+    <li><span class="contact__k">{t.contactGitHub}</span><a href={p.contact.github} target="_blank" rel="noopener noreferrer"><SmokyText client:visible text={p.contact.github.replace('https://', '')} colorVar="var(--text)" intensity={11} /></a></li>
+    <li><span class="contact__k">{t.contactLocation}</span><SmokyText client:visible text={p.contact.location} colorVar="var(--text)" intensity={11} /></li>
   </ul>
-  <div class="footer-sign">
-    <SmokyText client:visible text={t.brand} colorVar="var(--accent)" intensity={14} />
-  </div>
 </section>
 
 <script>
-  // Project-category filter: pills toggle visibility of cards by the
-  // data-categories attribute ProjectCard emits (space-separated keys).
-  const pills = document.querySelectorAll<HTMLButtonElement>('.filter__pill');
-  const cards = document.querySelectorAll<HTMLElement>('.project-card[data-categories]');
-  pills.forEach((pill) => {
-    pill.addEventListener('click', () => {
-      const key = pill.dataset.filter;
-      pills.forEach((b) => b.classList.toggle('is-active', b === pill));
-      cards.forEach((card) => {
-        const cats = (card.dataset.categories || '').split(' ');
-        card.hidden = key !== 'all' && !cats.includes(key!);
+  // Projects section controller: category filter × view mode (list|card) ×
+  // paging. List view paginates (6/page); card view shows 6 and grows by 6 via
+  // a "more" button. Changing filter or view resets paging.
+  const section = document.getElementById('projects');
+  if (section) {
+    const pills = [...section.querySelectorAll<HTMLButtonElement>('.filter__pill')];
+    const viewBtns = [...section.querySelectorAll<HTMLButtonElement>('.view-toggle button')];
+    const list = section.querySelector<HTMLElement>('.project-list')!;
+    const cards = [...section.querySelectorAll<HTMLElement>('.project-card[data-categories]')];
+    const moreWrap = section.querySelector<HTMLElement>('.projects-more')!;
+    const moreBtn = section.querySelector<HTMLButtonElement>('.btn-more')!;
+    const pager = section.querySelector<HTMLElement>('.projects-pager')!;
+    const PAGE = parseInt(list.dataset.pageSize || '6', 10);
+
+    let view: 'list' | 'card' = 'list';
+    let category = 'all';
+    let page = 0; // list mode
+    let shown = PAGE; // card mode
+
+    const filtered = () =>
+      cards.filter((c) => category === 'all' || (c.dataset.categories || '').split(' ').includes(category));
+
+    const buildPager = (pages: number) => {
+      pager.innerHTML = '';
+      pager.hidden = pages <= 1;
+      if (pages <= 1) return;
+      const mk = (label: string, target: number, opts: { active?: boolean; disabled?: boolean } = {}) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = label;
+        if (opts.active) b.classList.add('is-active');
+        if (opts.disabled) b.disabled = true;
+        b.addEventListener('click', () => {
+          page = target;
+          render();
+          list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        pager.appendChild(b);
+      };
+      mk('‹', Math.max(0, page - 1), { disabled: page === 0 });
+      for (let i = 0; i < pages; i++) mk(String(i + 1), i, { active: i === page });
+      mk('›', Math.min(pages - 1, page + 1), { disabled: page === pages - 1 });
+    };
+
+    function render() {
+      const set = filtered();
+      list.classList.toggle('is-list', view === 'list');
+      list.classList.toggle('is-card', view === 'card');
+      let visible: HTMLElement[];
+      if (view === 'list') {
+        const pages = Math.max(1, Math.ceil(set.length / PAGE));
+        if (page >= pages) page = pages - 1;
+        visible = set.slice(page * PAGE, page * PAGE + PAGE);
+        moreWrap.hidden = true;
+        buildPager(pages);
+      } else {
+        if (shown > set.length) shown = Math.max(PAGE, Math.ceil(set.length / PAGE) * PAGE);
+        visible = set.slice(0, shown);
+        pager.hidden = true;
+        pager.innerHTML = '';
+        moreWrap.hidden = shown >= set.length;
+      }
+      const showSet = new Set(visible);
+      cards.forEach((c) => {
+        const on = showSet.has(c);
+        c.hidden = !on;
+        // force-reveal shown cards so paged-in ones are never left at opacity:0
+        if (on) c.classList.add('is-visible');
       });
+    }
+
+    pills.forEach((pill) =>
+      pill.addEventListener('click', () => {
+        category = pill.dataset.filter || 'all';
+        page = 0;
+        shown = PAGE;
+        pills.forEach((b) => b.classList.toggle('is-active', b === pill));
+        render();
+      })
+    );
+    viewBtns.forEach((btn) =>
+      btn.addEventListener('click', () => {
+        view = (btn.dataset.view as 'list' | 'card') || 'list';
+        page = 0;
+        shown = PAGE;
+        viewBtns.forEach((b) => {
+          const on = b === btn;
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-pressed', String(on));
+        });
+        render();
+      })
+    );
+    moreBtn.addEventListener('click', () => {
+      shown += PAGE;
+      render();
     });
-  });
+
+    render();
+  }
 </script>
 
 <style>
@@ -446,6 +549,54 @@ const linkedinIcon =
     opacity: 0.75;
   }
 
+  /* Projects toolbar: filter on the left, list/card view toggle on the right.
+     Wraps on narrow screens so the toggle stays visible on mobile too. */
+  .projects-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.75rem;
+  }
+  .view-toggle {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--fill-softer);
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .view-toggle button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 1.9rem;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+  .view-toggle button svg {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+  .view-toggle button:hover {
+    color: var(--text);
+  }
+  .view-toggle button.is-active {
+    color: #fff;
+    background: var(--accent);
+  }
+  .view-toggle button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   /* Segmented control: one inset track holding all pills, with a single
      sliding accent "thumb" behind the active one — reads as a considered
      control rather than a row of loose chips. */
@@ -453,7 +604,6 @@ const linkedinIcon =
     display: inline-flex;
     flex-wrap: wrap;
     gap: 0.15rem;
-    margin-bottom: 1.75rem;
     padding: 0.3rem;
     background: var(--fill-softer);
     border: 1px solid var(--border-soft);
@@ -516,9 +666,108 @@ const linkedinIcon =
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+  /* card (grid) view */
+  .project-list.is-card {
     display: grid;
     gap: 1.5rem;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+  /* list view: single-column compact rows */
+  .project-list.is-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .project-list.is-list :global(.project-card a) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 1rem;
+    padding: 1.05rem 1.3rem;
+  }
+  .project-list.is-list :global(.project-card__title) {
+    font-size: 1.05rem;
+    padding-right: 2rem;
+    flex: 1 1 62%;
+  }
+  .project-list.is-list :global(.project-card__meta) {
+    margin-top: 0;
+    text-align: right;
+    flex: 1 1 auto;
+  }
+  .project-list.is-list :global(.project-card__metrics) {
+    margin-top: 0.15rem;
+    flex-basis: 100%;
+  }
+  .project-list.is-list :global(.project-card .tag-row) {
+    margin-top: 0.1rem;
+    padding-top: 0.35rem;
+    flex-basis: 100%;
+  }
+
+  /* load-more (card view) */
+  .projects-more {
+    margin-top: 1.75rem;
+    text-align: center;
+  }
+  .projects-more[hidden] {
+    display: none;
+  }
+  .btn-more {
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: var(--fill-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    padding: 0.6rem 1.6rem;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .btn-more:hover {
+    background: var(--fill-softer);
+    border-color: var(--border-strong);
+  }
+
+  /* pagination (list view) */
+  .projects-pager {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    justify-content: center;
+    margin-top: 1.75rem;
+  }
+  .projects-pager[hidden] {
+    display: none;
+  }
+  .projects-pager button {
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border-soft);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+  .projects-pager button:hover:not(:disabled) {
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .projects-pager button.is-active {
+    color: #fff;
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .projects-pager button:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
 
   .contact {
@@ -540,20 +789,5 @@ const linkedinIcon =
   }
   .contact a {
     color: inherit;
-  }
-
-  /* Footer sign-off (item 15): the name drifts in as smoke on scroll. */
-  .footer-sign {
-    margin-top: 4.5rem;
-    text-align: center;
-    font-weight: 800;
-    font-size: clamp(2.25rem, 8vw, 5.5rem);
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-  }
-  @media (max-width: 600px) {
-    .footer-sign {
-      margin-top: 3rem;
-    }
   }
 </style>

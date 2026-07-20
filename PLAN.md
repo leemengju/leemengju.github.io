@@ -60,3 +60,35 @@ body：沿用履歷那套「背景 / 挑戰 / 貢獻 / 結果」。
 5. 之後補 i18n、自訂網域。
 
 > 或直接跑 `/opsx:propose` 把本檔內容展開成正式 proposal/design/specs/tasks。
+
+---
+
+# impeccable 審計與變體規劃(2026-07,首頁)
+
+> 目的:記錄 impeccable 對首頁的設計建議,做成可**即時切換比較**的變體(原版 / impeccable / 暗色版)。只在首頁試、專案頁不動,切換鈕在右上角。
+> 實作:[`src/components/ThemeVariantSwitch.astro`](src/components/ThemeVariantSwitch.astro)(切換 UI + 套用 script + 變體 CSS),掛在 `HomeSections.astro` 內,天生只在首頁。
+
+## 現況(deterministic detector)
+
+`detect.mjs` 掃 `dist/index.html` 只剩 **1 條 advisory**:numbered-section-markers(章節軌卡片的 `01 / 06`,此處數字為導覽位置、有語意,屬邊界)。其餘反模式(側邊條框 / 漸層文字 / 玻璃擬態 / eyebrow / 卡片海)皆無。基準版已相當乾淨。
+
+## impeccable 建議(brand register:設計即產品)
+
+**1. 字級階層** — Hero 名字放大收緊 `clamp(2.2→3rem)`→`clamp(2.75→4.25rem)`、`letter-spacing -0.035em`、`text-wrap:balance`;section 標題 `1.25rem/700`→`1.5rem`、間距加大;自介首段做成 lead(和後段分層)。
+**2. 間距節奏** — section 上緣 `3.5rem`→`5rem`,不強求等距(反「統一反射」);卡片/清單呼吸加大。
+**3. 顏色/對比** — `--text-muted` `62%`→`~72%`(body/說明 ≥4.5:1);卡片表面層次略強。
+**4. 打磨** — 圓角/陰影收斂一致;保留現有 accent(身分一致性優先,不換色)。
+
+## 三個變體
+
+| 變體 | 做法 |
+|---|---|
+| **原版** | 不設 `data-variant`,跟隨系統淺/深色 = 目前線上樣子 |
+| **impeccable** | `:root[data-variant="impeccable"]` 覆寫 token + 首頁語意選擇器(上述四軸) |
+| **暗色版** | `:root[data-variant="dark"]{color-scheme:dark}`,`light-dark()` token 全解析深色 |
+
+預設 = 原版(無 localStorage)。選擇存 `localStorage['home-variant']`,**只有首頁讀取/套用** → 專案頁不受影響。
+
+## 後續
+
+比較後若採用某版,把該版 token/樣式收斂進 `tokens.css`/元件、移除切換鈕(這只是比較工具)。更深的 impeccable 迭代(需瀏覽器目視)待瀏覽器工具可用再做 `critique`/`live`。

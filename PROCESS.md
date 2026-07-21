@@ -38,6 +38,19 @@
 
 ## 進度日誌(新的寫最上面)
 
+### 2026-07-21 — 第三輪回饋(18 項)
+主題色系重構 + 專案清單化 + 新特效。分兩筆 push:
+- **主題**:變體改 **Bright / Dark**(移除 impeccable)、預設 Dark、放進 header 於**全站**(專案頁也有);新色票在 `tokens.css`(Bright #4A5989/#AEB2BD/#F3F4F8、Dark #FD853A/#A8866B/#1D2939)+ 新增 `--secondary`;Dark 下 logo 濾成白色;語言鈕與變體鈕在 header 固定 20px 間距(手機變體鈕落左下)。
+- **hero(item 5)**:改成 `RainingLetters.tsx`(字母雨背景 + 標語 scramble 解碼);移除 KineticGrid + MeshTextHeading(兩檔已無引用、留著沒刪)。h1 保留標語文字給 SEO。
+- **專案(item 9/13)**:移除卡片/清單切換,只留**清單**+分頁(每頁 6);分頁改**輔色**;list 列右側留 3rem 給 arrow,不再貼日期。
+- **特效修正**:標題 letter-swap 改**捲入觸發**(item 6);footer smoky **每次捲入重播 + 靜止用真文字**不再變淡(item 16);Oi 數字改**空心 2px 描邊**(item 7)。
+- **時間軸(item 15)**:工作經歷/學歷沿用既有 rail,加**捲動進度光束**(`.tl-beam`,vanilla JS)。
+- **舊 5 專案 banner(item 12)**:換成 `public/banners/<slug>.png` 橫幅(**注意:1–1.4MB/張,偏大,日後可壓**)。
+- **RWD(item 10)**:專案頁手機不再左右滾動——寬表格內部捲動、長行內 code 可斷行。
+- **其他**:技能卡 hover 邊框亮主色(8)、學士→學士學位(14)、聯絡 CTA 加揮手動畫(17)、頁尾版權(18)、`8週`→`8 weeks`(2)。
+- **踩雷**:`referenceForProtfolio/`(banner/CV SVG/effect 原碼)一度被 `git add -A` 誤加進 public repo → 已加入 .gitignore + `git rm --cached` 移出 HEAD(仍在 history,非機密故未改寫)。**教訓已內化**:新原料資料夾要先 gitignore。
+- **待目視**:字母雨 hero、時間軸光束、清單/分頁、smoky 重播、暗色橘藍——瀏覽器無法 paint,需使用者確認。
+
 ### 2026-07-20 — 17 項改版清單 + 13 項回饋
 - **17 項清單**:2–16 版面/內容項 + item 17(8 個工程專案去識別化搬遷)已完成並 push(內容 commit)。
 - **4 個特效**已移植成島:KineticGrid(hero 背景)、MeshTextHeading(hero 名字 mesh)、LetterSwapTitle(標題逐字翻)、SmokyText(footer 署名煙霧)、ChapterRail(桌機章節軌)。

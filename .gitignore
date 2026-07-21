@@ -32,3 +32,6 @@ pnpm-debug.log*
 # source material only — effect snippets, logo source, CV template SVGs (not site output)
 effectsForProtfolio/
 REDESIGN-PLAN.md
+
+# source material only — reference effects, banners, CV/logo art (not site output)
+referenceForProtfolio/

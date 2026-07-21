@@ -8,10 +8,9 @@
 import ProjectCard from './ProjectCard.astro';
 import StatsBand from './StatsBand.tsx';
 import FloatingNav from './FloatingNav.astro';
-import KineticGrid from './effects/KineticGrid.tsx';
+import RainingLetters from './effects/RainingLetters.tsx';
 import LetterSwapTitle from './effects/LetterSwapTitle.tsx';
 import SmokyText from './effects/SmokyText.tsx';
-import MeshTextHeading from './effects/MeshTextHeading.tsx';
 import { strings, categoryLabels, type Locale } from '../lib/i18n';
 import { getProfile } from '../lib/profile';
 import type { ProjectEntry } from '../lib/projects';
@@ -64,9 +63,7 @@ const linkedinIcon =
 <FloatingNav items={navItems} />
 
 <section class="hero">
-  <KineticGrid client:visible />
-  <h1><MeshTextHeading client:visible text={t.introHeading} /></h1>
-  <p class="hero__tagline">{t.introText}</p>
+  <RainingLetters client:visible text={t.introText} />
   <div class="hero__cta">
     {
       p.contact.resume && (
@@ -251,32 +248,96 @@ const linkedinIcon =
   }
 </script>
 
+<script>
+  // Timeline beam (item 15): for the Experience + Education lists, grow an
+  // accent line down the rail as the section scrolls through the viewport.
+  const lists = [...document.querySelectorAll<HTMLElement>('.exp, .edu')];
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (lists.length && !reduced) {
+    const beams = lists.map((list) => {
+      const beam = document.createElement('span');
+      beam.className = 'tl-beam';
+      beam.setAttribute('aria-hidden', 'true');
+      list.appendChild(beam);
+      return { list, beam };
+    });
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      for (const { list, beam } of beams) {
+        const r = list.getBoundingClientRect();
+        // 0 when the list top sits at 60% down the viewport, 1 once its bottom passes
+        const p = Math.max(0, Math.min(1, (vh * 0.6 - r.top) / Math.max(1, r.height)));
+        beam.style.height = (p * r.height).toFixed(1) + 'px';
+      }
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  }
+</script>
+
 <style>
   .hero {
     position: relative;
-    padding: 4.5rem 0 3.5rem;
+    min-height: min(70vh, 600px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 0 3.5rem;
     margin-bottom: 0.5rem;
     overflow: hidden;
   }
-  /* keep hero content above the KineticGrid canvas background */
-  .hero > h1,
-  .hero > .hero__tagline,
+  /* keep hero content above the raining-letters layer */
+  .hero > .rain-title,
   .hero > .hero__cta {
     position: relative;
     z-index: 1;
   }
-  .hero h1 {
-    margin: 0 0 0.75rem;
-    font-size: clamp(2.2rem, 4vw, 3rem);
+  /* raining-letters background (item 5) */
+  .rain-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    /* dissolve into the next section instead of a hard edge */
+    -webkit-mask-image: linear-gradient(to bottom, #000 42%, transparent 96%);
+    mask-image: linear-gradient(to bottom, #000 42%, transparent 96%);
+  }
+  .rain-layer :global(.rain__glyph) {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    font-size: 1.1rem;
+    color: var(--text);
+    opacity: 0.12;
+    will-change: top;
+    user-select: none;
+  }
+  .rain-layer :global(.rain__glyph.is-lit) {
+    color: var(--accent);
+    opacity: 0.9;
+    text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  .rain-title {
+    margin: 0 0 0.5rem;
+    max-width: 24ch;
+    font-size: clamp(1.9rem, 4.6vw, 3.2rem);
     font-weight: 800;
     letter-spacing: -0.02em;
+    line-height: 1.3;
   }
-  .hero__tagline {
-    margin: 0;
+  .rain-title :global(.rain-title__dud) {
+    color: var(--accent);
     opacity: 0.85;
-    max-width: 42rem;
-    font-size: 1.15rem;
-    line-height: 1.7;
   }
   .hero__cta {
     display: flex;
@@ -428,6 +489,28 @@ const linkedinIcon =
     display: grid;
     gap: 1.75rem;
     border-left: 2px solid var(--border-soft);
+    position: relative;
+  }
+  /* timeline beam (item 15): an accent line over the faint rail that fills as
+     the section scrolls into view */
+  .tl-beam {
+    position: absolute;
+    left: -2px;
+    top: 0;
+    width: 2px;
+    height: 0;
+    border-radius: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--accent),
+      color-mix(in srgb, var(--accent) 25%, transparent)
+    );
+    will-change: height;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tl-beam {
+      display: none;
+    }
   }
   .exp__item,
   .edu__item {

@@ -126,6 +126,25 @@ const tocItems = headings
   .project-body :global(tr:nth-child(even) td) {
     background: var(--fill-softer);
   }
+  /* Code blocks scroll inside themselves rather than widening the page. */
+  .project-body :global(pre) {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  /* Long inline code can break so it never forces the page wider (block code in
+     <pre> keeps white-space:pre, so it ignores this and scrolls instead). */
+  .project-body :global(code) {
+    overflow-wrap: anywhere;
+  }
+  /* Mobile (item 10): a table cell with an unbreakable code string was forcing
+     the whole page to scroll horizontally — let wide tables scroll internally. */
+  @media (max-width: 640px) {
+    .project-body :global(table) {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
 
   /* ---- Legacy design-project media (item 14): responsive layout ---- *
    * Shared look: rounded, layered Aceternity-style shadow, subtle border.

@@ -10,7 +10,7 @@ categories: [pm]
 
 在全臺鄉鎮之間,串起百年郵政心連結。2023 年 11 月至 2024 年 1 月,歷時三個月,擔任產品經理助理,負責企劃書撰寫、簡報製作與排程規劃,服務對象為中華郵政(股份有限公司)。
 
-![中華郵政 ATM 介面設計標案主視覺](/legacy/project3/media33.png)
+![中華郵政 ATM 介面設計標案主視覺](/banners/chunghwa-post-atm-tender.png)
 
 ## 專案概覽
 

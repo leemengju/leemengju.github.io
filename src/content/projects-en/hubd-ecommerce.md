@@ -16,7 +16,7 @@ categories: [fullstack, pm]
 - **Organization**: iSpan International
 - **GitHub**: [project-hubd-summary-version](https://github.com/leemengju/project-hubd-summary-version)
 
-![HUBD fast-fashion e-commerce platform project cover](/legacy/project5/media21.png)
+![HUBD fast-fashion e-commerce platform project cover](/banners/hubd-ecommerce.png)
 
 ## Project Overview
 

@@ -8,7 +8,7 @@ order: 16
 categories: [uiux]
 ---
 
-![專案主視覺:ESG 歐碳永續雲碳盤查系統介面設計](/legacy/project2/media04.png)
+![專案主視覺:ESG 歐碳永續雲碳盤查系統介面設計](/banners/iisi-carbon-system.png)
 
 ## 專案概覽
 

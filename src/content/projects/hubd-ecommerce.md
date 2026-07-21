@@ -16,7 +16,7 @@ categories: [fullstack, pm]
 - **服務公司**:資展國際
 - **GitHub**:[project-hubd-summary-version](https://github.com/leemengju/project-hubd-summary-version)
 
-![HUBD 快時尚電商平台專案封面](/legacy/project5/media21.png)
+![HUBD 快時尚電商平台專案封面](/banners/hubd-ecommerce.png)
 
 ## 專案概覽
 

@@ -38,6 +38,16 @@
 
 ## 進度日誌(新的寫最上面)
 
+### 2026-07-21 — 第四輪回饋(8 項)
+- **logo/品牌色(1、3)**:logo 改「遮罩剪影 + `background-color:currentColor`」(logo.svg 是 raster-in-SVG 但有 alpha,遮罩可精準上色);品牌色 Dark=白、Bright=主色,logo+名字一起變。
+- **header 動效(2)**:brand + 語言鈕淡入下滑進場(不動手機固定的變體鈕,避免 transform 破壞 fixed)。
+- **手機標題動效(3)**:LetterSwapTitle 拿掉 `fine` 限制(改捲入觸發,觸控也吃)。
+- **8 weeks 折行(4)**:Oi 太寬會折行(實測 84px 兩行)→ 改 `8wks`。
+- **技能卡 hover(5)**:改**主色柔光暈**(box-shadow),不是硬邊線。
+- **banner 壓縮(6)**:5 張 1920px PNG(~6MB)→ WebP 1600px(~0.5MB 總),md 引用改 `.webp`。
+- **時間軸無限捲動(7)**:**無法重現**(實測桌機 5074px / 手機 7300px、各 section 高度正常)。保險起見把光束從動 `height`(影響版面)改成 `transform:scaleY`(只走合成層、絕不影響頁高)。若仍發生需使用者提供:桌機/手機、哪個 section。
+- **版權(8)**:拿掉年份 → `© LanceLee Portfolio. All rights reserved.`
+
 ### 2026-07-21 — 第三輪回饋(18 項)
 主題色系重構 + 專案清單化 + 新特效。分兩筆 push:
 - **主題**:變體改 **Bright / Dark**(移除 impeccable)、預設 Dark、放進 header 於**全站**(專案頁也有);新色票在 `tokens.css`(Bright #4A5989/#AEB2BD/#F3F4F8、Dark #FD853A/#A8866B/#1D2939)+ 新增 `--secondary`;Dark 下 logo 濾成白色;語言鈕與變體鈕在 header 固定 20px 間距(手機變體鈕落左下)。

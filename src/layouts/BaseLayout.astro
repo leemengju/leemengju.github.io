@@ -4,6 +4,7 @@ import '../styles/code-blocks.css';
 import DiagramBlock from '../components/DiagramBlock.astro';
 import RevealScript from '../components/RevealScript.astro';
 import BackToTop from '../components/BackToTop.astro';
+import ThemeVariantSwitch from '../components/ThemeVariantSwitch.astro';
 import { strings, localeFromPath, alternatePath, homePath } from '../lib/i18n';
 
 interface Props {
@@ -45,11 +46,15 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
         <img class="site-header__logo" src="/logo.svg" alt="" width="28" height="28" />
         <span>{t.brand}</span>
       </a>
-      <a class="site-header__lang" href={altPath} aria-label={t.switcherAria}>{t.switcherLabel}</a>
+      <div class="site-header__actions">
+        <ThemeVariantSwitch />
+        <a class="site-header__lang" href={altPath} aria-label={t.switcherAria}>{t.switcherLabel}</a>
+      </div>
     </header>
     <main>
       <slot />
     </main>
+    <footer class="site-footer">© 2026 LanceLee Portfolio. All rights reserved.</footer>
     <RevealScript />
     <DiagramBlock />
     <BackToTop />
@@ -83,6 +88,12 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     height: 1.75rem;
     border-radius: 6px;
   }
+  /* language switch + theme switch cluster; fixed 20px gap on desktop (item 2) */
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
   .site-header__lang {
     font-size: 0.8rem;
     font-weight: 600;
@@ -93,6 +104,7 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     border: 1px solid var(--border-soft);
     border-radius: 999px;
     transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
   }
   .site-header__lang:hover {
     opacity: 1;
@@ -110,7 +122,17 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
   main {
     max-width: var(--content-width);
     margin: 0 auto;
-    padding: 0 1.5rem 5rem;
+    padding: 0 1.5rem 3rem;
+  }
+  /* Copyright footer (item 18) */
+  .site-footer {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 2.5rem;
+    border-top: 1px solid var(--border-soft);
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
   }
 
   /* Shared card surface used by project/skill/stat cards + article header. */

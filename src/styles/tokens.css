@@ -19,10 +19,12 @@
   --text: light-dark(#1a1c22, #e8eaf0);
   --text-muted: color-mix(in srgb, currentColor 62%, transparent);
 
-  /* Accent — softer, less "dead" than the old pure #3a6df0; a touch lighter
-     in dark theme so it stays legible on the near-black background. */
-  --accent: light-dark(#4f6ef0, #7d9bff);
+  /* Accent (primary) + secondary. Concrete per-variant values are set on
+     :root[data-variant] below; these light-dark() defaults cover no-JS / the
+     brief pre-hydration paint. */
+  --accent: light-dark(#4a5989, #fd853a);
   --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+  --secondary: light-dark(#aeb2bd, #a8866b);
 
   /* Elevation — subtle in light theme; in dark theme a ring does more work
      than a shadow, so the hover state leans on the border. */
@@ -33,6 +35,26 @@
   --radius-sm: 0.5rem;
 
   --content-width: 1100px;
+}
+
+/* ---- Theme variants (Bright / Dark), toggled by ThemeVariantSwitch on every
+   page. Default is Dark (the switch's inline script applies it during parse).
+   These sit on :root[data-variant] so they outrank the :root defaults. ---- */
+:root[data-variant='bright'] {
+  color-scheme: light;
+  --accent: #4a5989;
+  --secondary: #aeb2bd;
+  --page-bg: #f3f4f8;
+  --surface: #ffffff;
+  --text: #1a1c22;
+}
+:root[data-variant='dark'] {
+  color-scheme: dark;
+  --accent: #fd853a;
+  --secondary: #a8866b;
+  --page-bg: #1d2939;
+  --surface: #26344a; /* a step lighter than the ground so cards read as raised */
+  --text: #e8eaf0;
 }
 
 html {

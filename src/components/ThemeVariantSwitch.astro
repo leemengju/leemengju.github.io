@@ -1,25 +1,16 @@
 ---
 /**
- * ThemeVariantSwitch (item 13) — a home-only comparison toggle: 原版 /
- * impeccable / 暗色版. Rendered inside HomeSections, so it exists ONLY on the
- * home page; project pages never include it, never set `data-variant`, and are
- * therefore untouched.
- *
- *  - 原版:      no `data-variant` — the site as shipped (follows OS light/dark)
- *  - impeccable: `data-variant="impeccable"` — refined type / spacing / contrast
- *                per plan.md's impeccable audit
- *  - 暗色版:    `data-variant="dark"` — forces `color-scheme: dark` so every
- *                light-dark() token resolves to its dark value
- *
- * The choice persists in localStorage['home-variant']. The inline script runs
- * during parse (before the hero below it) to apply the saved variant early.
+ * ThemeVariantSwitch — Bright / Dark comparison toggle (default Dark).
+ * Rendered in the site header (BaseLayout) so it appears on every page,
+ * including project pages. The choice persists in localStorage['home-variant']
+ * and the inline script applies it during parse to avoid a flash. The palettes
+ * themselves live in tokens.css (:root[data-variant='bright'|'dark']).
  */
 ---
 
-<div class="variant-switch" role="group" aria-label="首頁樣式比較(僅供比較)">
-  <button type="button" data-variant-set="original" class="is-active">原版</button>
-  <button type="button" data-variant-set="impeccable">impeccable</button>
-  <button type="button" data-variant-set="dark">暗色</button>
+<div class="variant-switch" role="group" aria-label="Theme">
+  <button type="button" data-variant-set="bright">Bright</button>
+  <button type="button" data-variant-set="dark" class="is-active">Dark</button>
 </div>
 
 <script is:inline>
@@ -27,42 +18,36 @@
     var KEY = 'home-variant';
     var root = document.documentElement;
     var apply = function (v) {
-      if (v === 'impeccable' || v === 'dark') root.setAttribute('data-variant', v);
-      else root.removeAttribute('data-variant');
+      if (v !== 'bright' && v !== 'dark') v = 'dark';
+      root.setAttribute('data-variant', v);
       var btns = document.querySelectorAll('.variant-switch button');
       for (var i = 0; i < btns.length; i++) {
-        btns[i].classList.toggle('is-active', btns[i].getAttribute('data-variant-set') === (v || 'original'));
+        btns[i].classList.toggle('is-active', btns[i].getAttribute('data-variant-set') === v);
       }
     };
     var saved;
     try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
-    apply(saved || 'original');
-    var btns = document.querySelectorAll('.variant-switch button');
-    for (var i = 0; i < btns.length; i++) {
-      btns[i].addEventListener('click', function () {
-        var v = this.getAttribute('data-variant-set');
-        try { localStorage.setItem(KEY, v); } catch (e) {}
-        apply(v);
-      });
-    }
+    apply(saved || 'dark');
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('.variant-switch button') : null;
+      if (!b) return;
+      var v = b.getAttribute('data-variant-set');
+      try { localStorage.setItem(KEY, v); } catch (e2) {}
+      apply(v);
+    });
   })();
 </script>
 
 <style is:global>
-  /* ---------- the switch chrome ---------- */
+  /* Desktop/tablet: the switch sits in the header actions row (20px gap from
+     the language switch, set on .site-header__actions). */
   .variant-switch {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 60;
     display: inline-flex;
     gap: 2px;
     padding: 3px;
-    background: color-mix(in srgb, var(--surface) 88%, transparent);
-    backdrop-filter: blur(8px);
+    background: var(--fill-softer);
     border: 1px solid var(--border-soft);
     border-radius: 999px;
-    box-shadow: var(--shadow);
     font-size: 0.72rem;
   }
   .variant-switch button {
@@ -71,7 +56,7 @@
     border: none;
     background: transparent;
     color: var(--text-muted);
-    padding: 0.3rem 0.65rem;
+    padding: 0.3rem 0.7rem;
     border-radius: 999px;
     cursor: pointer;
     transition: color 0.2s ease, background 0.2s ease;
@@ -83,67 +68,29 @@
     color: #fff;
     background: var(--accent);
   }
-  /* mobile: top-right holds the nav hamburger and top-left the brand, so drop
-     the comparison switch to the free bottom-left corner */
+  .variant-switch button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Dark variant: flatten the (dark) logo to white so it reads on the navy. */
+  :root[data-variant='dark'] .site-header__logo {
+    filter: brightness(0) invert(1);
+  }
+
+  /* Mobile: the header top-right holds the language switch (and the nav
+     hamburger), so drop the comparison switch to the free bottom-left corner —
+     the user confirmed this placement. */
   @media (max-width: 1160px) {
     .variant-switch {
-      top: auto;
-      right: auto;
+      position: fixed;
       bottom: 1rem;
       left: 1rem;
+      z-index: 60;
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
     }
-  }
-
-  /* ================= impeccable variant (home only) ================= *
-   * Refined typography hierarchy, spacing rhythm, and text contrast — see
-   * plan.md. `!important` is required: these descendant selectors tie on
-   * specificity with Astro's scoped component styles, and source order would
-   * otherwise let the scoped rules win (which made the variant look identical
-   * to the original). */
-  :root[data-variant='impeccable'] {
-    --text-muted: color-mix(in srgb, currentColor 72%, transparent);
-  }
-  :root[data-variant='impeccable'] .hero {
-    padding-top: 6rem !important;
-    padding-bottom: 4.5rem !important;
-  }
-  :root[data-variant='impeccable'] .hero h1 {
-    font-size: clamp(2.9rem, 7.5vw, 4.5rem) !important;
-    letter-spacing: -0.038em !important;
-    line-height: 1.03 !important;
-    text-wrap: balance;
-  }
-  :root[data-variant='impeccable'] .hero__tagline {
-    font-size: 1.3rem !important;
-    max-width: 40rem !important;
-    opacity: 0.9 !important;
-  }
-  :root[data-variant='impeccable'] .section {
-    padding-top: 5.5rem !important;
-  }
-  :root[data-variant='impeccable'] .section > h2 {
-    font-size: 1.6rem !important;
-    letter-spacing: -0.025em !important;
-    margin-bottom: 2.5rem !important;
-  }
-  :root[data-variant='impeccable'] .about__para:first-of-type {
-    font-size: 1.2rem !important;
-    line-height: 1.85 !important;
-  }
-  :root[data-variant='impeccable'] .project-card__title {
-    letter-spacing: -0.02em !important;
-  }
-
-  /* ================= dark variant (home only) ================= *
-   * MediaTek orange accent on a deep-navy ground; color-scheme:dark keeps the
-   * remaining light-dark() tokens (shadows etc.) on their dark values. Token
-   * overrides sit on :root[data-variant] so they outrank tokens.css's :root. */
-  :root[data-variant='dark'] {
-    color-scheme: dark;
-    --accent: #ee7623;        /* MediaTek orange */
-    --page-bg: #0a1330;       /* deep navy */
-    --surface: #141f49;       /* navy card, a step lighter than the ground */
-    --text: #eaf0ff;
   }
 
   @media (prefers-reduced-motion: reduce) {

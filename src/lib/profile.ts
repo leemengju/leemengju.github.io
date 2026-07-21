@@ -139,7 +139,7 @@ const zh: Profile = {
     },
     {
       school: '北京大學',
-      degree: '學士',
+      degree: '學士學位',
       period: '2017.09 - 2022.06',
       notes: [
         '東京大學與香港理工大學交換，交換期間獲得全 A 成績。',

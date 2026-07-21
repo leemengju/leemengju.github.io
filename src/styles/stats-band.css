@@ -63,12 +63,14 @@
 .stats-band__value {
   display: block;
   font-family: 'Oi', serif;
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 400;
   letter-spacing: -0.01em;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
-  color: var(--accent);
+  /* hollow / outlined (item 7): 2px accent stroke, no fill */
+  color: transparent;
+  -webkit-text-stroke: 2px var(--accent);
 }
 .stats-band__label {
   display: block;

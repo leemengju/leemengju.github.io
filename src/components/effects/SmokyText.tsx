@@ -91,18 +91,23 @@ export default function SmokyText({
     styleEl.textContent = buildKF(kfId, color, intensity);
     document.head.appendChild(styleEl);
 
-    // hide, then reveal via smoke when scrolled into view
+    // Hide, then smoke-in whenever the text scrolls into view — and reset to
+    // hidden when it leaves, so it replays every time you scroll back (item 16).
     setPhase('hidden');
     const el = ref.current;
     let io: IntersectionObserver | null = null;
+    let timer = 0;
     if (el) {
       io = new IntersectionObserver(
         (entries) => {
-          if (entries.some((e) => e.isIntersecting)) {
-            io?.disconnect();
+          const inView = entries.some((e) => e.isIntersecting);
+          window.clearTimeout(timer);
+          if (inView) {
             setPhase('appearing');
             const settle = 1100 + chars.length * stagger * 1000 + 900;
-            window.setTimeout(() => setPhase('visible'), settle);
+            timer = window.setTimeout(() => setPhase('visible'), settle);
+          } else {
+            setPhase('hidden');
           }
         },
         { threshold: 0.35 }
@@ -112,6 +117,7 @@ export default function SmokyText({
     return () => {
       styleEl.remove();
       io?.disconnect();
+      window.clearTimeout(timer);
     };
   }, [kfId, colorVar, intensity, chars.length, stagger]);
 
@@ -125,12 +131,16 @@ export default function SmokyText({
   }
 
   const color = colorRef.current;
+  // Only the (transient) smoke animation paints via the resolved color + shadow;
+  // the resting 'visible' text is real text in the inherited color, so it stays
+  // crisp and follows the current Bright/Dark theme instead of looking faint.
+  const containerColor = phase === 'appearing' ? 'transparent' : 'inherit';
   return (
     <span
       ref={ref}
       aria-label={text}
       className={className}
-      style={{ display: 'inline-block', color: 'transparent', ...style }}
+      style={{ display: 'inline-block', color: containerColor, ...style }}
     >
       {chars.map((c, i) => {
         if (c === ' ')
@@ -139,16 +149,15 @@ export default function SmokyText({
               {' '}
             </span>
           );
-        const base: CSSProperties = { display: 'inline-block', textShadow: `0 0 0 ${color}` };
         if (phase === 'visible')
           return (
-            <span key={i} aria-hidden style={{ ...base, opacity: 1 }}>
+            <span key={i} aria-hidden style={{ display: 'inline-block' }}>
               {c}
             </span>
           );
         if (phase === 'hidden')
           return (
-            <span key={i} aria-hidden style={{ ...base, opacity: 0 }}>
+            <span key={i} aria-hidden style={{ display: 'inline-block', opacity: 0 }}>
               {c}
             </span>
           );
@@ -159,7 +168,8 @@ export default function SmokyText({
             key={i}
             aria-hidden
             style={{
-              ...base,
+              display: 'inline-block',
+              textShadow: `0 0 0 ${color}`,
               animation: `${kfId}-${variant} 1.1s ${i * stagger}s cubic-bezier(0,0,0.58,1) both`,
             }}
           >

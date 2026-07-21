@@ -69,6 +69,22 @@ export default function LetterSwapTitle({
     });
   };
 
+  // Scroll trigger (item 6): most people won't hover a heading, so the swap
+  // also plays when the title scrolls into view — and reverses when it leaves,
+  // so it replays every time the section's top comes back into view.
+  useEffect(() => {
+    if (!animated) return;
+    const el = scope.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => play(e.isIntersecting ? 'in' : 'out')),
+      { threshold: 0.85 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animated, idxs]);
+
   // Static / touch / reduced-motion: plain heading text, no islands of motion.
   if (!animated) return <span>{text}</span>;
 

@@ -10,7 +10,7 @@ categories: [uiux, pm]
 
 > 用在地化的美好，打造二手交易的心之所嚮 —— 二手交易／iOS／在地創業
 
-![NEIGHBOR-GOODS App 介面設計總覽](/banners/neighbor-goods-app.png)
+![NEIGHBOR-GOODS App 介面設計總覽](/banners/neighbor-goods-app.webp)
 
 ## 專案概覽
 

@@ -43,7 +43,7 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
   <body>
     <header class="site-header">
       <a class="site-header__brand" href={homePath(locale)}>
-        <img class="site-header__logo" src="/logo.svg" alt="" width="28" height="28" />
+        <span class="site-header__logo" aria-hidden="true"></span>
         <span>{t.brand}</span>
       </a>
       <div class="site-header__actions">
@@ -54,7 +54,7 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     <main>
       <slot />
     </main>
-    <footer class="site-footer">© 2026 LanceLee Portfolio. All rights reserved.</footer>
+    <footer class="site-footer">© LanceLee Portfolio. All rights reserved.</footer>
     <RevealScript />
     <DiagramBlock />
     <BackToTop />
@@ -82,17 +82,46 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
     text-decoration: none;
     color: inherit;
   }
+  /* logo is a masked silhouette so it takes the brand color exactly
+     (white in Dark, accent in Bright) — see ThemeVariantSwitch */
   .site-header__logo {
     display: block;
     width: 1.75rem;
     height: 1.75rem;
-    border-radius: 6px;
+    background-color: currentColor;
+    -webkit-mask: url('/logo.svg') center / contain no-repeat;
+    mask: url('/logo.svg') center / contain no-repeat;
   }
-  /* language switch + theme switch cluster; fixed 20px gap on desktop (item 2) */
+  /* language switch + theme switch cluster; fixed 20px gap on desktop */
   .site-header__actions {
     display: flex;
     align-items: center;
     gap: 20px;
+  }
+  /* header entrance motion (item 2) — animate the brand + lang link (never the
+     mobile fixed theme switch, whose fixed positioning a transformed ancestor
+     would break) */
+  .site-header__brand {
+    animation: header-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .site-header__lang {
+    animation: header-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+  }
+  @keyframes header-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-header__brand,
+    .site-header__lang {
+      animation: none;
+    }
   }
   .site-header__lang {
     font-size: 0.8rem;

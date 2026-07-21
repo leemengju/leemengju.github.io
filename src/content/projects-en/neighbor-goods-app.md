@@ -10,7 +10,7 @@ categories: [uiux, pm]
 
 > Building the heart's destination for second-hand trading with the beauty of locality — Second-hand trading / iOS / local entrepreneurship
 
-![NEIGHBOR-GOODS app UI design overview](/banners/neighbor-goods-app.png)
+![NEIGHBOR-GOODS app UI design overview](/banners/neighbor-goods-app.webp)
 
 ## Project Overview
 

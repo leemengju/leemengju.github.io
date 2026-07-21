@@ -10,7 +10,7 @@ categories: [pm]
 
 Connecting a century of postal trust across every town in Taiwan. Over three months (November 2023 - January 2024), I served as Project Manager Assistant, responsible for proposal writing, presentation production, and schedule planning, for Chunghwa Post Co., Ltd.
 
-![Key visual of the Chunghwa Post ATM interface design tender](/banners/chunghwa-post-atm-tender.png)
+![Key visual of the Chunghwa Post ATM interface design tender](/banners/chunghwa-post-atm-tender.webp)
 
 ## Project Overview
 

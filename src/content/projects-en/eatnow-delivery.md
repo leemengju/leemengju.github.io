@@ -18,7 +18,7 @@ Food-delivery platform | E-commerce | Technical optimization
 - **Organization**: iSpan International
 - **Links**: [GitHub](https://github.com/leemengju/project_EatNow)
 
-![EAT Now project cover](/banners/eatnow-delivery.png)
+![EAT Now project cover](/banners/eatnow-delivery.webp)
 
 ## Project Overview
 

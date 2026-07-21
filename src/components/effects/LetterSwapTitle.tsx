@@ -32,9 +32,9 @@ export default function LetterSwapTitle({
   const dir = useRef<'in' | 'out' | null>(null);
 
   useEffect(() => {
-    const fine = window.matchMedia('(pointer: fine)').matches;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setAnimated(fine && !reduced);
+    // allow on touch too — the swap is scroll-triggered, so it doesn't need hover
+    setAnimated(!reduced);
   }, []);
 
   const glyphs = useMemo(() => Array.from(text), [text]);

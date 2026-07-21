@@ -269,7 +269,7 @@ const linkedinIcon =
         const r = list.getBoundingClientRect();
         // 0 when the list top sits at 60% down the viewport, 1 once its bottom passes
         const p = Math.max(0, Math.min(1, (vh * 0.6 - r.top) / Math.max(1, r.height)));
-        beam.style.height = (p * r.height).toFixed(1) + 'px';
+        beam.style.transform = 'scaleY(' + p.toFixed(3) + ')';
       }
     };
     const onScroll = () => {
@@ -431,8 +431,11 @@ const linkedinIcon =
   }
   .skill:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
-    border-color: var(--accent);
+    /* soft accent glow that diffuses outward, not a hard border line (item 5) */
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border-soft));
+    box-shadow:
+      0 0 24px -2px color-mix(in srgb, var(--accent) 45%, transparent),
+      var(--shadow-hover);
   }
   .skill__icon {
     display: inline-flex;
@@ -498,14 +501,19 @@ const linkedinIcon =
     left: -2px;
     top: 0;
     width: 2px;
-    height: 0;
+    height: 100%;
     border-radius: 2px;
     background: linear-gradient(
       to bottom,
       var(--accent),
       color-mix(in srgb, var(--accent) 25%, transparent)
     );
-    will-change: height;
+    /* scaleY (compositor-only) instead of animating height, so the beam can
+       never affect page layout/height (item 7) */
+    transform: scaleY(0);
+    transform-origin: top;
+    pointer-events: none;
+    will-change: transform;
   }
   @media (prefers-reduced-motion: reduce) {
     .tl-beam {

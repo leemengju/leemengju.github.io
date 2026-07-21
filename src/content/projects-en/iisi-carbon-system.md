@@ -8,7 +8,7 @@ order: 16
 categories: [uiux]
 ---
 
-![Project key visual: ESG Carbon Sustainable Cloud — carbon inventory system UI design](/banners/iisi-carbon-system.png)
+![Project key visual: ESG Carbon Sustainable Cloud — carbon inventory system UI design](/banners/iisi-carbon-system.webp)
 
 ## Overview
 

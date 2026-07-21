@@ -18,7 +18,7 @@ categories: [fullstack, uiux]
 - **服務公司**:資展國際
 - **相關連結**:[GitHub](https://github.com/leemengju/project_EatNow)
 
-![EAT Now 專案封面](/banners/eatnow-delivery.png)
+![EAT Now 專案封面](/banners/eatnow-delivery.webp)
 
 ## 專案概覽
 

@@ -63,7 +63,7 @@ const zh: Profile = {
     { value: '~21×', label: 'ClickHouse 查詢提速' },
     { value: '300+', label: '小時/年 自動化節省' },
     { value: '−54%', label: '巨型 Vue 主檔瘦身(4221→1963 行)' },
-    { value: '8 weeks', label: '從零交付新貨幣後台(34 項工項)' },
+    { value: '8wks', label: '從零交付新貨幣後台(34 項工項)' },
     { value: '17+', label: '篇專案作品' },
     { value: '3.2×', label: '批量金流查詢提速(QA 實測)' }
   ],
@@ -166,7 +166,7 @@ const en: Profile = {
     { value: '~21×', label: 'ClickHouse query speed-up' },
     { value: '300+', label: 'hrs/yr saved via automation' },
     { value: '−54%', label: 'monolith Vue slimmed (4221→1963 lines)' },
-    { value: '8 weeks', label: 'new-currency back office from zero (34 items)' },
+    { value: '8wks', label: 'new-currency back office from zero (34 items)' },
     { value: '17+', label: 'project write-ups' },
     { value: '3.2×', label: 'batch cash-flow query speed-up (QA)' }
   ],

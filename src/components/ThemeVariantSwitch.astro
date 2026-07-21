@@ -73,9 +73,13 @@
     outline-offset: 2px;
   }
 
-  /* Dark variant: flatten the (dark) logo to white so it reads on the navy. */
-  :root[data-variant='dark'] .site-header__logo {
-    filter: brightness(0) invert(1);
+  /* Brand (masked logo + name) takes the theme's brand color: white in Dark so
+     it reads on the navy, accent in Bright (item 1). */
+  :root[data-variant='dark'] .site-header__brand {
+    color: #ffffff;
+  }
+  :root[data-variant='bright'] .site-header__brand {
+    color: var(--accent);
   }
 
   /* Mobile: the header top-right holds the language switch (and the nav

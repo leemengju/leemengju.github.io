@@ -24,9 +24,10 @@ export default function RainingLetters({ text }: { text: string }) {
   const [animated, setAnimated] = useState(false);
 
   useEffect(() => {
-    const fine = window.matchMedia('(pointer: fine)').matches;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setAnimated(fine && !reduced);
+    // run on mobile too (item 2) — it's the hero's signature motion; only
+    // reduced-motion opts out
+    setAnimated(!reduced);
   }, []);
 
   // ---- Rain layer ----
@@ -34,7 +35,8 @@ export default function RainingLetters({ text }: { text: string }) {
     if (!animated) return;
     const layer = layerRef.current;
     if (!layer) return;
-    const COUNT = 130;
+    // fewer glyphs on small screens to keep the rAF cheap on phones
+    const COUNT = window.innerWidth < 640 ? 70 : 130;
     type Drop = { el: HTMLSpanElement; x: number; y: number; speed: number };
     const drops: Drop[] = [];
     const rnd = (s: string) => s[Math.floor(Math.random() * s.length)];

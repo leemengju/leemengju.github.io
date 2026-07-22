@@ -38,6 +38,16 @@
 
 ## 進度日誌(新的寫最上面)
 
+### 2026-07-22 — 第六輪回饋(8 項,含履歷 PDF)
+- **根因:island/JS 產生的元素拿不到 Astro scoped CSS**。字母雨 hero(1)glyph 變成一行亂碼、分頁鈕(4)沒套色——都是因為 CSS 被 scope 到元件、但元素是 island/JS 建的。改用 `:global()` 後修好。**教訓已內化**:island 或 `document.createElement` 產生的節點,樣式要 `:global`。
+- 技能卡 hover(2):改大而柔的**輔色**光暈(box-shadow),非硬邊。
+- admonition icon(3):Dark 太深 → `fill: currentColor` = alert 標題色。
+- github/linkedin(5):`btn--expand` 展開式膠囊(icon 縮出、標籤展入、accent 漸層+光暈)。
+- smoky(6):顏色改**播放當下**從元素 `getComputedStyle().color` 取,Dark 直接冒白煙貼白字(不再黑煙→白字)。
+- backToTop(7):加 accent 陰影浮起感。版權(8):去掉年份。
+- **履歷 PDF(item 8)** ✅:`public/resume.html`(2 頁深色版型,仿 cv 模板,經歷/專案無 icon)→ headless Chrome 產 `public/resume.pdf`。**來源是 `profile.ts`(已去識別化的公開版),不引私有履歷,不放電話**(使用者確認)。hero「查看履歷」鈕已開。產製步驟寫進 WORKFLOW.md §7。**英文版待補**(同模板換 en 內容)。PDF 1.28MB 偏大,日後可壓。
+- **待目視**:字母雨(現在應該真的下雨了)、分頁輔色、展開鈕、smoky 白煙、履歷 PDF 版面。
+
 ### 2026-07-21 — 第四輪回饋(8 項)
 - **logo/品牌色(1、3)**:logo 改「遮罩剪影 + `background-color:currentColor`」(logo.svg 是 raster-in-SVG 但有 alpha,遮罩可精準上色);品牌色 Dark=白、Bright=主色,logo+名字一起變。
 - **header 動效(2)**:brand + 語言鈕淡入下滑進場(不動手機固定的變體鈕,避免 transform 破壞 fixed)。

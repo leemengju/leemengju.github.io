@@ -70,8 +70,10 @@ export default function SmokyText({
   const ref = useRef<HTMLSpanElement>(null);
   const colorRef = useRef('#888');
 
-  // Resolve color, inject keyframes, and arm the scroll-triggered smoke-in.
-  // Reduced motion → stay as plain visible text.
+  // Inject an (empty) keyframes <style>, then arm the scroll-triggered smoke-in.
+  // The smoke color is resolved from the ELEMENT at play-time (not a mount-time
+  // probe), so it always matches the current Bright/Dark theme — no more black
+  // smoke before it settles to white in Dark (item 6). Reduced motion → plain text.
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
@@ -79,16 +81,7 @@ export default function SmokyText({
       setPhase('visible');
       return;
     }
-    const probe = document.createElement('span');
-    probe.style.color = colorVar;
-    probe.style.display = 'none';
-    document.body.appendChild(probe);
-    const color = getComputedStyle(probe).color || '#888';
-    document.body.removeChild(probe);
-    colorRef.current = color;
-
     const styleEl = document.createElement('style');
-    styleEl.textContent = buildKF(kfId, color, intensity);
     document.head.appendChild(styleEl);
 
     // Hide, then smoke-in whenever the text scrolls into view — and reset to
@@ -103,6 +96,11 @@ export default function SmokyText({
           const inView = entries.some((e) => e.isIntersecting);
           window.clearTimeout(timer);
           if (inView) {
+            // read the live inherited color (element is 'hidden'/'inherit' here,
+            // so this is the real theme text color) and (re)build the keyframes
+            const color = getComputedStyle(el).color || '#888';
+            colorRef.current = color;
+            styleEl.textContent = buildKF(kfId, color, intensity);
             setPhase('appearing');
             const settle = 1100 + chars.length * stagger * 1000 + 900;
             timer = window.setTimeout(() => setPhase('visible'), settle);

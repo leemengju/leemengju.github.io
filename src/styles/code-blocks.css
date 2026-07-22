@@ -85,6 +85,12 @@ main .markdown-alert-title {
   margin-bottom: 0.35rem;
   line-height: 1;
 }
+/* icon matches the title color (item 3): the octicon ships a fixed dark fill
+   that reads too dark in Dark mode — force it to the alert color */
+main .markdown-alert-title svg {
+  fill: currentColor;
+  color: var(--alert-color, var(--accent));
+}
 main .markdown-alert-note {
   --alert-color: light-dark(#4f6ef0, #7d9bff);
 }

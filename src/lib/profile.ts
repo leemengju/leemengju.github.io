@@ -151,7 +151,7 @@ const zh: Profile = {
     email: 'emy0526@gmail.com',
     github: 'https://github.com/leemengju',
     location: '臺北市',
-    // resume: '/resume.pdf',  // TODO: CV 由你重新規劃後放 public/resume.pdf
+    resume: '/resume.pdf', // 2-page résumé; regenerate via public/resume.html → headless Chrome (see WORKFLOW.md)
     linkedin: 'https://www.linkedin.com/in/meng-ju-lee-902204231/'
   }
 };

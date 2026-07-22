@@ -95,3 +95,17 @@ graph LR
 | 換配色 | `styles/tokens.css` 的 `--accent` 等 |
 | 加新特效 | 先對照上面的特效分層表選層級,再決定放哪個元件 |
 | 履歷 PDF / LinkedIn 按鈕 | `profile.ts` 的 `contact.resume` / `contact.linkedin`(檔案放 `public/resume.pdf`) |
+
+## 7. 履歷 PDF 產製
+
+- **來源**:`public/resume.html`(自包含 HTML+CSS,深色版型仿 `referenceForProtfolio/cv`)。內容對齊 **`src/lib/profile.ts`**(已去識別化的公開版),**不直接引用私有履歷**,且**不放電話**(public repo 紅線;使用者已確認)。經歷/專案不放 icon。
+- **改內容**:編輯 `public/resume.html`(與 `profile.ts` 同步)。
+- **重新產 PDF**(需本機有 Chrome):
+  ```bash
+  "/c/Program Files/Google/Chrome/Application/chrome.exe" --headless=new --disable-gpu \
+    --no-pdf-header-footer --virtual-time-budget=12000 --user-data-dir=/tmp/cpdf \
+    --print-to-pdf="E:/portfolio/public/resume.pdf" "file:///E:/portfolio/public/resume.html"
+  ```
+  `--virtual-time-budget` 讓 webfont 載入;CSS 的 `print-color-adjust:exact` 保住深色底。
+- **上站**:`profile.ts` 的 `contact.resume: '/resume.pdf'` 已開;hero「履歷」按鈕即連到它。
+- **待辦**:目前只有中文版;英文版可比照(用 `profile.ts` 的 `en` 內容複製一份 `resume-en.html` → 產 `resume-en.pdf` → en profile 的 `contact.resume`)。

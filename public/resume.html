@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>李孟儒 Lance Lee — 履歷</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+  /* Résumé — dark theme after the referenceForProtfolio/cv template
+     (#1F1F1F ground, #BBCD62 accent, Inter + Noto Sans TC). Content mirrors
+     the public, de-identified profile (src/lib/profile.ts); no phone. Built as
+     two A4 pages for print / PDF export via headless Chrome. */
+  :root {
+    --bg: #1f1f1f;
+    --panel: #262626;
+    --line: #3d3d3d;
+    --text: #d8d8d8;
+    --muted: #9a9a9a;
+    --accent: #bbcd62;
+    --accent-soft: #c1d166;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    background: #111;
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    color: var(--text);
+    line-height: 1.55;
+    font-size: 13px;
+  }
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 12px auto;
+    background: var(--bg);
+    padding: 16mm 15mm;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+
+  /* header */
+  .head { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .head h1 { font-size: 26px; font-weight: 900; letter-spacing: 0.01em; color: #fff; }
+  .head h1 .en { color: var(--accent); font-weight: 700; margin-left: 6px; font-size: 20px; }
+  .head .intro { color: var(--muted); font-size: 12.5px; max-width: 165mm; }
+  .head .contact { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 4px; font-size: 12px; }
+  .head .contact span { color: var(--muted); }
+  .head .contact b { color: var(--text); font-weight: 500; }
+
+  /* section */
+  .section { display: flex; flex-direction: column; gap: 9px; }
+  .section > h2 { font-size: 15px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .section > h2::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  /* skills grid */
+  .skills { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 22px; }
+  .skill .k { font-weight: 700; color: #fff; font-size: 12.5px; margin-bottom: 1px; }
+  .skill .d { color: var(--muted); font-size: 11.5px; }
+
+  /* experience / education entries (no icons per request) */
+  .entry { padding-left: 13px; border-left: 2px solid var(--line); position: relative; margin-bottom: 11px; }
+  .entry::before { content: ''; position: absolute; left: -5px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .entry .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .entry .role { font-weight: 700; color: #fff; font-size: 13px; }
+  .entry .time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .entry .org { color: var(--accent-soft); font-size: 12px; margin-top: 1px; }
+  .entry .summary { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+  .entry ul { list-style: none; margin-top: 5px; display: flex; flex-direction: column; gap: 3px; }
+  .entry ul li { position: relative; padding-left: 12px; font-size: 11.8px; color: var(--text); }
+  .entry ul li::before { content: ''; position: absolute; left: 0; top: 7px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); opacity: 0.8; }
+
+  /* projects (no icons) */
+  .projects { display: flex; flex-direction: column; gap: 7px; }
+  .proj { display: flex; flex-direction: column; gap: 1px; }
+  .proj .pt { font-weight: 700; color: #fff; font-size: 12.3px; }
+  .proj .pm { color: var(--accent-soft); font-size: 11.3px; }
+  .proj .pd { color: var(--muted); font-size: 11.3px; }
+
+  @media print {
+    body { background: none; }
+    .page { margin: 0; box-shadow: none; }
+    .page + .page { page-break-before: always; }
+  }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+  <!-- ===================== PAGE 1 ===================== -->
+  <section class="page">
+    <header class="head">
+      <h1>李孟儒<span class="en">Lance Lee</span></h1>
+      <p class="intro">
+        擁有 2 年跨產業經驗，涵蓋數位產品設計與全端工程開發，現任線上娛樂平台全端工程師，曾參與百萬預算的 SaaS、金融、政府與線上娛樂平台專案。主導總勝分報表由 MySQL 遷移至 ClickHouse（整月查詢約 104 秒→約 5 秒、約 21 倍），持續推動報表與監控自動化（年省逾 300 小時），並重構大型 Vue 模組（4221 行縮減 54%）。設計與專案管理背景讓我能精準掌握需求脈絡與使用者體驗，讓技術決策直接對接商業目標。
+      </p>
+      <div class="contact">
+        <span>Email <b>emy0526@gmail.com</b></span>
+        <span>GitHub <b>github.com/leemengju</b></span>
+        <span>LinkedIn <b>meng-ju-lee-902204231</b></span>
+        <span>作品集 <b>leemengju.github.io</b></span>
+        <span>所在地 <b>臺北市</b></span>
+      </div>
+    </header>
+
+    <div class="section">
+      <h2>技能</h2>
+      <div class="skills">
+        <div class="skill"><div class="k">系統重構</div><div class="d">主導共用設定模組化，4221 行巨型 Vue 檔分三波拆為 10 檔、主檔縮減 54%；並重構線上會員頁，將單一混亂 API 拆成 3 支職責清晰 API、前端主檔由 712 行降至約 190 行。</div></div>
+        <div class="skill"><div class="k">資料庫遷移與效能優化</div><div class="d">熟悉 MySQL/MariaDB/ClickHouse 設計與操作，獨立主導 MySQL→ClickHouse 遷移（MV + AggregatingMergeTree），查詢提速約 21 倍，零停機切換、資料一致。</div></div>
+        <div class="skill"><div class="k">數據可視與自動化</div><div class="d">將重複性人工作業轉為自動化排程與資料視覺化，以 v-charts 折線圖與可拖拉表格呈現多維趨勢，並將日報表、監控回報改為 Kernel 排程，年省逾 300 小時人力。</div></div>
+        <div class="skill"><div class="k">第三方串接</div><div class="d">具備 LINE/Slack Bot SDK 串接與 cloudflared 內網穿透經驗，擅長打通防火牆內網限制，將訊息與資料即時同步推送。</div></div>
+        <div class="skill"><div class="k">全端開發技術</div><div class="d">React、Vue 前端框架與 PHP、Laravel 後端框架開發經驗，熟悉 MVC 與前後端串接，能獨立完成從資料庫設計到前端呈現的完整開發。</div></div>
+        <div class="skill"><div class="k">專案管理</div><div class="d">熟練使用 Notion、Trello、Redmine 進行專案管理，掌控進度與任務、提高執行效率。</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>經歷</h2>
+      <div class="entry">
+        <div class="top"><span class="role">全端工程師</span><span class="time">2025.06 - 至今</span></div>
+        <div class="org">糖蛙線上娛樂股份有限公司，台北</div>
+        <div class="summary">隸屬技術支援課，負責遊戲營運數據報表與後台系統之全端開發與維運。</div>
+        <ul>
+          <li>主導總勝分報表資料庫遷移，玩家整月查詢由約 104 秒降至約 5 秒（約 21 倍）。</li>
+          <li>將投注額日表、區間賠率監控、玩家金流查詢等每日人工作業（合計每年逾 300 小時）全面自動化。</li>
+          <li>將 4221 行巨型 Vue 檔模組化重構，拆為 10 檔、主檔縮減 54%，新框架為後續功能沿用驗證。</li>
+          <li>與同事協作 8 週內從零交付全新貨幣機制後台（34 項工項上線、個人 69 commits）。</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="top"><span class="role">全端開發工程師養成班受訓</span><span class="time">2024.11 - 2025.04</span></div>
+        <div class="org">資展國際（原資策會教研所），台中</div>
+        <ul>
+          <li>帶領 5 人團隊開發 HUBD 快時尚電商 MVP，主導 React 前端、Laravel 後端整合、API 串接與 MySQL 建置。</li>
+          <li>獨立從 0 到 1 打造 EatNow 外送平台原型，將單一斷點設計擴展為全載體，提升 50%+ 裝置相容性。</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="top"><span class="role">使用者體驗設計師＋專案管理</span><span class="time">2023.09 - 2024.09</span></div>
+        <div class="org">遊石設計有限公司，台北</div>
+        <div class="summary">專注於用戶體驗與服務設計的資深軟體接案公司。</div>
+        <ul>
+          <li>多案併行管理與標案提報：中華郵政 ATM 標案（決選第二）、IDDI 無障礙網站、寶藏巖體驗設計（時程準確率 95%）。</li>
+          <li>高技術門檻平台介面設計與使用者需求研究：碳盤查系統 700+ 頁介面、酷課雲親師生平台、公司新官網 GUI。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGE 2 ===================== -->
+  <section class="page">
+    <div class="section">
+      <h2>經歷（續）</h2>
+      <div class="entry">
+        <div class="top"><span class="role">品牌策略經理</span><span class="time">2023.09 - 2024.08</span></div>
+        <div class="org">一隅有限公司，新北</div>
+        <div class="summary">成長快速的空間數位影像新創公司。</div>
+        <ul>
+          <li>市場商業模式評估、5 大競品研究，提出 3 項市場切入策略與定價建議。</li>
+          <li>依品牌策略組織執行、成效匯報與 OKR 追蹤，並管理公司專案與人力。</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="top"><span class="role">研究員</span><span class="time">2021.02 - 2022.01</span></div>
+        <div class="org">北京大學文史研究中心，北京</div>
+        <ul>
+          <li>撰寫研究報告、論文與專題文章，並協助研究計畫的制定、推進與實施。</li>
+          <li>收集田野資料進行整理、編碼與統計分析，建立資料庫與文獻檔案。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>學歷</h2>
+      <div class="entry">
+        <div class="top"><span class="role">北亞利桑那大學 — 電腦資訊技術碩士</span><span class="time">2024.09 - 2025.09</span></div>
+        <ul>
+          <li>英語能力：GRE 315 / 托福 100（＝雅思 7＝多益 945+）。</li>
+          <li>在經濟部 IDDI 計畫支持下，獨立以 React 與 Tailwind CSS 開發符合 WCAG 標準的無障礙推廣網站。</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="top"><span class="role">北京大學 — 學士學位</span><span class="time">2017.09 - 2022.06</span></div>
+        <ul>
+          <li>東京大學與香港理工大學交換，交換期間獲得全 A 成績。</li>
+          <li>連續三年獲教育部頒發臺港澳學生獎學金一等獎，2021 年度特等獎（全校前三）。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>代表專案</h2>
+      <div class="projects">
+        <div class="proj"><div class="pt">總勝分報表資料庫遷移（MySQL → ClickHouse）</div><div class="pm">整月查詢 約 104s → 約 5s（~21×）、零停機</div></div>
+        <div class="proj"><div class="pt">玩家金流異動統計報表</div><div class="pm">20 人批量查詢 4~5 分鐘 → 15~20 秒（QA 實測 3.2×）</div></div>
+        <div class="proj"><div class="pt">區間賠率監控 + 運營資料 LINE／Slack 機器人自動推送</div><div class="pm">風管人工回報 → 全自動推送，約省 304 小時/年</div></div>
+        <div class="proj"><div class="pt">共用設定模組化重構</div><div class="pm">4221 行巨型 Vue 檔分三波拆為 10 檔、主檔縮減 54%</div></div>
+        <div class="proj"><div class="pt">Q 幣後台系統建置</div><div class="pm">8 週從零交付、34 項工項上線、個人 69 commits</div></div>
+        <div class="proj"><div class="pd">完整 17+ 篇專案作品見作品集：leemengju.github.io</div></div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

@@ -202,26 +202,45 @@ const linkedinIcon =
     const filtered = () =>
       cards.filter((c) => category === 'all' || (c.dataset.categories || '').split(' ').includes(category));
 
+    // Gooey-dot pager (item 4): accent dots that blob together via an SVG goo
+    // filter as the active one scales up; chevron arrows either side.
+    const goTo = (target: number) => {
+      page = target;
+      render();
+      list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
     const buildPager = (pages: number) => {
-      pager.innerHTML = '';
       pager.hidden = pages <= 1;
+      pager.innerHTML = '';
       if (pages <= 1) return;
-      const mk = (label: string, target: number, opts: { active?: boolean; disabled?: boolean } = {}) => {
+      pager.insertAdjacentHTML(
+        'beforeend',
+        '<svg class="pager-goo" aria-hidden="true"><defs><filter id="pgoo"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="g"/><feComposite in="SourceGraphic" in2="g" operator="atop"/></filter></defs></svg>'
+      );
+      const arrow = (label: string, target: number, disabled: boolean, aria: string) => {
         const b = document.createElement('button');
         b.type = 'button';
+        b.className = 'pager-arrow';
         b.textContent = label;
-        if (opts.active) b.classList.add('is-active');
-        if (opts.disabled) b.disabled = true;
-        b.addEventListener('click', () => {
-          page = target;
-          render();
-          list.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+        b.setAttribute('aria-label', aria);
+        if (disabled) b.disabled = true;
+        else b.addEventListener('click', () => goTo(target));
         pager.appendChild(b);
       };
-      mk('‹', Math.max(0, page - 1), { disabled: page === 0 });
-      for (let i = 0; i < pages; i++) mk(String(i + 1), i, { active: i === page });
-      mk('›', Math.min(pages - 1, page + 1), { disabled: page === pages - 1 });
+      arrow('‹', Math.max(0, page - 1), page === 0, 'Previous');
+      const dots = document.createElement('div');
+      dots.className = 'pager-dots';
+      for (let i = 0; i < pages; i++) {
+        const d = document.createElement('button');
+        d.type = 'button';
+        d.className = 'pager-dot' + (i === page ? ' is-active' : '');
+        d.setAttribute('aria-label', 'Page ' + (i + 1));
+        if (i === page) d.setAttribute('aria-current', 'true');
+        d.addEventListener('click', () => goTo(i));
+        dots.appendChild(d);
+      }
+      pager.appendChild(dots);
+      arrow('›', Math.min(pages - 1, page + 1), page === pages - 1, 'Next');
     };
 
     function render() {
@@ -366,13 +385,16 @@ const linkedinIcon =
   }
   .btn--primary {
     padding: 0.6rem 1.4rem;
-    background: var(--accent);
-    border-color: var(--accent);
+    background: linear-gradient(45deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #ffffff 25%));
+    border-color: transparent;
     color: #fff;
     font-size: 0.95rem;
+    box-shadow: 0 10px 26px -6px color-mix(in srgb, var(--accent) 60%, transparent);
   }
   .btn--primary:hover {
-    filter: brightness(1.08);
+    filter: brightness(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px -6px color-mix(in srgb, var(--accent) 65%, transparent);
   }
   /* Expanding icon button (item 5): a circle that grows into a labelled pill on
      hover — icon scales out, label scales in, accent gradient + glow. */
@@ -550,9 +572,10 @@ const linkedinIcon =
     border-left: 2px solid var(--border-soft);
     position: relative;
   }
-  /* timeline beam (item 15): an accent line over the faint rail that fills as
-     the section scrolls into view */
-  .tl-beam {
+  /* timeline beam — an accent line over the faint rail that fills as the section
+     scrolls into view. The beam is created in JS (no Astro scope attr), so the
+     rule MUST be :global — this is why it never showed before (batch-6 item 5). */
+  :global(.tl-beam) {
     position: absolute;
     left: -2px;
     top: 0;
@@ -565,14 +588,14 @@ const linkedinIcon =
       color-mix(in srgb, var(--accent) 25%, transparent)
     );
     /* scaleY (compositor-only) instead of animating height, so the beam can
-       never affect page layout/height (item 7) */
+       never affect page layout/height */
     transform: scaleY(0);
     transform-origin: top;
     pointer-events: none;
     will-change: transform;
   }
   @media (prefers-reduced-motion: reduce) {
-    .tl-beam {
+    :global(.tl-beam) {
       display: none;
     }
   }
@@ -752,45 +775,67 @@ const linkedinIcon =
     right: 1.3rem;
   }
 
-  /* pagination — border/fill use the secondary token (item 13) */
+  /* Gooey-dot pagination (item 4): accent dots that blob together via the SVG
+     goo filter; chevron arrows. All nodes are JS-created → :global. */
   .projects-pager {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
+    align-items: center;
     justify-content: center;
+    gap: 1rem;
     margin-top: 1.75rem;
   }
   .projects-pager[hidden] {
     display: none;
   }
-  /* buttons are created in JS (no Astro scope attr), so :global reaches them —
-     this is why the earlier secondary recolor "looked unchanged" (item 4) */
-  .projects-pager :global(button) {
-    font: inherit;
-    font-size: 0.85rem;
-    font-weight: 600;
-    min-width: 2rem;
-    height: 2rem;
-    padding: 0 0.5rem;
+  .projects-pager :global(.pager-goo) {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+  .projects-pager :global(.pager-arrow) {
+    background: none;
+    border: none;
     color: var(--text-muted);
-    background: transparent;
-    border: 1px solid var(--secondary);
-    border-radius: 0.5rem;
+    font-size: 1.35rem;
+    line-height: 1;
+    padding: 0.1rem 0.35rem;
     cursor: pointer;
-    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    transition: color 0.2s ease, transform 0.2s ease;
   }
-  .projects-pager :global(button:hover:not(:disabled)) {
-    color: var(--text);
-    background: color-mix(in srgb, var(--secondary) 18%, transparent);
+  .projects-pager :global(.pager-arrow:hover:not(:disabled)) {
+    color: var(--accent);
+    transform: scale(1.15);
   }
-  .projects-pager :global(button.is-active) {
-    color: #fff;
-    background: var(--secondary);
-    border-color: var(--secondary);
-  }
-  .projects-pager :global(button:disabled) {
-    opacity: 0.4;
+  .projects-pager :global(.pager-arrow:disabled) {
+    opacity: 0.35;
     cursor: default;
+  }
+  .projects-pager :global(.pager-dots) {
+    display: flex;
+    gap: 0.9rem;
+    filter: url(#pgoo);
+  }
+  .projects-pager :global(.pager-dot) {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    background: color-mix(in srgb, var(--text) 28%, transparent);
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
+  }
+  .projects-pager :global(.pager-dot:hover) {
+    background: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  .projects-pager :global(.pager-dot.is-active) {
+    background: var(--accent);
+    transform: scale(1.9);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .projects-pager :global(.pager-dot) {
+      transition: background 0.3s ease;
+    }
   }
 
   /* Contact CTA (item 17): a friendly animated wave to lift the section. */

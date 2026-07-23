@@ -116,15 +116,6 @@ const zh: Profile = {
         '市場商業模式評估、5 大競品研究，提出 3 項市場切入策略與定價建議。',
         '依品牌策略組織執行、成效匯報與 OKR 追蹤，並管理公司專案與人力。'
       ]
-    },
-    {
-      role: '研究員',
-      org: '北京大學文史研究中心，北京',
-      period: '2021.02 - 2022.01',
-      highlights: [
-        '撰寫研究報告、論文與專題文章，並協助研究計畫的制定、推進與實施。',
-        '收集田野資料進行整理、編碼與統計分析，建立資料庫與文獻檔案。'
-      ]
     }
   ],
   education: [
@@ -218,15 +209,6 @@ const en: Profile = {
       highlights: [
         'Market business-model assessment, research on 5 key competitors, 3 go-to-market strategies with pricing.',
         'Drove execution, performance reporting and OKR tracking around the brand strategy; managed projects and staffing.'
-      ]
-    },
-    {
-      role: 'Research Assistant',
-      org: 'Peking University Literature & History Research Center, Beijing',
-      period: '2021.02 - 2022.01',
-      highlights: [
-        'Wrote research reports, theses and feature articles; assisted in formulating and advancing research plans.',
-        'Collected field data for coding and statistical analysis; built databases and documentation archives.'
       ]
     }
   ],

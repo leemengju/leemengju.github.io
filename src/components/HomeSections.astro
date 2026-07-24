@@ -213,10 +213,6 @@ const linkedinIcon =
       pager.hidden = pages <= 1;
       pager.innerHTML = '';
       if (pages <= 1) return;
-      pager.insertAdjacentHTML(
-        'beforeend',
-        '<svg class="pager-goo" aria-hidden="true"><defs><filter id="pgoo"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="g"/><feComposite in="SourceGraphic" in2="g" operator="atop"/></filter></defs></svg>'
-      );
       const arrow = (label: string, target: number, disabled: boolean, aria: string) => {
         const b = document.createElement('button');
         b.type = 'button';
@@ -569,18 +565,33 @@ const linkedinIcon =
     padding: 0 0 0 1.25rem;
     display: grid;
     gap: 1.75rem;
-    border-left: 2px solid var(--border-soft);
     position: relative;
+  }
+  /* Faint rail. Starts at the first item's dot centre (0.6rem = dot top 0.3rem
+     + half the 0.6rem dot) so the line head never rises above the first dot;
+     runs to the list bottom. Replaces a border-left, which couldn't be inset. */
+  .exp::before,
+  .edu::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 0.6rem;
+    bottom: 0;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--border-soft);
+    pointer-events: none;
   }
   /* timeline beam — an accent line over the faint rail that fills as the section
      scrolls into view. The beam is created in JS (no Astro scope attr), so the
-     rule MUST be :global — this is why it never showed before (batch-6 item 5). */
+     rule MUST be :global — this is why it never showed before (batch-6 item 5).
+     Shares the rail's 0.6rem top inset so both align with the first dot. */
   :global(.tl-beam) {
     position: absolute;
     left: -2px;
-    top: 0;
+    top: 0.6rem;
     width: 2px;
-    height: 100%;
+    height: calc(100% - 0.6rem);
     border-radius: 2px;
     background: linear-gradient(
       to bottom,
@@ -775,8 +786,10 @@ const linkedinIcon =
     right: 1.3rem;
   }
 
-  /* Gooey-dot pagination (item 4): accent dots that blob together via the SVG
-     goo filter; chevron arrows. All nodes are JS-created → :global. */
+  /* Dot pagination (item 4): accent dots + chevron arrows. Inactive dots show
+     the accent at 50% opacity; the active dot is solid accent and scales up.
+     (The earlier SVG "goo" filter was dropped — its blur+alpha threshold shrank
+     the small inactive dots to invisible specks.) All nodes are JS-created → :global. */
   .projects-pager {
     display: flex;
     align-items: center;
@@ -786,11 +799,6 @@ const linkedinIcon =
   }
   .projects-pager[hidden] {
     display: none;
-  }
-  .projects-pager :global(.pager-goo) {
-    position: absolute;
-    width: 0;
-    height: 0;
   }
   .projects-pager :global(.pager-arrow) {
     background: none;
@@ -813,7 +821,6 @@ const linkedinIcon =
   .projects-pager :global(.pager-dots) {
     display: flex;
     gap: 0.9rem;
-    filter: url(#pgoo);
   }
   .projects-pager :global(.pager-dot) {
     width: 0.7rem;
@@ -821,12 +828,13 @@ const linkedinIcon =
     border-radius: 50%;
     border: none;
     padding: 0;
-    background: color-mix(in srgb, var(--text) 28%, transparent);
+    /* Inactive dot = accent at 50% opacity (per request). */
+    background: color-mix(in srgb, var(--accent) 50%, transparent);
     cursor: pointer;
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
   }
   .projects-pager :global(.pager-dot:hover) {
-    background: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 75%, transparent);
   }
   .projects-pager :global(.pager-dot.is-active) {
     background: var(--accent);

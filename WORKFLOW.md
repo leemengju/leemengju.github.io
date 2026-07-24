@@ -98,14 +98,18 @@ graph LR
 
 ## 7. 履歷 PDF 產製
 
-- **來源**:`public/resume.html`(自包含 HTML+CSS,深色版型仿 `referenceForProtfolio/cv`)。內容對齊 **`src/lib/profile.ts`**(已去識別化的公開版),**不直接引用私有履歷**,且**不放電話**(public repo 紅線;使用者已確認)。經歷/專案不放 icon。
-- **改內容**:編輯 `public/resume.html`(與 `profile.ts` 同步)。
+- **來源**(兩版都要):`public/resume.html`(中)+ `public/resume-en.html`(英)。自包含 HTML+CSS,版型仿 `referenceForProtfolio/cv/p1`+`p2`,**Bright 色票**(`--primary:#4a5989`)。內容對齊 **`src/lib/profile.ts`**(已去識別化的公開版)+ 去識別化專案敘述,**不直接引用私有履歷**,且**不放電話**(public repo 紅線;使用者已確認)。
+- **結構**(兩版一致,皆為乾淨 2 頁):P1 = header(含 GitHub/LinkedIn/作品集 超連結)+ 技能(**有 icon**,inline SVG)+ 經歷(前 3 筆,無 icon);P2 = 代表專案(前 6 個,每個 5 段:背景/專案內容/專案挑戰/個人貢獻/結果與影響)+ 學歷(最後,2 筆)。經歷/專案不放 icon。
+- **改內容**:編輯 `public/resume.html` / `resume-en.html`(與 `profile.ts` 同步)。
 - **重新產 PDF**(需本機有 Chrome):
   ```bash
-  "/c/Program Files/Google/Chrome/Application/chrome.exe" --headless=new --disable-gpu \
-    --no-pdf-header-footer --virtual-time-budget=12000 --user-data-dir=/tmp/cpdf \
-    --print-to-pdf="E:/portfolio/public/resume.pdf" "file:///E:/portfolio/public/resume.html"
+  CHROME="/c/Program Files/Google/Chrome/Application/chrome.exe"
+  "$CHROME" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=15000 \
+    --user-data-dir=/tmp/c1 --print-to-pdf="E:/portfolio/public/resume.pdf" "file:///E:/portfolio/public/resume.html"
+  "$CHROME" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=15000 \
+    --user-data-dir=/tmp/c2 --print-to-pdf="E:/portfolio/public/resume-en.pdf" "file:///E:/portfolio/public/resume-en.html"
   ```
-  `--virtual-time-budget` 讓 webfont 載入;CSS 的 `print-color-adjust:exact` 保住深色底。
-- **上站**:`profile.ts` 的 `contact.resume: '/resume.pdf'` 已開;hero「履歷」按鈕即連到它。
-- **待辦**:目前只有中文版;英文版可比照(用 `profile.ts` 的 `en` 內容複製一份 `resume-en.html` → 產 `resume-en.pdf` → en profile 的 `contact.resume`)。
+  `--virtual-time-budget` 讓 webfont 載入;CSS 的 `print-color-adjust:exact` 保住底色。
+- **驗證分頁**(無 Ghostscript 也能自檢):`pip install pymupdf` 後用 `fitz` 把每頁 raster 成 PNG 檢查——確認 (a) `/Count` = 2、(b) 專案卡與學歷條目沒被跨頁切開。`.proj/.entry/.skill` 皆設 `break-inside:avoid`;若某條目被擠到第 3 頁,微調 `.page padding`(11mm)、`.proj padding/margin`,或把英文太長的 dd 精簡成單行,直到回到 2 頁。
+- **上站**:zh `contact.resume:'/resume.pdf'`、en `contact.resume:'/resume-en.pdf'` 皆已開;hero「查看履歷」按鈕即依語系連到對應 PDF。
+- **紅線**:push 前跑 leak-scan(見 §3),掃描範圍要含 `public/resume.html public/resume-en.html`。

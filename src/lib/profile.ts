@@ -236,7 +236,7 @@ const en: Profile = {
     email: 'emy0526@gmail.com',
     github: 'https://github.com/leemengju',
     location: 'Taipei, Taiwan',
-    // resume: '/resume.pdf',  // TODO: résumé PDF at public/resume.pdf once you replan the CV
+    resume: '/resume-en.pdf', // 2-page EN résumé; regenerate via public/resume-en.html → headless Chrome (see WORKFLOW.md)
     linkedin: 'https://www.linkedin.com/in/meng-ju-lee-902204231/'
   }
 };

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Meng-Ju Lee (Lance) — Résumé</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --primary:#4a5989; --secondary:#8b90a0; --bg:#f3f4f8; --card:#ffffff; --line:#e0e2ea; --text:#26292f; --muted:#6b7180; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background:#d9dce4; font-family:'Inter','Noto Sans TC',sans-serif; color:var(--text); line-height:1.5; font-size:12.5px; }
+  .page { width:210mm; min-height:297mm; margin:12px auto; background:var(--bg); padding:11mm 15mm; display:flex; flex-direction:column; gap:9px; }
+  a { color:var(--primary); text-decoration:none; } a:hover { text-decoration:underline; }
+  .head { display:flex; flex-direction:column; gap:7px; padding-bottom:11px; border-bottom:2px solid var(--primary); }
+  .head h1 { font-size:24px; font-weight:900; color:var(--primary); }
+  .head .intro { color:var(--muted); font-size:12px; max-width:168mm; }
+  .head .contact { display:flex; flex-wrap:wrap; gap:5px 18px; margin-top:3px; font-size:11.5px; }
+  .head .contact span { color:var(--muted); } .head .contact a, .head .contact b { color:var(--text); font-weight:500; }
+  .section { display:flex; flex-direction:column; gap:8px; }
+  .section > h2 { font-size:14.5px; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:8px; }
+  .section > h2::after { content:''; flex:1; height:1px; background:var(--line); }
+  .skills { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; }
+  .skill { display:flex; gap:8px; align-items:flex-start; }
+  .skill .ico { flex-shrink:0; width:20px; height:20px; color:var(--primary); margin-top:1px; } .skill .ico svg { width:100%; height:100%; }
+  .skill .k { font-weight:700; color:var(--text); font-size:12px; } .skill .d { color:var(--muted); font-size:11px; }
+  .entry { padding-left:13px; border-left:2px solid var(--line); position:relative; margin-bottom:8px; }
+  .entry::before { content:''; position:absolute; left:-5px; top:5px; width:8px; height:8px; border-radius:50%; background:var(--primary); }
+  .entry .top { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .entry .role { font-weight:700; color:var(--text); font-size:12.5px; } .entry .time { color:var(--muted); font-size:10.5px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .entry .org { color:var(--primary); font-size:11.5px; margin-top:1px; } .entry .summary { color:var(--muted); font-size:11px; margin-top:2px; }
+  .entry ul { list-style:none; margin-top:4px; display:flex; flex-direction:column; gap:2px; }
+  .entry ul li { position:relative; padding-left:12px; font-size:11.3px; } .entry ul li::before { content:''; position:absolute; left:0; top:6px; width:4px; height:4px; border-radius:50%; background:var(--primary); opacity:.75; }
+  .proj { border:1px solid var(--line); border-radius:7px; background:var(--card); padding:7px 12px; margin-bottom:4px; }
+  .proj .pt { font-weight:700; color:var(--text); font-size:12.5px; margin-bottom:2px; }
+  .proj dl { display:grid; grid-template-columns:max-content 1fr; gap:2px 8px; }
+  .proj dt { color:var(--primary); font-weight:600; font-size:10.8px; white-space:nowrap; } .proj dd { color:var(--muted); font-size:11px; }
+  .proj, .entry, .skill { break-inside: avoid; }
+  .section > h2 { break-after: avoid; }
+  @media print { body { background:none; } .page { margin:0; } .page + .page { page-break-before:always; } }
+  @page { size:A4; margin:0; }
+</style>
+</head>
+<body>
+  <section class="page">
+    <header class="head">
+      <h1>Meng-Ju Lee (Lance)</h1>
+      <p class="intro">Full-stack engineer with 2 years of cross-industry experience spanning digital product design and full-stack development, currently at an online-entertainment platform; worked on million-budget SaaS, finance and government projects. Led a total-win report migration from MySQL to ClickHouse (a full-month query from ~104s to ~5s, ~21×), drove report/monitoring automation (300+ hours saved per year), and refactored a large Vue module (4221 lines, −54%). A design and project-management background lets me read requirements and user experience precisely and tie technical decisions to business goals.</p>
+      <div class="contact">
+        <span>Email <b>emy0526@gmail.com</b></span>
+        <span>GitHub <a href="https://github.com/leemengju">github.com/leemengju</a></span>
+        <span>LinkedIn <a href="https://www.linkedin.com/in/meng-ju-lee-902204231/">meng-ju-lee</a></span>
+        <span>Portfolio <a href="https://leemengju.github.io">leemengju.github.io</a></span>
+        <span>Location <b>Taipei, Taiwan</b></span>
+      </div>
+    </header>
+
+    <div class="section">
+      <h2>Skills</h2>
+      <div class="skills">
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span><div><div class="k">System refactoring</div><div class="d">Modularized shared settings: a 4221-line Vue monolith split into 10 files (main file −54%); split a tangled member-page API into 3 focused APIs, front-end main file 712 → ~190 lines.</div></div></div>
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span><div><div class="k">DB migration & performance</div><div class="d">MySQL/MariaDB/ClickHouse; independently led a MySQL→ClickHouse migration (MV + AggregatingMergeTree), ~21× faster queries, zero-downtime, data-consistent.</div></div></div>
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 3-3 3 3 5-5"/></svg></span><div><div class="k">Data viz & automation</div><div class="d">Turned repetitive manual work into scheduled automation and visualization (v-charts line charts + draggable tables); moved daily reports/monitoring to Kernel schedules, saving 300+ hours/year.</div></div></div>
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M9 22v-6M15 22v-6M2 9h6M2 15h6M22 9h-6M22 15h-6"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></span><div><div class="k">Third-party integration</div><div class="d">LINE/Slack Bot SDK integration and cloudflared tunneling; skilled at pushing messages/data through firewalled intranets in real time.</div></div></div>
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span><div><div class="k">Full-stack development</div><div class="d">React/Vue front-end and PHP/Laravel back-end; comfortable with MVC and end-to-end delivery from DB design to UI.</div></div></div>
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v10"/></svg></span><div><div class="k">Project management</div><div class="d">Notion, Trello and Redmine for managing scope, progress and tasks to keep execution efficient.</div></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Experience</h2>
+      <div class="entry">
+        <div class="top"><span class="role">Full-Stack Engineer</span><span class="time">2025.06 - present</span></div>
+        <div class="org">Tonwa Online Entertainment Co., Ltd., Taipei</div>
+        <div class="summary">Technical Support team — full-stack development and operations for game-operations reports and back-office systems.</div>
+        <ul>
+          <li>Led the total-win report DB migration; a full-month query dropped from ~104s to ~5s (~21×).</li>
+          <li>Fully automated daily manual work (bet-daily table, odds-range monitoring, cash-flow queries — 300+ hours/year).</li>
+          <li>Refactored a 4221-line Vue monolith into 10 files (main file −54%); the new structure was reused by later features.</li>
+          <li>Delivered a brand-new currency back office from zero in 8 weeks with a colleague (34 items shipped, 69 personal commits).</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="top"><span class="role">Full-Stack Bootcamp Trainee</span><span class="time">2024.11 - 2025.04</span></div>
+        <div class="org">iSpan International (formerly III), Taichung</div>
+        <ul>
+          <li>Led a 5-person team building the HUBD fast-fashion e-commerce MVP — React front-end, Laravel back-end, API integration, MySQL.</li>
+          <li>Built the EatNow delivery-platform prototype from 0 to 1; expanded a single-breakpoint design to all devices (+50% compatibility).</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="top"><span class="role">UX Designer + Project Manager</span><span class="time">2023.09 - 2024.09</span></div>
+        <div class="org">Youshi Design Co., Ltd., Taipei</div>
+        <div class="summary">A senior UX/service-design software consultancy.</div>
+        <ul>
+          <li>Multi-project management and tender proposals: Chunghwa Post ATM tender (2nd place), IDDI accessibility site, Treasure Hill experience design (95% schedule accuracy).</li>
+          <li>Interface design and user research for high-complexity platforms: a 700+-page carbon-inventory system, the Cooc education platform, the company's new website GUI.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="section">
+      <h2>Selected Projects</h2>
+      <div class="proj"><div class="pt">Player Cash-Flow Report</div><dl>
+        <dt>Background</dt><dd>CS / risk control needed cash-flow lookups across monthly shard tables; 20-person batches took 4–5 min.</dd>
+        <dt>Work</dt><dd>Auto-routed queries between a ClickHouse table and MySQL shards by date, via a query builder.</dd>
+        <dt>Challenge</dt><dd>Slow cross-month shard queries, batch timeouts, and CH↔MySQL results had to match exactly.</dd>
+        <dt>Contribution</dt><dd>Independently designed the routing and CH schema, verified correctness against real data.</dd>
+        <dt>Result</dt><dd>20-person batch queries: 4–5 min → 15–20 s (~3.2× in QA).</dd>
+      </dl></div>
+      <div class="proj"><div class="pt">Odds-Range Monitoring + LINE／Slack Auto-Push Bot</div><dl>
+        <dt>Background</dt><dd>Risk control compiled and reported odds-range + ops data by hand daily — slow and error-prone.</dd>
+        <dt>Work</dt><dd>Used LINE／Slack Bot SDK + cloudflared tunneling to push monitoring results automatically on a schedule.</dd>
+        <dt>Challenge</dt><dd>Firewalled intranet limits and a cross-host clock-skew race condition.</dd>
+        <dt>Contribution</dt><dd>Independently set up the tunnel, push scheduling and error-handling / ops routine.</dd>
+        <dt>Result</dt><dd>Manual reporting → fully automated push, ~304 hours/year saved.</dd>
+      </dl></div>
+      <div class="proj"><div class="pt">Bet-Daily Table Automation & Visualization</div><dl>
+        <dt>Background</dt><dd>The bet-daily table took ~20 min of manual entry each day and had 6 long-standing pain points.</dd>
+        <dt>Work</dt><dd>Built an automation pipeline; visualized multi-game trends with v-charts line charts and draggable tables.</dd>
+        <dt>Challenge</dt><dd>Multi-game data integration, template management, and historical re-runs.</dd>
+        <dt>Contribution</dt><dd>Designed the data pipeline, the front-end visualization and the template-management flow.</dd>
+        <dt>Result</dt><dd>20 min/day of manual work → 0; all 6 pain points resolved.</dd>
+      </dl></div>
+      <div class="proj"><div class="pt">Q-Coin Back Office</div><dl>
+        <dt>Background</dt><dd>The company introduced a brand-new virtual currency (Q-Coin); the back office was built from scratch.</dd>
+        <dt>Work</dt><dd>Backward-compatible DB schema + Vue front-end; assessed ~50 reports, shipped 34 items.</dd>
+        <dt>Challenge</dt><dd>Very fuzzy requirements, two-month deadline, dual-currency UI, 8+ concurrent branches to merge.</dd>
+        <dt>Contribution</dt><dd>Co-built with a colleague; 16 items solo, 69 commits; set up a bi-weekly progress-reporting mechanism.</dd>
+        <dt>Result</dt><dd>Delivered from zero in 8 weeks, 34 items shipped, 15+ unneeded features scoped out.</dd>
+      </dl></div>
+      <div class="proj"><div class="pt">Total-Win Report DB Migration (MySQL → ClickHouse)</div><dl>
+        <dt>Background</dt><dd>The total-win report queried MySQL monthly/daily shards; a full-month query took ~104 s.</dd>
+        <dt>Work</dt><dd>Migrated to ClickHouse (MV + AggregatingMergeTree), routing between CH and MySQL by date.</dd>
+        <dt>Challenge</dt><dd>Zero-downtime cutover and pre/post data-consistency verification.</dd>
+        <dt>Contribution</dt><dd>Independently led the migration, CH schema and partition-key design, and reconciled against real data.</dd>
+        <dt>Result</dt><dd>Full-month query ~104 s → ~5 s (~21×), zero downtime.</dd>
+      </dl></div>
+      <div class="proj"><div class="pt">Online-Member Page Refactor & Cross-Team Requirements</div><dl>
+        <dt>Background</dt><dd>The member page was a single tangled API with a 712-line front-end main file and multi-team demands.</dd>
+        <dt>Work</dt><dd>Split the single API into 3 focused APIs and refactored the front end.</dd>
+        <dt>Challenge</dt><dd>Preserve existing currency logic while integrating exec / operations / risk-control needs.</dd>
+        <dt>Contribution</dt><dd>Led the API split, the front-end refactor and cross-team requirement clarification.</dd>
+        <dt>Result</dt><dd>1 tangled API → 3; front-end main file 712 → ~190 lines.</dd>
+      </dl></div>
+    </div>
+
+    <div class="section">
+      <h2>Education</h2>
+      <div class="entry">
+        <div class="top"><span class="role">Northern Arizona University — M.S. in Computer Information Technology</span><span class="time">2024.09 - 2025.09</span></div>
+        <ul>
+          <li>English: GRE 315 / TOEFL 100 (= IELTS 7 = TOEIC 945+).</li>
+          <li>Under the MOEA IDDI program, independently built a WCAG-compliant accessibility site with React and Tailwind CSS.</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="top"><span class="role">Peking University — Bachelor's Degree</span><span class="time">2017.09 - 2022.06</span></div>
+        <ul>
+          <li>Exchange at the University of Tokyo and Hong Kong Polytechnic University, all-A grades during the exchange.</li>
+          <li>First-class MOE scholarship for HK/Macao/Taiwan students three years running; 2021 top prize (top 3 university-wide).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

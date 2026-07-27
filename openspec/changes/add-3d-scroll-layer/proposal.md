@@ -9,34 +9,36 @@ restrained 3D layer of tech-themed objects (circuit boards, chips, connectors,
 server racks, wireframe data structures) that react to scroll would reinforce the
 brand — *if* it stays fast and degrades cleanly.
 
-This is exploratory and large; three.js is heavy. The intent is a **scoped**
-version (one hero object or a few scroll-reveal models), not a full immersive site.
+This is exploratory and large; three.js is heavy. The scoped version (finalized
+2026-07-27): **one reused drone model** across five home sections, not a full
+immersive site. See design.md/tasks.md for the finalized plan.
 
 ## What Changes
 
-- Add a `client:visible` React-Three-Fiber island rendered behind/within the hero
-  (and optionally 1–2 later sections), so it never blocks SSR or LCP.
-- A scroll-progress driver (Lenis smooth-scroll or GSAP ScrollTrigger) maps page
-  scroll to camera and/or model transforms per a **choreography spec**.
-- Load low-poly glTF/`.glb` models (Draco-compressed), themed to the engineer brand.
+- Add a `client:visible` React-Three-Fiber island rendered behind the home
+  content, so it never blocks SSR or LCP.
+- A scroll-progress driver (Lenis) maps page scroll to model (+ camera)
+  transforms per a **choreography spec** keyed to real section DOM boundaries.
+- Load one low-poly `.glb` drone (**meshopt-compressed + WebP + quantization**,
+  ~610 KB), theme-swapped bright/dark; decoded with MeshoptDecoder (not Draco).
 - Capability gate: **prefers-reduced-motion**, coarse/low-power devices, and absent
   WebGL2 get the current 2D hero — no 3D loaded at all (dynamic import).
-- Deliver a fill-in **choreography template** the user completes (per section:
-  model, camera pos/rotation, model rotation/scale, at what scroll %).
+- A dev-only **leva tuning panel** lets the user drag each section to taste and
+  copy the live numbers into `choreography.ts` (numbers can't be filled blind).
 
 ## Impact
 
 - Affected: `src/components/HomeSections.astro` (mount point), a new
-  `src/components/effects/Scene3D.tsx` island, `astro.config` (three deps), and
-  `public/models/*.glb` assets.
-- New dependencies: `three`, `@react-three/fiber`, `@react-three/drei`, a scroll lib.
+  `src/components/effects/Scene3D.tsx` island + `choreography.ts`, `astro.config`
+  (three deps), and `public/models/drone.{bright,dark}.glb` assets.
+- New dependencies: `three`, `@react-three/fiber`, `@react-three/drei`, `lenis`.
 - Risks: JS + model payload (LCP/TTI regression), mobile GPU cost, a11y. All
   gated behind capability checks + a hard performance budget.
-- **User-supplied assets required**: `.glb` models (glTF 2.0, Draco, embedded
-  textures, exported from Blender) and the filled choreography spec.
 
-## Open Questions
+## Resolved (was Open Questions)
 
-- Which sections get 3D (hero only vs. multiple)?
-- Payload budget ceiling (target: added gzip JS ≤ ~200 KB, each model ≤ ~300 KB)?
-- Fallback: static poster image vs. keep the raining-letters hero?
+- **Which sections get 3D** → hero / 關於我 / 專案技能 / 學歷 / 聯絡方式 (5 of 7);
+  工作經歷 + 專案作品 fade the drone out.
+- **Payload budget** → added gzip JS ≤ ~200 KB; a single ~610 KB drone (reused),
+  reducible to ~350–400 KB via 512 px textures if needed.
+- **Fallback** → keep the raining-letters hero (no static poster).

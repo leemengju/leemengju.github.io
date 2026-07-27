@@ -1,0 +1,123 @@
+---
+/**
+ * Opt-in ambient background audio (item 5). ONE looping track, OFF by default
+ * (browser autoplay policy + courtesy). A sound icon in the header toggles
+ * play ↔ pause with a short volume fade. `preload="none"` + src set only on the
+ * first play, so nothing is fetched until the visitor clicks. Lives in
+ * BaseLayout, so every theme (bright/dark) and locale (zh/en) gets it.
+ * Respects prefers-reduced-motion by skipping the fade (still plays/pauses).
+ */
+---
+<button
+  class="audio-toggle"
+  type="button"
+  data-audio-toggle
+  aria-pressed="false"
+  aria-label="播放背景音樂 / Play background music"
+  title="背景音樂"
+>
+  <!-- muted (shown when OFF) -->
+  <svg class="audio-toggle__i audio-toggle__i--off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+    <line x1="22" y1="9" x2="16" y2="15" />
+    <line x1="16" y1="9" x2="22" y2="15" />
+  </svg>
+  <!-- playing (shown when ON) -->
+  <svg class="audio-toggle__i audio-toggle__i--on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+    <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+    <path d="M18.5 5.5a9 9 0 0 1 0 13" />
+  </svg>
+</button>
+<audio data-audio-el loop preload="none"></audio>
+
+<style>
+  .audio-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    color: inherit;
+    opacity: 0.75;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .audio-toggle:hover {
+    opacity: 1;
+    background: var(--fill-soft);
+    border-color: var(--border-strong);
+  }
+  .audio-toggle.is-on {
+    opacity: 1;
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border-soft));
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+  .audio-toggle__i {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+  /* show the muted icon by default; swap to the playing icon when on */
+  .audio-toggle__i--on {
+    display: none;
+  }
+  .audio-toggle.is-on .audio-toggle__i--off {
+    display: none;
+  }
+  .audio-toggle.is-on .audio-toggle__i--on {
+    display: block;
+  }
+</style>
+
+<script>
+  const TRACK = '/audio/ambient.mp3';
+  const TARGET_VOL = 0.25;
+  const FADE_MS = 600;
+
+  document.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((btn) => {
+    const audio = btn.parentElement?.querySelector<HTMLAudioElement>('[data-audio-el]');
+    if (!audio) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let raf = 0;
+
+    const fade = (to: number, done?: () => void) => {
+      cancelAnimationFrame(raf);
+      if (reduce) {
+        audio.volume = to;
+        done?.();
+        return;
+      }
+      const from = audio.volume;
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const k = Math.min(1, (now - t0) / FADE_MS);
+        audio.volume = from + (to - from) * k;
+        if (k < 1) raf = requestAnimationFrame(step);
+        else done?.();
+      };
+      raf = requestAnimationFrame(step);
+    };
+
+    const setOn = (on: boolean) => {
+      btn.classList.toggle('is-on', on);
+      btn.setAttribute('aria-pressed', String(on));
+    };
+
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('is-on')) {
+        fade(0, () => audio.pause());
+        setOn(false);
+      } else {
+        if (!audio.src) audio.src = TRACK; // first play → fetch now (preload none)
+        audio.volume = 0;
+        audio.play().then(() => fade(TARGET_VOL)).catch(() => setOn(false));
+        setOn(true);
+      }
+    });
+  });
+</script>

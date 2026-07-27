@@ -5,6 +5,7 @@ import DiagramBlock from '../components/DiagramBlock.astro';
 import RevealScript from '../components/RevealScript.astro';
 import BackToTop from '../components/BackToTop.astro';
 import ThemeVariantSwitch from '../components/ThemeVariantSwitch.astro';
+import AudioToggle from '../components/AudioToggle.astro';
 import { strings, localeFromPath, alternatePath, homePath } from '../lib/i18n';
 
 interface Props {
@@ -47,6 +48,7 @@ const altLangAttr = strings[locale === 'en' ? 'zh' : 'en'].langAttr;
         <span>{t.brand}</span>
       </a>
       <div class="site-header__actions">
+        <AudioToggle />
         <ThemeVariantSwitch />
         <a class="site-header__lang" href={altPath} aria-label={t.switcherAria}>{t.switcherLabel}</a>
       </div>

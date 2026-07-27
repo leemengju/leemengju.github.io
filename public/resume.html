@@ -8,15 +8,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
 <style>
-  /* Résumé — Bright palette (#4A5989 primary / #AEB2BD secondary / #F3F4F8 bg),
-     layout after referenceForProtfolio/cv (skills grid + experience timeline).
-     Content mirrors the public, de-identified profile (src/lib/profile.ts +
-     de-identified project write-ups); no phone. Skills have icons; experience
-     and projects do not. */
+  /* Résumé — accent #4A5989 on a WHITE page (deliberately NOT the Bright
+     palette's #F3F4F8 page tint — résumé stays plain white). Layout after
+     referenceForProtfolio/cv. Content mirrors the public, de-identified profile
+     (src/lib/profile.ts + de-identified project write-ups); no phone, no
+     location. Skills have icons; experience and projects do not; projects are
+     plain text blocks (no card box). */
   :root {
     --primary: #4a5989;
     --secondary: #8b90a0;
-    --bg: #f3f4f8;
+    --bg: #ffffff;
     --card: #ffffff;
     --line: #e0e2ea;
     --text: #26292f;
@@ -29,7 +30,7 @@
   a { color: var(--primary); text-decoration: none; }
   a:hover { text-decoration: underline; }
 
-  .head { display: flex; flex-direction: column; gap: 7px; padding-bottom: 11px; border-bottom: 2px solid var(--primary); }
+  .head { display: flex; flex-direction: column; gap: 7px; padding-bottom: 2px; }
   .head h1 { font-size: 25px; font-weight: 900; color: var(--primary); }
   .head h1 .en { color: var(--text); font-weight: 700; margin-left: 7px; font-size: 19px; }
   .head .intro { color: var(--muted); font-size: 12px; max-width: 168mm; }
@@ -59,7 +60,7 @@
   .entry ul li { position: relative; padding-left: 12px; font-size: 11.3px; }
   .entry ul li::before { content: ''; position: absolute; left: 0; top: 6px; width: 4px; height: 4px; border-radius: 50%; background: var(--primary); opacity: 0.75; }
 
-  .proj { border: 1px solid var(--line); border-radius: 7px; background: var(--card); padding: 7px 12px; margin-bottom: 4px; }
+  .proj { margin-bottom: 9px; }
   .proj .pt { font-weight: 700; color: var(--text); font-size: 12.5px; margin-bottom: 2px; }
   .proj dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 8px; }
   .proj dt { color: var(--primary); font-weight: 600; font-size: 10.8px; white-space: nowrap; }
@@ -83,7 +84,6 @@
         <span>GitHub <a href="https://github.com/leemengju">github.com/leemengju</a></span>
         <span>LinkedIn <a href="https://www.linkedin.com/in/meng-ju-lee-902204231/">meng-ju-lee</a></span>
         <span>作品集 <a href="https://leemengju.github.io">leemengju.github.io</a></span>
-        <span>所在地 <b>臺北市</b></span>
       </div>
     </header>
 

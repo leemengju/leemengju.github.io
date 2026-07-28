@@ -11,6 +11,7 @@ import FloatingNav from './FloatingNav.astro';
 import RainingLetters from './effects/RainingLetters.tsx';
 import LetterSwapTitle from './effects/LetterSwapTitle.tsx';
 import SmokyText from './effects/SmokyText.tsx';
+import Scene3D from './effects/Scene3D.tsx';
 import { strings, categoryLabels, type Locale } from '../lib/i18n';
 import { getProfile } from '../lib/profile';
 import type { ProjectEntry } from '../lib/projects';
@@ -61,6 +62,7 @@ const linkedinIcon =
 ---
 
 <FloatingNav items={navItems} />
+<Scene3D client:idle />
 
 <section class="hero">
   <RainingLetters client:visible text={t.introText} />

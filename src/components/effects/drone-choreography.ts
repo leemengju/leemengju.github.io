@@ -1,16 +1,16 @@
 /**
  * Scroll choreography for the hero drone (item 4). One reused model; each home
  * section gets a keyframe (position / euler rotation / uniform scale / opacity).
- * The scene interpolates between adjacent sections' keyframes as the viewport
- * centre passes from one section to the next.
+ * Position is interpolated along a Catmull-Rom spline through the section points
+ * (an S-curve, never a straight vertical drop); rotation/scale/opacity ease
+ * (smoothstep) between adjacent sections.
  *
- * These are BEST-GUESS starting values derived from the user's per-section
- * descriptions — they are meant to be fine-tuned live via the ?tune overlay
- * (drag sliders → "Copy choreography" → paste back here). See design.md.
+ * Starting values are best-guess from the user's per-section descriptions — dial
+ * them in live via the ?tune overlay (drag → "Copy all" → paste back here).
+ * The overlay edits the DESKTOP keyframes; mobile overrides are authored here.
  *
- * Camera is fixed (looking at the origin); the MODEL moves. "Look up / down"
- * feel is faked via model position + tilt rather than moving the camera.
- * Coordinates: +x right, +y up, +z toward viewer. Rotation in radians.
+ * Camera is fixed (looking at the origin); the MODEL moves. Coords: +x right,
+ * +y up, +z toward viewer. Rotation in radians.
  */
 export type Vec3 = [number, number, number];
 export interface Keyframe {
@@ -32,7 +32,8 @@ export interface SectionDef {
   key: SectionKey;
   /** DOM selector used to locate the section's vertical centre. */
   selector: string;
-  /** Slowly auto-rotates (turntable) while this section is dominant. */
+  /** Slowly auto-rotates (turntable) while dominant. Only hero + about spin;
+   *  every other section holds a fixed angle. */
   spin?: boolean;
   desktop: Keyframe;
   /** Partial overrides applied at <= 768px. */
@@ -46,57 +47,59 @@ export const CAMERA = { pos: [0, 0, 9] as Vec3, fov: 35 };
 
 export const SECTIONS: SectionDef[] = [
   {
-    // Hero: fills the top-right, prominent, nose toward top-left, only ~70%
-    // visible (rest overflows), worm's-eye feel (tilted up). Behind the tagline.
+    // Hero: faces the viewer head-on, large, fully visible, near the top edge.
+    // Spins slowly. Mobile: 2–3× bigger, may exceed the viewport width.
     key: 'hero',
     selector: '.hero',
-    desktop: { pos: [3.5, 2.5, 0.5], rot: [deg(18), deg(-38), deg(26)], scale: 2.4, opacity: 1 },
-    mobile: { pos: [1.4, 3.2, -1], rot: [deg(14), deg(-30), deg(22)], scale: 1.15 }
+    spin: true,
+    desktop: { pos: [0.3, 1.7, 0], rot: [0, 0, 0], scale: 2.6, opacity: 1 },
+    mobile: { pos: [0, 1.1, -0.5], scale: 4.2 }
   },
   {
-    // About: lands to the LEFT of the intro paragraph, whole model, ~1/3 screen,
-    // eye level, slow 360° turntable.
+    // About: flies to the LEFT of the intro paragraph and, once over the text,
+    // drops to opacity 0.1. Still spinning (hero + about only). Mobile 1.5× bigger.
     key: 'about',
     selector: '#about',
     spin: true,
-    desktop: { pos: [-3.3, -0.2, 1], rot: [0, 0, 0], scale: 1.35, opacity: 1 },
-    mobile: { pos: [0, 2.3, -1], scale: 1.0 }
+    desktop: { pos: [-3.1, -0.2, 0.5], rot: [0, 0, 0], scale: 1.3, opacity: 0.1 },
+    mobile: { pos: [0, 1.9, -1], scale: 1.95, opacity: 0.1 }
   },
   {
-    // Skills: hidden behind the cards, opacity 0.3, tilted ~20° toward top-left,
-    // centred.
+    // Skills: behind the cards, tilted ~20°, opacity fading 0.3 → 0 into the next
+    // section. No spin.
     key: 'skills',
     selector: '#skills',
-    desktop: { pos: [0, 0, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.75, opacity: 0.3 },
-    mobile: { scale: 1.25 }
+    desktop: { pos: [0, 0.1, -1.4], rot: [deg(-6), 0, deg(20)], scale: 1.7, opacity: 0.3 },
+    mobile: { scale: 1.3 }
   },
   {
-    // Experience: no drone — fade out.
+    // Experience: no drone — faded out (offset x for the S-curve).
     key: 'experience',
     selector: '#experience',
-    desktop: { pos: [0, -0.6, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.5, opacity: 0 }
+    desktop: { pos: [-0.8, -0.6, -1.4], rot: [deg(-6), 0, deg(20)], scale: 1.5, opacity: 0 }
   },
   {
-    // Projects: stay hidden.
+    // Projects: stay hidden (offset the other way for the S-curve).
     key: 'projects',
     selector: '#projects',
-    desktop: { pos: [0, -0.6, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.5, opacity: 0 }
+    desktop: { pos: [0.8, -0.7, -1.5], rot: [deg(-6), 0, deg(20)], scale: 1.5, opacity: 0 }
   },
   {
-    // Education: to the RIGHT of the "學歷" heading, flown back from afar, nose
-    // toward viewer offset ~20° right.
+    // Education: flies back in to the RIGHT of the 學歷 heading. No spin.
+    // Mobile: fades to 0.1 once over the "北亞利桑那大學…" text.
     key: 'education',
     selector: '#education',
     desktop: { pos: [3.2, 0.7, 0.2], rot: [deg(-4), deg(20), 0], scale: 1.05, opacity: 1 },
-    mobile: { pos: [1.3, 2.1, -0.5], scale: 0.85 }
+    mobile: { pos: [1.2, 2.0, -0.5], scale: 0.9, opacity: 0.1 }
   },
   {
-    // Contact: enlarges into a parked state, slight top-down view, bottom-right
-    // (not clipping bottom), ground shadow, nose toward left ~45°.
+    // Contact: parks bottom-right, nose turned back toward the 聯絡方式 heading,
+    // settled ~20px lower. No spin. Mobile: stops at 聯絡方式, doesn't drop onto
+    // the "一起打造好體驗…" line.
     key: 'contact',
     selector: '#contact',
-    desktop: { pos: [2.6, -1.7, 0.5], rot: [deg(26), deg(-45), 0], scale: 1.75, opacity: 1 },
-    mobile: { pos: [0, -1.6, 0], scale: 1.2 }
+    desktop: { pos: [2.6, -1.95, 0.5], rot: [deg(18), deg(-135), 0], scale: 1.75, opacity: 1 },
+    mobile: { pos: [0, -1.1, 0], scale: 1.15 }
   }
 ];
 

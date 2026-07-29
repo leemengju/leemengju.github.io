@@ -159,23 +159,35 @@ function Drone({ theme, tune, liveRef }: DroneProps) {
     const kfA = tune ? liveRef.current[cs[a].key] : effectiveKeyframe(SECTIONS[a], mob);
     const kfB = tune ? liveRef.current[cs[b].key] : effectiveKeyframe(SECTIONS[b], mob);
 
-    const px = THREE.MathUtils.lerp(kfA.pos[0], kfB.pos[0], t);
-    const py = THREE.MathUtils.lerp(kfA.pos[1], kfB.pos[1], t);
-    const pz = THREE.MathUtils.lerp(kfA.pos[2], kfB.pos[2], t);
-    const rx = THREE.MathUtils.lerp(kfA.rot[0], kfB.rot[0], t);
-    const ry = THREE.MathUtils.lerp(kfA.rot[1], kfB.rot[1], t);
-    const rz = THREE.MathUtils.lerp(kfA.rot[2], kfB.rot[2], t);
-    const scale = THREE.MathUtils.lerp(kfA.scale, kfB.scale, t);
-    const opacity = THREE.MathUtils.lerp(kfA.opacity, kfB.opacity, t);
+    // Smoothstep easing between adjacent keyframes.
+    const te = t * t * (3 - 2 * t);
 
-    const spinW = (SECTIONS[a].spin ? 1 - t : 0) + (SECTIONS[b].spin ? t : 0);
+    // Position follows a Catmull-Rom spline through ALL the section points — an
+    // S-curve, never a straight vertical drop. `u` is a global 0..1 param.
+    const N = cs.length;
+    const pts = SECTIONS.map(
+      (sec, i) =>
+        new THREE.Vector3(...(tune ? liveRef.current[cs[i].key] : effectiveKeyframe(sec, mob)).pos)
+    );
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
+    const u = THREE.MathUtils.clamp((a + te) / (N - 1), 0, 1);
+    const p = curve.getPoint(u);
+
+    const rx = THREE.MathUtils.lerp(kfA.rot[0], kfB.rot[0], te);
+    const ry = THREE.MathUtils.lerp(kfA.rot[1], kfB.rot[1], te);
+    const rz = THREE.MathUtils.lerp(kfA.rot[2], kfB.rot[2], te);
+    const scale = THREE.MathUtils.lerp(kfA.scale, kfB.scale, te);
+    const opacity = THREE.MathUtils.lerp(kfA.opacity, kfB.opacity, te);
+
+    // Spin only while hero/about are dominant; everything else holds its angle.
+    const spinW = (SECTIONS[a].spin ? 1 - te : 0) + (SECTIONS[b].spin ? te : 0);
     spin.current += delta * 0.5 * spinW;
 
     // frame-rate-independent damping toward the choreography target
     const k = 1 - Math.pow(0.0015, delta);
-    g.position.x = THREE.MathUtils.lerp(g.position.x, px, k);
-    g.position.y = THREE.MathUtils.lerp(g.position.y, py, k);
-    g.position.z = THREE.MathUtils.lerp(g.position.z, pz, k);
+    g.position.x = THREE.MathUtils.lerp(g.position.x, p.x, k);
+    g.position.y = THREE.MathUtils.lerp(g.position.y, p.y, k);
+    g.position.z = THREE.MathUtils.lerp(g.position.z, p.z, k);
     g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, rx, k);
     g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, ry + spin.current, k);
     g.rotation.z = THREE.MathUtils.lerp(g.rotation.z, rz, k);
@@ -305,33 +317,39 @@ function TuneOverlay({ liveRef }: { liveRef: React.MutableRefObject<LiveMap> }) 
 export default function DroneScene({ tune = false }: { tune?: boolean }) {
   const theme = useThemeVariant();
   const liveRef = useRef<LiveMap>(cloneLive());
+  // The bright-theme model reads ~40% brighter (per request) by boosting lights.
+  const lb = theme === 'bright' ? 1.4 : 1;
 
   return (
-    <div
-      className="drone3d"
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: -1,
-        pointerEvents: 'none'
-      }}
-    >
-      <Canvas
-        dpr={[1, 1.5]}
-        camera={{ position: CAMERA.pos, fov: CAMERA.fov }}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-        style={{ background: 'transparent' }}
+    <>
+      <div
+        className="drone3d"
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: -1,
+          pointerEvents: 'none'
+        }}
       >
-        <ambientLight intensity={0.9} />
-        <directionalLight position={[4, 6, 5]} intensity={1.6} />
-        <directionalLight position={[-6, 2, -4]} intensity={0.5} />
-        <Suspense fallback={null}>
-          <Drone theme={theme} tune={tune} liveRef={liveRef} />
-        </Suspense>
-        <ContactShadows position={[0, -2.3, 0]} opacity={0.28} scale={14} blur={2.6} far={5} />
-      </Canvas>
+        <Canvas
+          dpr={[1, 1.5]}
+          camera={{ position: CAMERA.pos, fov: CAMERA.fov }}
+          gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+          style={{ background: 'transparent' }}
+        >
+          <ambientLight intensity={0.9 * lb} />
+          <directionalLight position={[4, 6, 5]} intensity={1.6 * lb} />
+          <directionalLight position={[-6, 2, -4]} intensity={0.5 * lb} />
+          <Suspense fallback={null}>
+            <Drone theme={theme} tune={tune} liveRef={liveRef} />
+          </Suspense>
+          <ContactShadows position={[0, -2.3, 0]} opacity={0.28} scale={14} blur={2.6} far={5} />
+        </Canvas>
+      </div>
+      {/* Tune overlay is a SIBLING of the z-index:-1 canvas (not a child), so it
+          isn't trapped behind the page and its sliders/buttons are clickable. */}
       {tune && <TuneOverlay liveRef={liveRef} />}
-    </div>
+    </>
   );
 }

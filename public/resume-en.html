@@ -8,35 +8,56 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
 <style>
-  :root { --primary:#4a5989; --secondary:#8b90a0; --bg:#ffffff; --card:#ffffff; --line:#e0e2ea; --text:#26292f; --muted:#6b7180; }
+  /* Palette: main/sub title = primary; auxiliary (dates/org) = #AEB2BD;
+     description = #D1D3D8; item titles = dark #26292f (never pure black).
+     Header band on #F3F4F8; body white. See resume.html for the zh original. */
+  :root {
+    --primary: #4a5989;
+    --aux: #aeb2bd;
+    --desc: #d1d3d8;
+    --text: #26292f;
+    --line: #e0e2ea;
+    --bg: #ffffff;
+    --head-bg: #f3f4f8;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { background:#d9dce4; font-family:'Inter','Noto Sans TC',sans-serif; color:var(--text); line-height:1.5; font-size:12.5px; }
   .page { width:210mm; min-height:297mm; margin:12px auto; background:var(--bg); padding:11mm 15mm; display:flex; flex-direction:column; gap:9px; }
   a { color:var(--primary); text-decoration:none; } a:hover { text-decoration:underline; }
-  .head { display:flex; flex-direction:column; gap:7px; padding-bottom:2px; }
+
+  .head { background:var(--head-bg); border-radius:6px; padding:18px 20px 20px; margin-bottom:15px; display:flex; flex-direction:column; gap:8px; }
   .head h1 { font-size:24px; font-weight:900; color:var(--primary); }
-  .head .intro { color:var(--muted); font-size:12px; max-width:168mm; }
-  .head .contact { display:flex; flex-wrap:wrap; gap:5px 18px; margin-top:3px; font-size:11.5px; }
-  .head .contact span { color:var(--muted); } .head .contact a, .head .contact b { color:var(--text); font-weight:500; }
+  .head .intro { color:var(--primary); font-size:12px; max-width:168mm; }
+  .head .contact { display:flex; gap:8px; margin-top:4px; }
+  .icon-btn { width:32px; height:32px; border-radius:4px; background:var(--primary); display:inline-flex; align-items:center; justify-content:center; }
+  .icon-btn:hover { text-decoration:none; opacity:.9; }
+  .icon-btn svg { width:16px; height:16px; color:#fff; }
+
   .section { display:flex; flex-direction:column; gap:8px; }
   .section > h2 { font-size:14.5px; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:8px; }
   .section > h2::after { content:''; flex:1; height:1px; background:var(--line); }
+
   .skills { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; }
   .skill { display:flex; gap:8px; align-items:flex-start; }
   .skill .ico { flex-shrink:0; width:20px; height:20px; color:var(--primary); margin-top:1px; } .skill .ico svg { width:100%; height:100%; }
-  .skill .k { font-weight:700; color:var(--text); font-size:12px; } .skill .d { color:var(--muted); font-size:11px; }
-  .entry { padding-left:13px; border-left:2px solid var(--line); position:relative; margin-bottom:8px; }
-  .entry::before { content:''; position:absolute; left:-5px; top:5px; width:8px; height:8px; border-radius:50%; background:var(--primary); }
+  .skill .k { font-weight:700; color:var(--text); font-size:12px; } .skill .d { color:var(--desc); font-size:11px; }
+
+  .entry { padding-left:13px; position:relative; margin-bottom:8px; }
+  .entry::before { content:''; position:absolute; left:-4px; top:5px; width:8px; height:8px; border-radius:50%; background:var(--primary); z-index:1; }
+  .entry::after { content:''; position:absolute; left:-1px; top:9px; bottom:0; width:2px; background:var(--line); }
   .entry .top { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
-  .entry .role { font-weight:700; color:var(--text); font-size:12.5px; } .entry .time { color:var(--muted); font-size:10.5px; font-variant-numeric:tabular-nums; white-space:nowrap; }
-  .entry .org { color:var(--primary); font-size:11.5px; margin-top:1px; } .entry .summary { color:var(--muted); font-size:11px; margin-top:2px; }
+  .entry .role { font-weight:700; color:var(--text); font-size:12.5px; } .entry .time { color:var(--aux); font-size:10.5px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .entry .org { color:var(--aux); font-size:11.5px; margin-top:1px; } .entry .summary { color:var(--desc); font-size:11px; margin-top:2px; }
   .entry ul { list-style:none; margin-top:4px; display:flex; flex-direction:column; gap:2px; }
-  .entry ul li { position:relative; padding-left:12px; font-size:11.3px; } .entry ul li::before { content:''; position:absolute; left:0; top:6px; width:4px; height:4px; border-radius:50%; background:var(--primary); opacity:.75; }
+  .entry ul li { position:relative; padding-left:12px; font-size:11.3px; color:var(--desc); } .entry ul li::before { content:''; position:absolute; left:0; top:6px; width:4px; height:4px; border-radius:50%; background:var(--primary); opacity:.75; }
+
   .proj { margin-bottom:9px; }
-  .proj .pt { font-weight:700; color:var(--text); font-size:12.5px; margin-bottom:2px; }
-  .proj dl { display:grid; grid-template-columns:max-content 1fr; gap:2px 8px; }
-  .proj dt { color:var(--primary); font-weight:600; font-size:10.8px; white-space:nowrap; } .proj dd { color:var(--muted); font-size:11px; }
+  .proj .pt { font-weight:700; color:var(--text); font-size:12.5px; margin-bottom:3px; }
+  .proj ul { list-style:none; display:flex; flex-direction:column; gap:2px; }
+  .proj ul li { position:relative; padding-left:12px; font-size:11px; color:var(--desc); }
+  .proj ul li::before { content:''; position:absolute; left:0; top:6px; width:4px; height:4px; border-radius:50%; background:var(--primary); opacity:.75; }
+
   .proj, .entry, .skill { break-inside: avoid; }
   .section > h2 { break-after: avoid; }
   @media print { body { background:none; } .page { margin:0; } .page + .page { page-break-before:always; } }
@@ -49,10 +70,18 @@
       <h1>Meng-Ju Lee (Lance)</h1>
       <p class="intro">Full-stack engineer with 2 years of cross-industry experience spanning digital product design and full-stack development, currently at an online-entertainment platform; worked on million-budget SaaS, finance and government projects. Led a total-win report migration from MySQL to ClickHouse (a full-month query from ~104s to ~5s, ~21×), drove report/monitoring automation (300+ hours saved per year), and refactored a large Vue module (4221 lines, −54%). A design and project-management background lets me read requirements and user experience precisely and tie technical decisions to business goals.</p>
       <div class="contact">
-        <span>Email <b>emy0526@gmail.com</b></span>
-        <span>GitHub <a href="https://github.com/leemengju">github.com/leemengju</a></span>
-        <span>LinkedIn <a href="https://www.linkedin.com/in/meng-ju-lee-902204231/">meng-ju-lee</a></span>
-        <span>Portfolio <a href="https://leemengju.github.io">leemengju.github.io</a></span>
+        <a class="icon-btn" href="mailto:emy0526@gmail.com" aria-label="Email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 6 9-6"/></svg>
+        </a>
+        <a class="icon-btn" href="https://github.com/leemengju" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.66.41.35.77 1.05.77 2.12 0 1.53-.01 2.76-.01 3.14 0 .3.2.67.8.55A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+        </a>
+        <a class="icon-btn" href="https://www.linkedin.com/in/meng-ju-lee-902204231/" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.55V9h3.57v11.45Z"/></svg>
+        </a>
+        <a class="icon-btn" href="https://leemengju.github.io" aria-label="Portfolio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19"/><path d="M12 2.5a15 15 0 0 1 0 19a15 15 0 0 1 0-19Z"/></svg>
+        </a>
       </div>
     </header>
 
@@ -103,49 +132,43 @@
 
   <section class="page">
     <div class="section">
-      <h2>Selected Projects</h2>
-      <div class="proj"><div class="pt">Player Cash-Flow Report</div><dl>
-        <dt>Background</dt><dd>CS / risk control needed cash-flow lookups across monthly shard tables; 20-person batches took 4–5 min.</dd>
-        <dt>Work</dt><dd>Auto-routed queries between a ClickHouse table and MySQL shards by date, via a query builder.</dd>
-        <dt>Challenge</dt><dd>Slow cross-month shard queries, batch timeouts, and CH↔MySQL results had to match exactly.</dd>
-        <dt>Contribution</dt><dd>Independently designed the routing and CH schema, verified correctness against real data.</dd>
-        <dt>Result</dt><dd>20-person batch queries: 4–5 min → 15–20 s (~3.2× in QA).</dd>
-      </dl></div>
-      <div class="proj"><div class="pt">Odds-Range Monitoring + LINE／Slack Auto-Push Bot</div><dl>
-        <dt>Background</dt><dd>Risk control compiled and reported odds-range + ops data by hand daily — slow and error-prone.</dd>
-        <dt>Work</dt><dd>Used LINE／Slack Bot SDK + cloudflared tunneling to push monitoring results automatically on a schedule.</dd>
-        <dt>Challenge</dt><dd>Firewalled intranet limits and a cross-host clock-skew race condition.</dd>
-        <dt>Contribution</dt><dd>Independently set up the tunnel, push scheduling and error-handling / ops routine.</dd>
-        <dt>Result</dt><dd>Manual reporting → fully automated push, ~304 hours/year saved.</dd>
-      </dl></div>
-      <div class="proj"><div class="pt">Bet-Daily Table Automation & Visualization</div><dl>
-        <dt>Background</dt><dd>The bet-daily table took ~20 min of manual entry each day and had 6 long-standing pain points.</dd>
-        <dt>Work</dt><dd>Built an automation pipeline; visualized multi-game trends with v-charts line charts and draggable tables.</dd>
-        <dt>Challenge</dt><dd>Multi-game data integration, template management, and historical re-runs.</dd>
-        <dt>Contribution</dt><dd>Designed the data pipeline, the front-end visualization and the template-management flow.</dd>
-        <dt>Result</dt><dd>20 min/day of manual work → 0; all 6 pain points resolved.</dd>
-      </dl></div>
-      <div class="proj"><div class="pt">Q-Coin Back Office</div><dl>
-        <dt>Background</dt><dd>The company introduced a brand-new virtual currency (Q-Coin); the back office was built from scratch.</dd>
-        <dt>Work</dt><dd>Backward-compatible DB schema + Vue front-end; assessed ~50 reports, shipped 34 items.</dd>
-        <dt>Challenge</dt><dd>Very fuzzy requirements, two-month deadline, dual-currency UI, 8+ concurrent branches to merge.</dd>
-        <dt>Contribution</dt><dd>Co-built with a colleague; 16 items solo, 69 commits; set up a bi-weekly progress-reporting mechanism.</dd>
-        <dt>Result</dt><dd>Delivered from zero in 8 weeks, 34 items shipped, 15+ unneeded features scoped out.</dd>
-      </dl></div>
-      <div class="proj"><div class="pt">Total-Win Report DB Migration (MySQL → ClickHouse)</div><dl>
-        <dt>Background</dt><dd>The total-win report queried MySQL monthly/daily shards; a full-month query took ~104 s.</dd>
-        <dt>Work</dt><dd>Migrated to ClickHouse (MV + AggregatingMergeTree), routing between CH and MySQL by date.</dd>
-        <dt>Challenge</dt><dd>Zero-downtime cutover and pre/post data-consistency verification.</dd>
-        <dt>Contribution</dt><dd>Independently led the migration, CH schema and partition-key design, and reconciled against real data.</dd>
-        <dt>Result</dt><dd>Full-month query ~104 s → ~5 s (~21×), zero downtime.</dd>
-      </dl></div>
-      <div class="proj"><div class="pt">Online-Member Page Refactor & Cross-Team Requirements</div><dl>
-        <dt>Background</dt><dd>The member page was a single tangled API with a 712-line front-end main file and multi-team demands.</dd>
-        <dt>Work</dt><dd>Split the single API into 3 focused APIs and refactored the front end.</dd>
-        <dt>Challenge</dt><dd>Preserve existing currency logic while integrating exec / operations / risk-control needs.</dd>
-        <dt>Contribution</dt><dd>Led the API split, the front-end refactor and cross-team requirement clarification.</dd>
-        <dt>Result</dt><dd>1 tangled API → 3; front-end main file 712 → ~190 lines.</dd>
-      </dl></div>
+      <h2>Projects</h2>
+      <div class="proj"><div class="pt">Player Cash-Flow Report</div><ul>
+        <li>Background: CS / risk control needed cash-flow lookups across monthly shard tables; 20-person batches took 4–5 min.</li>
+        <li>Work: auto-routed queries between a ClickHouse table and MySQL shards by date, via a query builder.</li>
+        <li>Challenge: slow cross-month shard queries, batch timeouts, and CH↔MySQL results had to match exactly.</li>
+        <li>Contribution & result: independently designed the routing and CH schema, verified against real data; 20-person batches 4–5 min → 15–20 s (~3.2× in QA).</li>
+      </ul></div>
+      <div class="proj"><div class="pt">Odds-Range Monitoring + LINE／Slack Auto-Push Bot</div><ul>
+        <li>Background: risk control compiled and reported odds-range + ops data by hand daily — slow and error-prone.</li>
+        <li>Work: used LINE／Slack Bot SDK + cloudflared tunneling to push monitoring results automatically on a schedule.</li>
+        <li>Challenge: firewalled intranet limits and a cross-host clock-skew race condition.</li>
+        <li>Contribution & result: independently set up the tunnel, scheduling and error-handling; manual reporting → fully automated push, ~304 hours/year saved.</li>
+      </ul></div>
+      <div class="proj"><div class="pt">Bet-Daily Table Automation & Visualization</div><ul>
+        <li>Background: the bet-daily table took ~20 min of manual entry each day and had 6 long-standing pain points.</li>
+        <li>Work: built an automation pipeline; visualized multi-game trends with v-charts line charts and draggable tables.</li>
+        <li>Challenge: multi-game data integration, template management, and historical re-runs.</li>
+        <li>Contribution & result: designed the pipeline, visualization and template-management flow; 20 min/day → 0, all 6 pain points resolved.</li>
+      </ul></div>
+      <div class="proj"><div class="pt">Q-Coin Back Office</div><ul>
+        <li>Background: the company introduced a brand-new virtual currency (Q-Coin); the back office was built from scratch.</li>
+        <li>Work: backward-compatible DB schema + Vue front-end; assessed ~50 reports, shipped 34 items.</li>
+        <li>Challenge: very fuzzy requirements, two-month deadline, dual-currency UI, 8+ concurrent branches to merge.</li>
+        <li>Contribution & result: co-built with a colleague, 16 items solo, 69 commits; delivered from zero in 8 weeks, 34 shipped, 15+ unneeded features scoped out.</li>
+      </ul></div>
+      <div class="proj"><div class="pt">Total-Win Report DB Migration (MySQL → ClickHouse)</div><ul>
+        <li>Background: the total-win report queried MySQL monthly/daily shards; a full-month query took ~104 s.</li>
+        <li>Work: migrated to ClickHouse (MV + AggregatingMergeTree), routing between CH and MySQL by date.</li>
+        <li>Challenge: zero-downtime cutover and pre/post data-consistency verification.</li>
+        <li>Contribution & result: independently led the migration, CH schema and partition-key design, reconciled against real data; full-month query ~104 s → ~5 s (~21×), zero downtime.</li>
+      </ul></div>
+      <div class="proj"><div class="pt">Online-Member Page Refactor & Cross-Team Requirements</div><ul>
+        <li>Background: the member page was a single tangled API with a 712-line front-end main file and multi-team demands.</li>
+        <li>Work: split the single API into 3 focused APIs and refactored the front end.</li>
+        <li>Challenge: preserve existing currency logic while integrating exec / operations / risk-control needs.</li>
+        <li>Contribution & result: led the API split, front-end refactor and cross-team clarification; 1 tangled API → 3, front-end main file 712 → ~190 lines.</li>
+      </ul></div>
     </div>
 
     <div class="section">

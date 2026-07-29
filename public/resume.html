@@ -8,20 +8,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
 <style>
-  /* Résumé — accent #4A5989 on a WHITE page (deliberately NOT the Bright
-     palette's #F3F4F8 page tint — résumé stays plain white). Layout after
-     referenceForProtfolio/cv. Content mirrors the public, de-identified profile
-     (src/lib/profile.ts + de-identified project write-ups); no phone, no
-     location. Skills have icons; experience and projects do not; projects are
-     plain text blocks (no card box). */
+  /* Résumé — accent #4A5989. Palette (per request): main/sub title = primary;
+     auxiliary text (dates/org) = #AEB2BD; description text = #D1D3D8; item
+     titles = dark #26292f (NEVER pure black). Header band on #F3F4F8; body white.
+     Content mirrors the de-identified public profile; no phone, no location. */
   :root {
     --primary: #4a5989;
-    --secondary: #8b90a0;
-    --bg: #ffffff;
-    --card: #ffffff;
+    --aux: #aeb2bd;      /* 輔助文字 */
+    --desc: #d1d3d8;     /* 說明文字 */
+    --text: #26292f;     /* item titles (not pure black) */
     --line: #e0e2ea;
-    --text: #26292f;
-    --muted: #6b7180;
+    --bg: #ffffff;
+    --head-bg: #f3f4f8;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -30,13 +28,18 @@
   a { color: var(--primary); text-decoration: none; }
   a:hover { text-decoration: underline; }
 
-  .head { display: flex; flex-direction: column; gap: 7px; padding-bottom: 2px; }
+  /* Header band: #F3F4F8, padding-bottom 20px; ~24px to 技能 (15 + the 9px page gap). */
+  .head { background: var(--head-bg); border-radius: 6px; padding: 18px 20px 20px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
   .head h1 { font-size: 25px; font-weight: 900; color: var(--primary); }
-  .head h1 .en { color: var(--text); font-weight: 700; margin-left: 7px; font-size: 19px; }
-  .head .intro { color: var(--muted); font-size: 12px; max-width: 168mm; }
-  .head .contact { display: flex; flex-wrap: wrap; gap: 5px 18px; margin-top: 3px; font-size: 11.5px; }
-  .head .contact span { color: var(--muted); }
-  .head .contact a, .head .contact b { color: var(--text); font-weight: 500; }
+  .head h1 .en { color: var(--primary); font-weight: 700; margin-left: 7px; font-size: 19px; }
+  .head .intro { color: var(--primary); font-size: 12px; max-width: 168mm; }
+  /* Contact: solid primary square icon buttons, white icons, radius 4. */
+  .head .contact { display: flex; gap: 8px; margin-top: 4px; }
+  .icon-btn { width: 32px; height: 32px; border-radius: 4px; background: var(--primary); display: inline-flex; align-items: center; justify-content: center; }
+  .icon-btn:hover { text-decoration: none; opacity: 0.9; }
+  /* color:#fff → fill="currentColor" (github/linkedin) render white; stroke
+     icons (email/globe) keep their own fill:none so they aren't solid blobs. */
+  .icon-btn svg { width: 16px; height: 16px; color: #fff; }
 
   .section { display: flex; flex-direction: column; gap: 8px; }
   .section > h2 { font-size: 14.5px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
@@ -47,24 +50,27 @@
   .skill .ico { flex-shrink: 0; width: 20px; height: 20px; color: var(--primary); margin-top: 1px; }
   .skill .ico svg { width: 100%; height: 100%; }
   .skill .k { font-weight: 700; color: var(--text); font-size: 12px; }
-  .skill .d { color: var(--muted); font-size: 11px; }
+  .skill .d { color: var(--desc); font-size: 11px; }
 
-  .entry { padding-left: 13px; border-left: 2px solid var(--line); position: relative; margin-bottom: 8px; }
-  .entry::before { content: ''; position: absolute; left: -5px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+  /* Timeline entry: the line starts at the dot centre (top:9px), never above it. */
+  .entry { padding-left: 13px; position: relative; margin-bottom: 8px; }
+  .entry::before { content: ''; position: absolute; left: -4px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); z-index: 1; }
+  .entry::after { content: ''; position: absolute; left: -1px; top: 9px; bottom: 0; width: 2px; background: var(--line); }
   .entry .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .entry .role { font-weight: 700; color: var(--text); font-size: 12.5px; }
-  .entry .time { color: var(--muted); font-size: 10.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .entry .org { color: var(--primary); font-size: 11.5px; margin-top: 1px; }
-  .entry .summary { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .entry .time { color: var(--aux); font-size: 10.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .entry .org { color: var(--aux); font-size: 11.5px; margin-top: 1px; }
+  .entry .summary { color: var(--desc); font-size: 11px; margin-top: 2px; }
   .entry ul { list-style: none; margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
-  .entry ul li { position: relative; padding-left: 12px; font-size: 11.3px; }
+  .entry ul li { position: relative; padding-left: 12px; font-size: 11.3px; color: var(--desc); }
   .entry ul li::before { content: ''; position: absolute; left: 0; top: 6px; width: 4px; height: 4px; border-radius: 50%; background: var(--primary); opacity: 0.75; }
 
+  /* Projects: title + up to 4 bullet dots (背景 / 專案內容 / 專案挑戰 / 貢獻與成果). */
   .proj { margin-bottom: 9px; }
-  .proj .pt { font-weight: 700; color: var(--text); font-size: 12.5px; margin-bottom: 2px; }
-  .proj dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 8px; }
-  .proj dt { color: var(--primary); font-weight: 600; font-size: 10.8px; white-space: nowrap; }
-  .proj dd { color: var(--muted); font-size: 11px; }
+  .proj .pt { font-weight: 700; color: var(--text); font-size: 12.5px; margin-bottom: 3px; }
+  .proj ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+  .proj ul li { position: relative; padding-left: 12px; font-size: 11px; color: var(--desc); }
+  .proj ul li::before { content: ''; position: absolute; left: 0; top: 6px; width: 4px; height: 4px; border-radius: 50%; background: var(--primary); opacity: 0.75; }
 
   /* keep blocks whole across page breaks; never orphan a section heading */
   .proj, .entry, .skill { break-inside: avoid; }
@@ -80,10 +86,18 @@
       <h1>李孟儒<span class="en">Lance Lee</span></h1>
       <p class="intro">擁有 2 年跨產業經驗，涵蓋數位產品設計與全端工程開發，現任線上娛樂平台全端工程師，曾參與百萬預算的 SaaS、金融、政府與線上娛樂平台專案。主導總勝分報表由 MySQL 遷移至 ClickHouse（整月查詢約 104 秒→約 5 秒、約 21 倍），持續推動報表與監控自動化（年省逾 300 小時），並重構大型 Vue 模組（4221 行縮減 54%）。設計與專案管理背景讓我能精準掌握需求脈絡與使用者體驗，讓技術決策直接對接商業目標。</p>
       <div class="contact">
-        <span>Email <b>emy0526@gmail.com</b></span>
-        <span>GitHub <a href="https://github.com/leemengju">github.com/leemengju</a></span>
-        <span>LinkedIn <a href="https://www.linkedin.com/in/meng-ju-lee-902204231/">meng-ju-lee</a></span>
-        <span>作品集 <a href="https://leemengju.github.io">leemengju.github.io</a></span>
+        <a class="icon-btn" href="mailto:emy0526@gmail.com" aria-label="Email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 6 9-6"/></svg>
+        </a>
+        <a class="icon-btn" href="https://github.com/leemengju" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.66.41.35.77 1.05.77 2.12 0 1.53-.01 2.76-.01 3.14 0 .3.2.67.8.55A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+        </a>
+        <a class="icon-btn" href="https://www.linkedin.com/in/meng-ju-lee-902204231/" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.55V9h3.57v11.45Z"/></svg>
+        </a>
+        <a class="icon-btn" href="https://leemengju.github.io" aria-label="作品集">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19"/><path d="M12 2.5a15 15 0 0 1 0 19a15 15 0 0 1 0-19Z"/></svg>
+        </a>
       </div>
     </header>
 
@@ -132,58 +146,52 @@
     </div>
   </section>
 
-  <!-- ===== PAGE 2 — 代表專案 ===== -->
+  <!-- ===== PAGE 2 — 專案 ===== -->
   <section class="page">
     <div class="section">
-      <h2>代表專案</h2>
+      <h2>專案</h2>
 
-      <div class="proj"><div class="pt">玩家金流異動統計報表</div><dl>
-        <dt>背景</dt><dd>客服／風管需查詢玩家金流異動，原查詢跨月分表，20 人批量查詢需 4~5 分鐘。</dd>
-        <dt>專案內容</dt><dd>重構查詢邏輯，依搜尋日期自動分流 ClickHouse 單表／MySQL 分表，並封裝查詢建構器。</dd>
-        <dt>專案挑戰</dt><dd>跨月分表查詢慢、批量查詢逾時、CH 與 MySQL 結果需完全對齊。</dd>
-        <dt>個人貢獻</dt><dd>獨立設計分流邏輯與 CH schema，並以實資料對數驗證正確性。</dd>
-        <dt>結果與影響</dt><dd>20 人批量查詢 4~5 分鐘 → 15~20 秒（QA 實測約 3.2×）。</dd>
-      </dl></div>
+      <div class="proj"><div class="pt">玩家金流異動統計報表</div><ul>
+        <li>背景：客服／風管需查詢玩家金流異動，原查詢跨月分表，20 人批量查詢需 4~5 分鐘。</li>
+        <li>專案內容：重構查詢邏輯，依搜尋日期自動分流 ClickHouse 單表／MySQL 分表，並封裝查詢建構器。</li>
+        <li>專案挑戰：跨月分表查詢慢、批量查詢逾時、CH 與 MySQL 結果需完全對齊。</li>
+        <li>貢獻與成果：獨立設計分流邏輯與 CH schema、以實資料對數驗證；20 人批量查詢 4~5 分鐘 → 15~20 秒（QA 實測約 3.2×）。</li>
+      </ul></div>
 
-      <div class="proj"><div class="pt">區間賠率監控 + 運營資料 LINE／Slack 機器人自動推送</div><dl>
-        <dt>背景</dt><dd>風管每日人工整理區間賠率與運營資料並回報，耗時且易漏。</dd>
-        <dt>專案內容</dt><dd>以 LINE／Slack Bot SDK + cloudflared 內網穿透，將監控結果定時自動推送。</dd>
-        <dt>專案挑戰</dt><dd>防火牆內網限制、跨機時鐘偏移造成的資料競態。</dd>
-        <dt>個人貢獻</dt><dd>獨立打通內網穿透、設計推送排程與異常處理／維運機制。</dd>
-        <dt>結果與影響</dt><dd>人工回報 → 全自動推送，約省 304 小時／年。</dd>
-      </dl></div>
+      <div class="proj"><div class="pt">區間賠率監控 + 運營資料 LINE／Slack 機器人自動推送</div><ul>
+        <li>背景：風管每日人工整理區間賠率與運營資料並回報，耗時且易漏。</li>
+        <li>專案內容：以 LINE／Slack Bot SDK + cloudflared 內網穿透，將監控結果定時自動推送。</li>
+        <li>專案挑戰：防火牆內網限制、跨機時鐘偏移造成的資料競態。</li>
+        <li>貢獻與成果：獨立打通內網穿透、設計推送排程與異常處理；人工回報 → 全自動推送，約省 304 小時／年。</li>
+      </ul></div>
 
-      <div class="proj"><div class="pt">投注額日表（betDaily）自動化與視覺化</div><dl>
-        <dt>背景</dt><dd>投注額日表每日人工填表約 20 分鐘，且有 6 個長期痛點。</dd>
-        <dt>專案內容</dt><dd>建立自動化 pipeline，以 v-charts 折線圖與可拖拉表格呈現多遊戲趨勢。</dd>
-        <dt>專案挑戰</dt><dd>多遊戲資料整合、範本設定管理、歷史資料重跑。</dd>
-        <dt>個人貢獻</dt><dd>設計資料 pipeline 與前端視覺化、範本管理流程。</dd>
-        <dt>結果與影響</dt><dd>每日 20 分鐘人工 → 0，6 個痛點全數解決。</dd>
-      </dl></div>
+      <div class="proj"><div class="pt">投注額日表（betDaily）自動化與視覺化</div><ul>
+        <li>背景：投注額日表每日人工填表約 20 分鐘，且有 6 個長期痛點。</li>
+        <li>專案內容：建立自動化 pipeline，以 v-charts 折線圖與可拖拉表格呈現多遊戲趨勢。</li>
+        <li>專案挑戰：多遊戲資料整合、範本設定管理、歷史資料重跑。</li>
+        <li>貢獻與成果：設計資料 pipeline 與前端視覺化、範本管理流程；每日 20 分鐘人工 → 0，6 個痛點全數解決。</li>
+      </ul></div>
 
-      <div class="proj"><div class="pt">Q 幣後台系統建置</div><dl>
-        <dt>背景</dt><dd>公司導入全新虛擬貨幣（Q 幣），後台完全從零建立。</dd>
-        <dt>專案內容</dt><dd>DB 建表與相容設計 + Vue 前端，近 50 份報表逐張評估、34 項工項上線。</dd>
-        <dt>專案挑戰</dt><dd>需求極度模糊、兩個月死線、跨幣種 UI 共存、8+ 短線分支合版。</dd>
-        <dt>個人貢獻</dt><dd>與同事協作、16 項獨立完成、69 commits，建立雙周進度匯報機制。</dd>
-        <dt>結果與影響</dt><dd>8 週從零交付、34 項工項上線，並剃除 15+ 項不需要功能。</dd>
-      </dl></div>
+      <div class="proj"><div class="pt">Q 幣後台系統建置</div><ul>
+        <li>背景：公司導入全新虛擬貨幣（Q 幣），後台完全從零建立。</li>
+        <li>專案內容：DB 建表與相容設計 + Vue 前端，近 50 份報表逐張評估、34 項工項上線。</li>
+        <li>專案挑戰：需求極度模糊、兩個月死線、跨幣種 UI 共存、8+ 短線分支合版。</li>
+        <li>貢獻與成果：與同事協作、16 項獨立完成、69 commits；8 週從零交付、34 項上線，並剃除 15+ 項不需要功能。</li>
+      </ul></div>
 
-      <div class="proj"><div class="pt">總勝分報表資料庫遷移（MySQL → ClickHouse）</div><dl>
-        <dt>背景</dt><dd>總勝分報表查 MySQL 月／日分表，玩家整月查詢約 104 秒。</dd>
-        <dt>專案內容</dt><dd>遷移至 ClickHouse（MV + AggregatingMergeTree），依日期在 CH／MySQL 間分流。</dd>
-        <dt>專案挑戰</dt><dd>零停機切換、遷移前後資料一致性驗證。</dd>
-        <dt>個人貢獻</dt><dd>獨立主導遷移、CH schema 與分區鍵設計、以實資料對數。</dd>
-        <dt>結果與影響</dt><dd>整月查詢 約 104s → 約 5s（約 21×），零停機。</dd>
-      </dl></div>
+      <div class="proj"><div class="pt">總勝分報表資料庫遷移（MySQL → ClickHouse）</div><ul>
+        <li>背景：總勝分報表查 MySQL 月／日分表，玩家整月查詢約 104 秒。</li>
+        <li>專案內容：遷移至 ClickHouse（MV + AggregatingMergeTree），依日期在 CH／MySQL 間分流。</li>
+        <li>專案挑戰：零停機切換、遷移前後資料一致性驗證。</li>
+        <li>貢獻與成果：獨立主導遷移、CH schema 與分區鍵設計、以實資料對數；整月查詢 約 104s → 約 5s（約 21×），零停機。</li>
+      </ul></div>
 
-      <div class="proj"><div class="pt">線上會員頁重構與多部門需求整合</div><dl>
-        <dt>背景</dt><dd>線上會員頁為單一混亂 API、前端主檔 712 行，且需整合多部門需求。</dd>
-        <dt>專案內容</dt><dd>將單一 API 拆為 3 支職責清晰 API，並重構前端主檔。</dd>
-        <dt>專案挑戰</dt><dd>不破壞既有幣種邏輯，同時整合執行長／運營／風管等需求。</dd>
-        <dt>個人貢獻</dt><dd>主導 API 拆分與前端重構、跨部門需求釐清。</dd>
-        <dt>結果與影響</dt><dd>1 支混亂 API → 3 支；前端主檔 712 行 → 約 190 行。</dd>
-      </dl></div>
+      <div class="proj"><div class="pt">線上會員頁重構與多部門需求整合</div><ul>
+        <li>背景：線上會員頁為單一混亂 API、前端主檔 712 行，且需整合多部門需求。</li>
+        <li>專案內容：將單一 API 拆為 3 支職責清晰 API，並重構前端主檔。</li>
+        <li>專案挑戰：不破壞既有幣種邏輯，同時整合執行長／運營／風管等需求。</li>
+        <li>貢獻與成果：主導 API 拆分與前端重構、跨部門需求釐清；1 支混亂 API → 3 支，前端主檔 712 行 → 約 190 行。</li>
+      </ul></div>
     </div>
 
     <div class="section">

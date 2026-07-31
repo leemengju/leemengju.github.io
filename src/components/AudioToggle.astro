@@ -2,9 +2,11 @@
 /**
  * Ambient background audio (item 2/5). ONE looping track, ON by default. A sound
  * icon in the header toggles play ↔ pause with a short fade; once the user turns
- * it OFF it stays off (sessionStorage 'audio-off'). Browsers block unmuted
- * autoplay before any interaction, so playback starts on the visitor's first
- * gesture. Playback position is saved to sessionStorage ('audio-time') and
+ * it OFF it stays off (sessionStorage 'audio-off'). Because browsers block
+ * *audible* autoplay before any interaction, the track starts MUTED on entry
+ * (muted autoplay is allowed) and unmutes on the visitor's first interaction of
+ * any kind (mousemove / scroll / tap / key / click). Playback position is saved
+ * to sessionStorage ('audio-time') and
  * resumed after a full-page navigation (language switch / opening a project), so
  * the music continues rather than restarting; theme toggles and the résumé
  * (opens in a new tab) never interrupt it. Lives in BaseLayout, so every theme
@@ -123,16 +125,31 @@
         try { audio.currentTime = t; } catch {}
       }
     };
-    const start = () => {
+    const play = () => {
       if (!audio.src) audio.src = TRACK; // fetch on demand (preload="none")
-      audio.volume = 0;
       const p = audio.play();
       if (audio.readyState >= 1) seek();
       else audio.addEventListener('loadedmetadata', seek, { once: true });
-      return p.then(() => {
-        fade(TARGET_VOL);
-        setOn(true);
-      });
+      return p;
+    };
+    // Make it audible (call from a user gesture): unmute + fade in.
+    const beginAudible = () => {
+      audio.muted = false;
+      audio.volume = 0;
+      fade(TARGET_VOL);
+      setOn(true);
+    };
+    // The track starts MUTED (browsers allow muted autoplay before any gesture);
+    // it becomes audible on the visitor's first interaction of any kind.
+    const armAudible = () => {
+      const events = ['pointerdown', 'pointermove', 'mousemove', 'scroll', 'keydown', 'touchstart', 'click'];
+      const fire = () => {
+        events.forEach((e) => window.removeEventListener(e, fire));
+        if (!wantOn()) return;
+        if (audio.paused) play().catch(() => {});
+        beginAudible();
+      };
+      events.forEach((e) => window.addEventListener(e, fire, { once: true, passive: true }));
     };
 
     // Persist the position so playback continues where it left off after a
@@ -150,25 +167,22 @@
         fade(0, () => audio.pause());
         setOn(false);
       } else {
+        // Clicking the icon is itself a gesture → can go audible immediately.
         sessionStorage.removeItem(K_OFF);
-        setOn(true);
-        start().catch(() => setOn(false));
+        if (audio.paused) play().then(beginAudible).catch(() => setOn(false));
+        else beginAudible();
       }
     });
 
-    // Default ON: show the on state and try to start. Browsers block unmuted
-    // autoplay before any interaction, so if play() is rejected we start on the
-    // visitor's first gesture (which happens almost immediately).
+    // Default ON: start playing on entry (muted so autoplay is allowed), and
+    // unmute on the first interaction. Persisted across navigations, so the
+    // track keeps going rather than restarting.
     if (wantOn()) {
       setOn(true);
-      start().catch(() => {
-        const events = ['pointerdown', 'keydown', 'scroll', 'click', 'touchstart'];
-        const kick = () => {
-          events.forEach((e) => window.removeEventListener(e, kick));
-          if (wantOn()) start().catch(() => {});
-        };
-        events.forEach((e) => window.addEventListener(e, kick, { once: true, passive: true }));
-      });
+      audio.muted = true;
+      audio.volume = TARGET_VOL;
+      play().catch(() => {}); // muted autoplay; harmless if a browser still blocks it
+      armAudible();
     }
   });
 </script>

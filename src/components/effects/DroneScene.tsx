@@ -17,24 +17,27 @@ import {
   CAMERA,
   deg,
   effectiveKeyframe,
+  exitPartial,
+  mergeExit,
   type Keyframe,
   type SectionKey,
   type Vec3
 } from './drone-choreography';
 
 type LiveMap = Record<SectionKey, Keyframe>;
+type Live = { desktop: LiveMap; mobile: LiveMap };
 
-function cloneLive(): LiveMap {
-  const o = {} as LiveMap;
+function cloneKf(k: Keyframe): Keyframe {
+  return { pos: [...k.pos] as Vec3, rot: [...k.rot] as Vec3, scale: k.scale, opacity: k.opacity };
+}
+function cloneLive(): Live {
+  const desktop = {} as LiveMap;
+  const mobile = {} as LiveMap;
   for (const s of SECTIONS) {
-    o[s.key] = {
-      pos: [...s.desktop.pos] as Vec3,
-      rot: [...s.desktop.rot] as Vec3,
-      scale: s.desktop.scale,
-      opacity: s.desktop.opacity
-    };
+    desktop[s.key] = cloneKf(s.desktop);
+    mobile[s.key] = cloneKf(s.mobile);
   }
-  return o;
+  return { desktop, mobile };
 }
 
 function useThemeVariant(): 'bright' | 'dark' {
@@ -66,7 +69,7 @@ function eachMaterial(root: THREE.Object3D, fn: (m: THREE.Material) => void) {
 interface DroneProps {
   theme: 'bright' | 'dark';
   tune: boolean;
-  liveRef: React.MutableRefObject<LiveMap>;
+  liveRef: React.MutableRefObject<Live>;
 }
 
 function Drone({ theme, tune, liveRef }: DroneProps) {
@@ -125,10 +128,16 @@ function Drone({ theme, tune, liveRef }: DroneProps) {
   useEffect(() => {
     const measure = () => {
       mobile.current = window.matchMedia('(max-width: 768px)').matches;
+      // Clamp each section's centre to the reachable scroll range so the FIRST
+      // and LAST sections (esp. contact) are actually hit by the viewport centre.
+      const half = window.innerHeight / 2;
+      const minVC = half;
+      const maxVC = Math.max(half, document.documentElement.scrollHeight - half);
       centers.current = SECTIONS.map((s) => {
         const el = document.querySelector(s.selector);
         const r = el?.getBoundingClientRect();
-        const center = r ? r.top + window.scrollY + r.height / 2 : 0;
+        let center = r ? r.top + window.scrollY + r.height / 2 : 0;
+        center = Math.min(Math.max(center, minVC), maxVC);
         return { key: s.key, center };
       });
     };
@@ -147,32 +156,46 @@ function Drone({ theme, tune, liveRef }: DroneProps) {
     const cs = centers.current;
     if (!g || !model || cs.length < 2) return;
 
+    const mob = mobile.current;
+    const live = tune ? liveRef.current[mob ? 'mobile' : 'desktop'] : null;
+    const baseKf = (i: number): Keyframe => (live ? live[cs[i].key] : effectiveKeyframe(SECTIONS[i], mob));
+
+    // Ordered stops: each section's keyframe, plus an optional merged "exit" stop
+    // placed 65% of the way to the next section (within-section motion, e.g.
+    // about fades 0.85 → 0.1, skills slides out to the right).
+    type Stop = { anchor: number; kf: Keyframe; sec: number };
+    const stops: Stop[] = [];
+    for (let i = 0; i < cs.length; i++) {
+      const base = baseKf(i);
+      stops.push({ anchor: cs[i].center, kf: base, sec: i });
+      const ex = exitPartial(SECTIONS[i], mob);
+      if (ex && i < cs.length - 1) {
+        stops.push({
+          anchor: cs[i].center + 0.65 * (cs[i + 1].center - cs[i].center),
+          kf: mergeExit(base, ex),
+          sec: i
+        });
+      }
+    }
+    if (stops.length < 2) return;
+
     const vc = window.scrollY + window.innerHeight / 2;
     let a = 0;
-    while (a < cs.length - 1 && vc > cs[a + 1].center) a++;
-    const b = Math.min(a + 1, cs.length - 1);
-    const ca = cs[a].center;
-    const cb = cs[b].center;
-    const t = cb > ca ? THREE.MathUtils.clamp((vc - ca) / (cb - ca), 0, 1) : 0;
+    while (a < stops.length - 1 && vc > stops[a + 1].anchor) a++;
+    const b = Math.min(a + 1, stops.length - 1);
+    const sa = stops[a].anchor;
+    const sb = stops[b].anchor;
+    const t = sb > sa ? THREE.MathUtils.clamp((vc - sa) / (sb - sa), 0, 1) : 0;
+    const te = t * t * (3 - 2 * t); // smoothstep
 
-    const mob = mobile.current;
-    const kfA = tune ? liveRef.current[cs[a].key] : effectiveKeyframe(SECTIONS[a], mob);
-    const kfB = tune ? liveRef.current[cs[b].key] : effectiveKeyframe(SECTIONS[b], mob);
-
-    // Smoothstep easing between adjacent keyframes.
-    const te = t * t * (3 - 2 * t);
-
-    // Position follows a Catmull-Rom spline through ALL the section points — an
-    // S-curve, never a straight vertical drop. `u` is a global 0..1 param.
-    const N = cs.length;
-    const pts = SECTIONS.map(
-      (sec, i) =>
-        new THREE.Vector3(...(tune ? liveRef.current[cs[i].key] : effectiveKeyframe(sec, mob)).pos)
-    );
+    // Position along a Catmull-Rom spline through ALL the stop points (S-curve).
+    const pts = stops.map((st) => new THREE.Vector3(...st.kf.pos));
     const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
-    const u = THREE.MathUtils.clamp((a + te) / (N - 1), 0, 1);
+    const u = THREE.MathUtils.clamp((a + te) / (stops.length - 1), 0, 1);
     const p = curve.getPoint(u);
 
+    const kfA = stops[a].kf;
+    const kfB = stops[b].kf;
     const rx = THREE.MathUtils.lerp(kfA.rot[0], kfB.rot[0], te);
     const ry = THREE.MathUtils.lerp(kfA.rot[1], kfB.rot[1], te);
     const rz = THREE.MathUtils.lerp(kfA.rot[2], kfB.rot[2], te);
@@ -180,7 +203,7 @@ function Drone({ theme, tune, liveRef }: DroneProps) {
     const opacity = THREE.MathUtils.lerp(kfA.opacity, kfB.opacity, te);
 
     // Spin only while hero/about are dominant; everything else holds its angle.
-    const spinW = (SECTIONS[a].spin ? 1 - te : 0) + (SECTIONS[b].spin ? te : 0);
+    const spinW = (SECTIONS[stops[a].sec].spin ? 1 - te : 0) + (SECTIONS[stops[b].sec].spin ? te : 0);
     spin.current += delta * 0.5 * spinW;
 
     // frame-rate-independent damping toward the choreography target
@@ -204,10 +227,15 @@ function fmt(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-/** Live slider overlay (?tune). Edits the desktop keyframe of whichever section
- *  the viewport centre is on; "Copy" emits a ready-to-paste SECTIONS block. */
-function TuneOverlay({ liveRef }: { liveRef: React.MutableRefObject<LiveMap> }) {
+/** Live slider overlay (?tune). Edits the keyframe of whichever section the
+ *  viewport centre is on, for the CURRENT breakpoint (desktop values on a
+ *  desktop viewport, mobile values on a mobile viewport). "Copy all" emits both
+ *  the desktop and mobile SECTIONS blocks, ready to paste back. */
+function TuneOverlay({ liveRef }: { liveRef: React.MutableRefObject<Live> }) {
   const [active, setActive] = useState<SectionKey>('hero');
+  const [mob, setMob] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
+  );
   const [, force] = useReducer((x) => x + 1, 0);
 
   useEffect(() => {
@@ -228,16 +256,20 @@ function TuneOverlay({ liveRef }: { liveRef: React.MutableRefObject<LiveMap> }) 
       }
       setActive(best);
     };
+    const onResize = () => {
+      setMob(window.matchMedia('(max-width: 768px)').matches);
+      onScroll();
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('resize', onResize);
     return () => {
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('resize', onResize);
     };
   }, []);
 
-  const kf = liveRef.current[active];
+  const kf = liveRef.current[mob ? 'mobile' : 'desktop'][active];
 
   const row = (
     label: string,
@@ -266,16 +298,20 @@ function TuneOverlay({ liveRef }: { liveRef: React.MutableRefObject<LiveMap> }) 
   );
 
   const copyAll = () => {
-    const lines = SECTIONS.map((s) => {
-      const k = liveRef.current[s.key];
-      const r = `[deg(${fmt((k.rot[0] * 180) / Math.PI)}), deg(${fmt((k.rot[1] * 180) / Math.PI)}), deg(${fmt(
-        (k.rot[2] * 180) / Math.PI
-      )})]`;
-      return `  ${s.key}: { pos: [${fmt(k.pos[0])}, ${fmt(k.pos[1])}, ${fmt(k.pos[2])}], rot: ${r}, scale: ${fmt(
-        k.scale
-      )}, opacity: ${fmt(k.opacity)} },`;
-    });
-    navigator.clipboard?.writeText('// desktop keyframes\n' + lines.join('\n'));
+    const block = (setName: 'desktop' | 'mobile') => {
+      const map = liveRef.current[setName];
+      const lines = SECTIONS.map((s) => {
+        const k = map[s.key];
+        const r = `[deg(${fmt((k.rot[0] * 180) / Math.PI)}), deg(${fmt((k.rot[1] * 180) / Math.PI)}), deg(${fmt(
+          (k.rot[2] * 180) / Math.PI
+        )})]`;
+        return `  ${s.key}: { pos: [${fmt(k.pos[0])}, ${fmt(k.pos[1])}, ${fmt(k.pos[2])}], rot: ${r}, scale: ${fmt(
+          k.scale
+        )}, opacity: ${fmt(k.opacity)} },`;
+      });
+      return `// ${setName} keyframes\n${lines.join('\n')}`;
+    };
+    navigator.clipboard?.writeText(block('desktop') + '\n\n' + block('mobile'));
   };
 
   return (
@@ -296,7 +332,7 @@ function TuneOverlay({ liveRef }: { liveRef: React.MutableRefObject<LiveMap> }) 
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-        <strong>drone · {active}</strong>
+        <strong>drone · {active} · {mob ? 'mobile' : 'desktop'}</strong>
         <button onClick={copyAll} style={{ fontSize: 11, cursor: 'pointer' }}>
           Copy all
         </button>
@@ -316,7 +352,7 @@ function TuneOverlay({ liveRef }: { liveRef: React.MutableRefObject<LiveMap> }) 
 
 export default function DroneScene({ tune = false }: { tune?: boolean }) {
   const theme = useThemeVariant();
-  const liveRef = useRef<LiveMap>(cloneLive());
+  const liveRef = useRef<Live>(cloneLive());
   // The bright-theme model reads ~40% brighter (per request) by boosting lights.
   const lb = theme === 'bright' ? 1.4 : 1;
 

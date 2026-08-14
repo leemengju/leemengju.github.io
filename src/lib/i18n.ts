@@ -34,7 +34,7 @@ export const strings = {
   },
   en: {
     langAttr: 'en',
-    brand: 'Meng-Ju Lee (Lance)',
+    brand: 'LANCE LEE',
     siteTitle: 'Meng-Ju Lee (Lance) | Portfolio',
     titleSuffix: ' | Meng-Ju Lee (Lance)',
     introHeading: 'Meng-Ju Lee (Lance)',

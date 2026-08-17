@@ -202,9 +202,13 @@ function Drone({ theme, tune, liveRef }: DroneProps) {
     const scale = THREE.MathUtils.lerp(kfA.scale, kfB.scale, te);
     const opacity = THREE.MathUtils.lerp(kfA.opacity, kfB.opacity, te);
 
-    // Spin only while hero/about are dominant; everything else holds its angle.
+    // Spin only while hero/about are dominant. The accumulated spin is applied
+    // scaled by spinW, so it fades out on the way to non-spin sections and every
+    // other section (esp. contact) settles to a DETERMINISTIC angle regardless of
+    // how long the drone spun earlier.
     const spinW = (SECTIONS[stops[a].sec].spin ? 1 - te : 0) + (SECTIONS[stops[b].sec].spin ? te : 0);
     spin.current += delta * 0.5 * spinW;
+    const spinApplied = spin.current * spinW;
 
     // frame-rate-independent damping toward the choreography target
     const k = 1 - Math.pow(0.0015, delta);
@@ -212,7 +216,7 @@ function Drone({ theme, tune, liveRef }: DroneProps) {
     g.position.y = THREE.MathUtils.lerp(g.position.y, p.y, k);
     g.position.z = THREE.MathUtils.lerp(g.position.z, p.z, k);
     g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, rx, k);
-    g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, ry + spin.current, k);
+    g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, ry + spinApplied, k);
     g.rotation.z = THREE.MathUtils.lerp(g.rotation.z, rz, k);
     const s = THREE.MathUtils.lerp(g.scale.x, scale, k);
     g.scale.setScalar(s);
@@ -241,13 +245,19 @@ function TuneOverlay({ liveRef }: { liveRef: React.MutableRefObject<Live> }) {
   useEffect(() => {
     const onScroll = () => {
       const vc = window.scrollY + window.innerHeight / 2;
+      // Clamp centres to the scrollable range (same as the drone) so the LAST
+      // section (contact) becomes the nearest one at the bottom and is editable.
+      const half = window.innerHeight / 2;
+      const minVC = half;
+      const maxVC = Math.max(half, document.documentElement.scrollHeight - half);
       let best: SectionKey = 'hero';
       let bd = Infinity;
       for (const s of SECTIONS) {
         const el = document.querySelector(s.selector);
         if (!el) continue;
         const r = el.getBoundingClientRect();
-        const c = r.top + window.scrollY + r.height / 2;
+        let c = r.top + window.scrollY + r.height / 2;
+        c = Math.min(Math.max(c, minVC), maxVC);
         const d = Math.abs(vc - c);
         if (d < bd) {
           bd = d;

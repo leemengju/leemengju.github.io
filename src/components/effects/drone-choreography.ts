@@ -56,7 +56,7 @@ export const SECTIONS: SectionDef[] = [
     spin: true,
     desktop: { pos: [2.3, 1.85, -1.15], rot: [deg(40), deg(-21), deg(-9)], scale: 3, opacity: 1 },
     // Mobile: opacity forced to 0.5 (visible for tuning); only pos tuned this round.
-    mobile: { pos: [0.35, 1.85, -1.15], rot: [deg(30), deg(-16), deg(-6)], scale: 2.4, opacity: 0.2 }
+    mobile: { pos: [0.35, 1.85, -1.15], rot: [deg(30), deg(-16), deg(-6)], scale: 2.4, opacity: 1 }
   },
   {
     key: 'about',
@@ -66,7 +66,7 @@ export const SECTIONS: SectionDef[] = [
     desktop: { pos: [-1.85, 0.2, -0.85], rot: [0, 0, 0], scale: 1.3, opacity: 0.85 },
     desktopExit: { opacity: 0.1 },
     // Mobile: slides [0,1.8,-1] → [-1.85,0.2,-0.85]; opacity 0.5 flat.
-    mobile: { pos: [0, 1.8, -1], rot: [0, 0, 0], scale: 1.2, opacity: 0.2 },
+    mobile: { pos: [0, 1.8, -1], rot: [0, 0, 0], scale: 1.2, opacity: 0.5 },
     mobileExit: { pos: [-1.85, 0.2, -0.85] }
   },
   {
@@ -74,37 +74,38 @@ export const SECTIONS: SectionDef[] = [
     selector: '#skills',
     // Enters behind the cards, then slides out to the right as it leaves.
     desktop: { pos: [0, 0.1, -1.4], rot: [deg(-6), 0, deg(20)], scale: 1.7, opacity: 0.3 },
-    desktopExit: { pos: [3.8, 0.1, -1.4] },
-    // Mobile: slides [0.15,0,-1.6] → [8,0.2,-0.85] (off to the right); opacity 0.5.
-    mobile: { pos: [0.15, 0, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.25, opacity: 0.2 },
-    mobileExit: { pos: [8, 0.2, -0.85] }
+    // Slides off-screen left (x=-8) as it leaves, so the spin-to-front settle
+    // happens where the drone isn't visible.
+    desktopExit: { pos: [-8, 0.1, -1.4] },
+    mobile: { pos: [0.15, 0, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.25, opacity: 0.5 },
+    mobileExit: { pos: [-8, 0.1, -1.4] }
   },
   {
     key: 'experience',
     selector: '#experience',
     desktop: { pos: [3.9, 0.05, -1.5], rot: [deg(-6), 0, deg(20)], scale: 1.5, opacity: 0 },
-    mobile: { pos: [1.7, 0, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.3, opacity: 0.2 }
+    mobile: { pos: [1.7, 0, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.3, opacity: 0.5 }
   },
   {
     key: 'projects',
     selector: '#projects',
     desktop: { pos: [0.8, -0.7, -1.5], rot: [deg(-6), 0, deg(20)], scale: 1.5, opacity: 0 },
-    mobile: { pos: [-2.85, -0.7, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.3, opacity: 0.2 }
+    mobile: { pos: [-2.85, -0.7, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.3, opacity: 0.5 }
   },
   {
     key: 'education',
     selector: '#education',
     desktop: { pos: [3.2, 0.7, 0.2], rot: [deg(-4), deg(20), 0], scale: 1.05, opacity: 1 },
-    mobile: { pos: [-1.95, 1.9, -0.5], rot: [deg(-4), deg(20), 0], scale: 0.85, opacity: 0.2 }
+    mobile: { pos: [-1.95, 1.9, -0.5], rot: [deg(-4), deg(20), 0], scale: 0.85, opacity: 0.5 }
   },
   {
     key: 'contact',
     selector: '#contact',
     // Nose turned back to face the viewer, then 30° to the right.
-    desktop: { pos: [2.6, -1.6, 0.5], rot: [0, deg(-30), 0], scale: 1.75, opacity: 1 },
+    desktop: { pos: [1.95, -0.95, 0.7], rot: [deg(23), deg(-30), 0], scale: 1.75, opacity: 1 },
     // Mobile: kept up (y 0.5) so it lands near the 聯絡方式 heading and doesn't
     // drop onto the "一起打造好體驗…" line.
-    mobile: { pos: [0.3, 0.5, -0.3], rot: [deg(21), deg(-79), 0], scale: 1.15, opacity: 0.2 }
+    mobile: { pos: [0.3, 0.5, -0.3], rot: [deg(26), deg(-32), 0], scale: 1.15, opacity: 1 }
   }
 ];
 

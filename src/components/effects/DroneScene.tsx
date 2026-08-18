@@ -202,13 +202,11 @@ function Drone({ theme, tune, liveRef }: DroneProps) {
     const scale = THREE.MathUtils.lerp(kfA.scale, kfB.scale, te);
     const opacity = THREE.MathUtils.lerp(kfA.opacity, kfB.opacity, te);
 
-    // Spin only while hero/about are dominant. The accumulated spin is applied
-    // scaled by spinW, so it fades out on the way to non-spin sections and every
-    // other section (esp. contact) settles to a DETERMINISTIC angle regardless of
-    // how long the drone spun earlier.
+    // Spin only while hero/about are dominant.
     const spinW = (SECTIONS[stops[a].sec].spin ? 1 - te : 0) + (SECTIONS[stops[b].sec].spin ? te : 0);
-    spin.current += delta * 0.5 * spinW;
-    const spinApplied = spin.current * spinW;
+    const spinning = spinW > 0.05;
+    if (spinning) spin.current += delta * 0.5 * spinW;
+    else spin.current = 0;
 
     // frame-rate-independent damping toward the choreography target
     const k = 1 - Math.pow(0.0015, delta);
@@ -216,7 +214,17 @@ function Drone({ theme, tune, liveRef }: DroneProps) {
     g.position.y = THREE.MathUtils.lerp(g.position.y, p.y, k);
     g.position.z = THREE.MathUtils.lerp(g.position.z, p.z, k);
     g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, rx, k);
-    g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, ry + spinApplied, k);
+    if (spinning) {
+      // continuous turntable spin while hero/about are dominant
+      g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, ry + spin.current, k);
+    } else {
+      // settle to the keyframe angle by the SHORTEST path (≤ half turn), so it
+      // never unwinds through all the accumulated spin (the "many turns" bug),
+      // and every non-spin section (incl. contact) lands on a deterministic angle.
+      let dy = ry - g.rotation.y;
+      dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+      g.rotation.y = g.rotation.y + dy * k;
+    }
     g.rotation.z = THREE.MathUtils.lerp(g.rotation.z, rz, k);
     const s = THREE.MathUtils.lerp(g.scale.x, scale, k);
     g.scale.setScalar(s);
@@ -338,7 +346,9 @@ function TuneOverlay({ liveRef }: { liveRef: React.MutableRefObject<Live> }) {
         color: '#e6e8ee',
         font: '12px/1.4 ui-monospace, monospace',
         boxShadow: '0 8px 30px rgba(0,0,0,0.4)',
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
+        // Kept faint so it doesn't block the (mobile) drone preview while tuning.
+        opacity: 0.2
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>

@@ -74,11 +74,10 @@ export const SECTIONS: SectionDef[] = [
     selector: '#skills',
     // Enters behind the cards, then slides out to the right as it leaves.
     desktop: { pos: [0, 0.1, -1.4], rot: [deg(-6), 0, deg(20)], scale: 1.7, opacity: 0.3 },
-    // Slides off-screen left (x=-8) as it leaves, so the spin-to-front settle
-    // happens where the drone isn't visible.
-    desktopExit: { pos: [-8, 0.1, -1.4] },
+    // Slides out to the right as it leaves (half-turn settle handles the angle).
+    desktopExit: { pos: [3.8, 0.1, -1.4] },
     mobile: { pos: [0.15, 0, -1.6], rot: [deg(-6), 0, deg(20)], scale: 1.25, opacity: 0.5 },
-    mobileExit: { pos: [-8, 0.1, -1.4] }
+    mobileExit: { pos: [8, 0.2, -0.85] }
   },
   {
     key: 'experience',
@@ -105,7 +104,7 @@ export const SECTIONS: SectionDef[] = [
     desktop: { pos: [1.95, -0.95, 0.7], rot: [deg(23), deg(-30), 0], scale: 1.75, opacity: 1 },
     // Mobile: kept up (y 0.5) so it lands near the 聯絡方式 heading and doesn't
     // drop onto the "一起打造好體驗…" line.
-    mobile: { pos: [0.3, 0.5, -0.3], rot: [deg(26), deg(-32), 0], scale: 1.15, opacity: 1 }
+    mobile: { pos: [0.3, 0.3, -0.3], rot: [deg(26), deg(-32), 0], scale: 1.15, opacity: 1 }
   }
 ];
 

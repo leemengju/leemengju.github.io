@@ -21,8 +21,8 @@ Add a junction table so one account can bind multiple roles; the back end merges
 
 ## Highlights
 
-- Created a permission junction table (`sn`, `account`, `groupNum`, `unique(sn, groupNum)`) so one account can bind multiple role groups.
-- Implemented the `mergePermissions()` algorithm on the back end: it unions the suffix characters of multiple rule strings and sends the merged `ruleMerged` to the front end, so the front end no longer parses rules itself.
+- Created a permission junction table (account-table primary key + account string + role group number, with a unique index on "primary key + group number") so one account can bind multiple role groups.
+- Implemented a **permission-merge algorithm** on the back end: it unions the suffix characters of multiple rule strings and sends the **merged rule string** to the front end in one shot, so the front end no longer parses rules itself.
 - A Seeder automatically migrates every account's existing role value into the new table — a zero-downtime upgrade with legacy data fully preserved.
 - Front-end multi-select UI: groups switched to checkbox multi-select; "all permissions" can only be selected alone — once chosen, no other group can be added (intercepted by a UI dialog).
 - The legacy role column keeps being written in sync (with the first group number), so existing code that reads it upgrades seamlessly.
@@ -31,9 +31,9 @@ Add a junction table so one account can bind multiple roles; the back end merges
 
 | Aspect | Before | After |
 |--------|--------|-------|
-| Max roles per account | 1 | Unlimited (deduped by unique(sn, groupNum)) |
+| Max roles per account | 1 | Unlimited (deduped by a unique index) |
 | New role needed for composite needs | Required | Not needed — just pick an existing combination |
-| Front-end rule parsing | Front end looks it up itself | Back end pre-builds `ruleMerged`, used directly |
+| Front-end rule parsing | Front end looks it up itself | Back end pre-builds the merged rule string, used directly |
 | Upgrade downtime | — | 0 (Seeder hot upgrade) |
 
 ## Solution & Architecture
@@ -44,27 +44,28 @@ Add a junction table so one account can bind multiple roles; the back end merges
 |-------|--------|-------|
 | Back-office account table | Legacy role column retained | Compatible with old paths; synced to the first group number on write |
 | Role-definition table | Unchanged | Role definitions and rule format stay the same |
-| Permission junction table | **New** | Account ↔ role many-to-many; unique(sn, groupNum) prevents duplicates |
+| Permission junction table | **New** | Account ↔ role many-to-many; a unique index (primary key + group number) prevents duplicates |
 
 ```sql
+-- Illustrative schema (table and columns named by role, not actual naming)
 CREATE TABLE account_role_map (
   id         BIGINT AUTO_INCREMENT PRIMARY KEY,
-  sn         INT NOT NULL,
-  account    VARCHAR(...) NOT NULL,
-  groupNum   INT NOT NULL,
+  account_sn INT NOT NULL,            -- account-table primary key
+  account    VARCHAR(...) NOT NULL,   -- account string
+  role_group INT NOT NULL,            -- role group number
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_sn_group (sn, groupNum)
+  UNIQUE KEY uq_account_role (account_sn, role_group)
 );
 ```
 
 ### Back-end layer
 
-| Method | Purpose |
+| Method responsibility | Purpose |
 |--------|---------|
-| `getAccountGroups($account)` | Query the junction table; fall back to the legacy role column if empty |
-| `setAccountGroups($account, $groups)` | Clear-old-write-new in a transaction + sync the legacy role column (taking `$groups[0]`) |
-| `mergePermissions($groupNums)` | Read multiple roles' rules, union the suffix characters, and reassemble |
-| `getGroupNames($groupNums)` | Return a groupNum → name lookup map |
+| Read an account's groups | Query the junction table; fall back to the legacy role column if empty |
+| Write an account's groups | Clear-old-write-new in a transaction + sync the legacy role column (taking the first group in the list) |
+| Merge permissions | Read multiple roles' rules, union the suffix characters, and reassemble |
+| Group-name lookup | Return a group-number → name lookup map |
 
 **Core of the rule-merge algorithm:**
 
@@ -84,8 +85,8 @@ merge steps:
 
 | Component | Change |
 |-----------|--------|
-| Account list page | Reads `Groups[]`; the permission column now shows group names joined by ", " |
-| Group-selection component | Removed the "unassigned (-1)" option; disabled the old management field (replaced by multi-select) |
+| Account list page | Reads the group list; the permission column now shows group names joined by ", " |
+| Group-selection component | Removed the "unassigned (-1)" option; disabled the old single-permission field (replaced by multi-select) |
 | Account create / edit component | Groups switched to multi-select; validates that "all permissions" (group number 0) cannot be selected alongside other groups |
 | Front-end store | Removed deprecated merge state |
 
@@ -98,14 +99,14 @@ flowchart TD
     end
     subgraph Write path
       W[Account create / edit] --> M[Permission junction table]
-      W -->|sync first of Groups| ROLE[Legacy role column]
+      W -->|sync first of the group list| ROLE[Legacy role column]
     end
 ```
 
 ## Difficulties
 
 - Merging rule strings required hand-parsing the format (a character-level union over `key_suffix`), with many edge cases (empty suffix, multiple characters, the special all-permissions value).
-- The junction table's unique key had to account for both `sn` (the account table's primary key) and the account string, to avoid trouble from the rare case of the same account under different `sn`.
+- The junction table's unique key had to account for both the account table's primary key and the account string, to avoid trouble from the rare case of the same account under different primary keys.
 
 ## The Most Painful Pitfall
 
@@ -127,7 +128,7 @@ That is why any field where `0` carries business meaning should be guarded by nu
 
 ### Symptom 2: all permissions merged to "all_" instead of "all"
 
-For "all permissions", the role-definition table stores the rule as `"all"` (no underscore), but `mergePermissions` parses by the `key_suffix` format: `"all"` with no underscore → key = "all", suffix = [] → reassembled as `"all_"`, which front-end validation rejects because it expects `"all"`. The fix special-cases the merged result, restoring `["all_"]` back to `["all"]` — when a string-format algorithm meets a special value that doesn't follow the format, special-casing it is steadier than forcing the general logic on it.
+For "all permissions", the role-definition table stores the rule as `"all"` (no underscore), but the permission-merge algorithm parses by the `key_suffix` format: `"all"` with no underscore → key = "all", suffix = [] → reassembled as `"all_"`, which front-end validation rejects because it expects `"all"`. The fix special-cases the merged result, restoring `["all_"]` back to `["all"]` — when a string-format algorithm meets a special value that doesn't follow the format, special-casing it is steadier than forcing the general logic on it.
 
 ## Key Trade-offs
 
@@ -142,7 +143,7 @@ The common thread across all three is trading "rewrite + big change" for "compat
 ## Future Plans
 
 - The permission-change API currently batch-updates only the legacy role column; supporting batch multi-select assignment would require updating the junction table in sync.
-- Permission loading after back-office login still reads only the legacy role column plus a single role's rule; making multi-role truly effective would require the login flow to call `getAccountGroups` + `mergePermissions`.
+- Permission loading after back-office login still reads only the legacy role column plus a single role's rule; making multi-role truly effective would require the login flow to read the junction table for the group list first, then run the permission-merge algorithm.
 - The permission junction table currently has no `updated_at`; it can be added if an audit requirement arises.
 - The business meaning of "all permissions" (group number 0) should be pinned down with a DB comment or documentation, to avoid mistakenly removing the check for `0` later.
 
@@ -152,6 +153,6 @@ The common thread across all three is trading "rewrite + big change" for "compat
 
 **API contract (post-revamp)**
 
-- Account list API → returns `Groups[]`, `GroupNames[]`, `ruleMerged`.
-- Create / edit account API → receives `Groups[]`, triggering `setAccountGroups`.
+- Account list API → returns the group list, the group-name list, and the merged rule string.
+- Create / edit account API → receives the group list, triggering the "write an account's groups" path.
 - Permission-change API → still only updates the legacy role column (multi-group batch not yet supported).

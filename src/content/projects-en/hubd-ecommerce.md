@@ -76,7 +76,7 @@ The project spans project management, UI/UX design and full-stack development. W
 
 ### Technical Flow: Front End
 
-This diagram shows the architecture of the project's React application. The app boots from index.html and enters the core logic (src/App.jsx) via src/main.jsx. Routing is handled by src/routers/Routers.jsx, which renders the different page components. Each page component builds its view from shared UI components. These views interact with the service layer (api.js, AuthService.js) to call the back-end Laravel API for data. Configuration files such as tailwind.config.js and vite.config.js manage styling and the build process, and static assets (images and utility files) support the app's features. The whole architecture works together to keep data flowing smoothly from front end to back end and pages rendering correctly.
+This diagram shows the architecture of the project's React application. The app boots from index.html and enters the core logic (src/App.jsx) via src/main.jsx. Routing is handled by src/routers/Routers.jsx, which renders the different page components. Each page component builds its view from shared UI components. These views interact with the service layer (an API request module and an auth service module) to call the back-end Laravel API for data. Configuration files such as tailwind.config.js and vite.config.js manage styling and the build process, and static assets (images and utility files) support the app's features. The whole architecture works together to keep data flowing smoothly from front end to back end and pages rendering correctly.
 
 ![Front-end React application architecture flow](/legacy/project5/media19.png)
 

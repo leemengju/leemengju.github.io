@@ -35,7 +35,7 @@ beforeAfterMotion: gsap
 2. **Real-time data is queryable** — previously only pre-written statistics could be queried; now today reads raw data while past complete days read the aggregate table.
 3. **Query time cut sharply** — full month **~104s → ~5s** (same-range measurement, ~21×).
 4. **Maintenance cost dropped significantly** — no longer maintaining the whole set of "write-the-stats" scheduled jobs and their patch-up logic (reruns, backfills, dropped-log handling).
-5. **Code consolidated, easier to hand off** — player / dedicated-machine / per-game sharded sub-reports moved from one scattered monolithic file and multiple controllers into a domain layer, one query object per data source (see [File Structure](#file-structure)).
+5. **Code consolidated, easier to hand off** — player / dedicated-machine / per-game sharded sub-reports moved from a scattered monolithic shared model file and multiple controllers into a domain layer, one query object per data source (see [File Structure](#file-structure)).
 
 ## Solution & Architecture
 
@@ -164,38 +164,38 @@ Sub-segment: looking only at the "distinct player count" step, the before/after 
 
 ## File Structure
 
-The win-score report had accumulated many generations of patches with scattered data, plus varied developer conventions and short development windows — the original architecture was disorganized. One representative restructuring pulled win-score logic out of a **monolithic single file** and **scattered controllers**, into a **domain layer** + **one file per query domain**.
+The win-score report had accumulated many generations of patches with scattered data, plus varied developer conventions and short development windows — the original architecture was disorganized. One representative restructuring pulled win-score logic out of a **monolithic shared model file** and **scattered controllers**, into a **domain layer** + **one file per query domain** (roles below are described by responsibility, not by actual file names).
 
 **Before (scattered)**
 
 ```
-app/
-├─ Model/Game.php                    # Monolithic file, win-score logic tangled in
-├─ Http/Controllers/WinScore/
-│  ├─ WinScoreController.php         # Main controller
-│  ├─ WinScoreStat.php
-│  └─ CCoin/
-│     ├─ CheckDuplicateData.php
-│     └─ DeleteWinScoreDayData.php
-└─ Model/ClickHouse/WinScore/
-   ├─ WinScorePlayer.php              # Player (existing)
-   └─ WinScoreBuyFG.php               # Buy-free-game (existing)
+win-score code (before)
+├─ monolithic shared model file    # thousand-line shared model, win-score logic tangled in
+├─ controller layer/win-score/
+│  ├─ entry controller             # main controller
+│  ├─ statistics writer
+│  └─ primary currency/
+│     ├─ duplicate-data check
+│     └─ daily-data cleanup
+└─ query layer/ClickHouse/win-score/
+   ├─ sub-report query: player (existing)
+   └─ sub-report query: buy-free-game (existing)
    (other sub-reports not yet split out)
 ```
 
 **After (domain layer + one file per domain)**
 
 ```
-app/
-├─ Model/Game.php                    # Substantially slimmed down
-├─ Domain/WinScore/                  # New domain layer, centralizes win-score business logic
-│  ├─ TotalWinReport.php             # Report
-│  ├─ TotalWinStatistic.php          # ← formerly WinScore/WinScoreStat.php
-│  ├─ CheckDuplicateData.php         # ← formerly WinScore/CCoin/
-│  └─ DeleteWinScoreDayData.php      # ← formerly WinScore/CCoin/
-├─ Http/Controllers/WinScoreController.php  # Slimmed to a thin entry point
-└─ Model/ClickHouse/WinScore/        # ClickHouse queries: one file per domain
-   ├─ WinScorePlayer.php             # Player
-   ├─ WinScoreBuyFG.php              # Buy-free-game
-   └─ WinScorePersonalSeat.php       # Dedicated machines
+win-score code (after)
+├─ monolithic shared model file    # substantially slimmed down, win-score logic all moved out
+├─ domain layer/win-score/         # new domain layer, centralizes win-score business logic
+│  ├─ report domain class          # report reads
+│  ├─ statistics writer            # ← formerly in the controller layer
+│  ├─ duplicate-data check         # ← formerly in the controller layer (primary currency)
+│  └─ daily-data cleanup           # ← formerly in the controller layer (primary currency)
+├─ controller layer/entry controller     # slimmed to a thin entry point
+└─ query layer/ClickHouse/win-score/     # ClickHouse queries: one file per domain
+   ├─ sub-report query: player
+   ├─ sub-report query: buy-free-game
+   └─ sub-report query: dedicated machines
 ```

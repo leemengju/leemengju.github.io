@@ -21,7 +21,7 @@ Four teams each raised very different pain points:
 
 - **CEO**: to preview everything at a glance on a phone, all games' headcount and bet amounts were crammed into a single row — information density too high, hard to read.
 - **Operations director**: the report used color strings (`<span style="color:red">123</span>`) to distinguish parameters, figures from different versions were concatenated as strings, and the output was unrecognizable — impossible to tell what each number meant.
-- **Tech lead**: the columns were originally designed for only four multiplier (gainRate) slots, but there are now over a hundred games with up to 11 distinct multipliers, which the old framework simply could not hold; combined with five years of patches, the data structure was unreadable and badly needed a refactor.
+- **Tech lead**: the columns were originally designed for only four multiplier slots, but there are now over a hundred games with up to 11 distinct multipliers, which the old framework simply could not hold; combined with five years of patches, the data structure was unreadable and badly needed a refactor.
 - **Risk-control**: needs to report figures regularly, but because column meanings were unclear, often had to ask a developer to confirm what a column meant.
 
 > [!IMPORTANT]
@@ -38,7 +38,7 @@ Out of scope: the auto-refresh countdown (requirement withdrawn, removed).
 - **Four teams satisfied in one release**: the CEO's mobile-friendly row, operations' clear columns, the tech lead's structural refactor, and risk-control's explicit numbers — all shipped in the same release.
 - **Batch filtering by hall category**: the game selector can batch-filter by "hall category" (multiplier / type), far better for analysis than ticking games one by one, sharply cutting the cost of filtering.
 - **Front-end-adjustable summary formula**: the CEO frequently changes the definition of "total lobby headcount"; a formula-adjustment dialog lets anyone tweak the aggregation logic live in the UI, no code change needed.
-- **Multi-view game detail**: added a per-hall headcount (game detail) mode where each of the hundred-plus games shows four per-hall headcount columns (`gainRate1`~`gainRate4`), padded with 0 when fewer than four, with card-and-board games excluded automatically.
+- **Multi-view game detail**: added a per-hall headcount (game detail) mode where each of the hundred-plus games shows four per-hall headcount columns (multiplier columns 1-4), padded with 0 when fewer than four, with card-and-board games excluded automatically.
 - **Color coding removed**: summary values changed from color strings to pure numeric columns, so the front end does arithmetic directly and the string-concatenation corruption is gone.
 
 ## Quantified Results
@@ -48,7 +48,7 @@ Out of scope: the auto-refresh countdown (requirement withdrawn, removed).
 | Front-end main file lines | 712 lines (single page component) | ~190 lines (parent) + 7 sub-modules |
 | Auxiliary settings file | 232 lines (mixed into one file) | 3 independent column-definition files |
 | API count | 1 (all-in-one) | 3 (each with a clear responsibility) |
-| Supported multiplier columns | 4 (hard-coded) | dynamic gainRate1~4 (auto-padded with 0) |
+| Supported multiplier columns | 4 (hard-coded) | dynamic multiplier columns 1-4 (auto-padded with 0) |
 | Summary formula adjustment | change back-end code | live front-end UI adjustment |
 | Color-coding dependency | yes (no arithmetic possible) | none (pure numbers) |
 | Export coverage | player list only | player list + game detail |
@@ -98,8 +98,8 @@ Because the back-end logs showed correct numbers, it was first misdiagnosed as a
 A few other pitfalls cleared along the way:
 
 - **Removing color strings**: the legacy summary values were strings carrying `<span>` tags, so splitting them required changing the Laravel response format, the Vue display logic, and the aggregation calculation all at once — three places that had to move together.
-- **Asymmetric gainRate columns**: the multiplier list length varies across games (1–11); the old version padded some with 0 and simply didn't show others, an inconsistent logic. This was unified to output `gainRate1`~`gainRate4`, always padding with 0 when fewer than four, mapped by the multiplier list's index (not by value name, since the same index maps to different multiplier values across games).
-- **Excluding card-and-board games**: card-and-board games have more than four gainRate values and must be silently filtered in game-detail mode (excluded on the back end, still selectable in the UI), but the filtering must not affect the headcount-overview mode.
+- **Asymmetric multiplier columns**: the multiplier list length varies across games (1–11); the old version padded some with 0 and simply didn't show others, an inconsistent logic. This was unified to output multiplier columns 1-4, always padding with 0 when fewer than four, mapped by the multiplier list's index (not by value name, since the same index maps to different multiplier values across games).
+- **Excluding card-and-board games**: card-and-board games have more than four multiplier values and must be silently filtered in game-detail mode (excluded on the back end, still selectable in the UI), but the filtering must not affect the headcount-overview mode.
 
 ## Key Trade-offs
 
@@ -117,7 +117,7 @@ A few other pitfalls cleared along the way:
 
 ## Future Plans
 
-- The per-hall headcount column labels (named by multiplier / hall) are currently hard-coded in the column-definition file, and would need updating in sync if the gainRate order changes in the future.
+- The per-hall headcount column labels (named by multiplier / hall) are currently hard-coded in the column-definition file, and would need updating in sync if the multiplier order changes in the future.
 - The formula-adjustment dialog's checkbox state resets on refresh, which is an intentional design (the CEO's adjustments are ad hoc and don't need to be persisted).
 - Game detail currently aggregates all member types (formal + offline + trial + no-account + personal-seat); splitting them out by type would require additional columns.
 

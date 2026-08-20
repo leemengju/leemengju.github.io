@@ -161,13 +161,13 @@ $req->setRouteResolver(function () {
 
 **Fix**: the deposit-points sum keys off account ID in its WHERE clause, with account ID taken from the member-lookup API.
 
-### Pitfall 5: the shared `toCsvCell` auto-wraps multi-line values as `="..."`, which Excel truncates
+### Pitfall 5: the shared CSV-escaping helper auto-wraps multi-line values as `="..."`, which Excel truncates
 
 **Symptom**: after CSV export, the "per-game win/loss detail" cell showed only its first line in Excel; the rest was truncated.
 
-**Root cause**: the shared `toCsvCell()` normally escapes with standard double quotes `"..."` (a dozen-plus reports rely on it, and it's fine as-is). But it has a `needForceText` check `/[,\r\n]/.test(str)` — **any value containing a newline `\n` is classified as needing forced text and wrapped in the `="..."` Excel-formula format**. That `="..."` formula doesn't support in-cell line breaks, so multi-line content collapses to its first line. The very trait of "being multi-line" triggered the truncation branch.
+**Root cause**: the shared CSV cell-escaping helper normally escapes with standard double quotes `"..."` (a dozen-plus reports rely on it, and it's fine as-is). But it has a "force as text" check `/[,\r\n]/.test(str)` — **any value containing a newline `\n` is classified as needing forced text and wrapped in the `="..."` Excel-formula format**. That `="..."` formula doesn't support in-cell line breaks, so multi-line content collapses to its first line. The very trait of "being multi-line" triggered the truncation branch.
 
-**Background: what each `needForceText` rule was originally guarding against** (all guarding against Excel over-interpreting / structurally breaking CSV):
+**Background: what each "force as text" rule was originally guarding against** (all guarding against Excel over-interpreting / structurally breaking CSV):
 
 | Rule | Problem it prevents |
 |---|---|
@@ -177,7 +177,7 @@ $req->setRouteResolver(function () {
 | `/^=/` (leading =) | Excel evaluates it as a **formula** (`=1+1`→`2`) |
 | `/[,\r\n]/` (comma, newline) | CSV **structural chars**: comma = field separator, newline = row separator; unquoted, they split fields / rows |
 
-**Fix**: this page's multi-line cells bypass the shared `toCsvCell` and use a custom `csvCell()` that only does standard double-quote escaping (`"..."` wrapping, doubling inner `"`, no `=`), so `\n` inside the quotes is correctly recognized by Excel as an in-cell line break. The shared utility is left untouched, since doing so requires confirming the other dozen-plus reports don't depend on the `="..."` forced-text effect. Plain values are safe to hand to `toCsvCell`, but any cell that may contain `\n` (multi-line detail) must use the `=`-free standard escape.
+**Fix**: this page's multi-line cells bypass the shared helper and use a page-local escaping function that only does standard double-quote escaping (`"..."` wrapping, doubling inner `"`, no `=`), so `\n` inside the quotes is correctly recognized by Excel as an in-cell line break. The shared utility is left untouched, since doing so requires confirming the other dozen-plus reports don't depend on the `="..."` forced-text effect. Plain values are safe to hand to the shared helper, but any cell that may contain `\n` (multi-line detail) must use the `=`-free standard escape.
 
 ### Pitfall 6: try/catch-based CSV-import encoding detection fails — Big5 doesn't throw on garbage
 
@@ -258,9 +258,9 @@ Verified correct for all three sources: UTF-8, UTF-8+BOM (BOM stripped automatic
 | Player identity lookup | GUID or character name | obtains GUID, accountId, OpenID |
 | Deposit points + C-coin | GUID + accountId | new backend, queries recharge-log table + cash-flow detail table |
 | Batch consolidation | GUID list | three-phase batch, 8-minute timeout |
-| Game win/loss | GUID | coinType=GOLD |
-| Transfer (out) | GUID | PlayerType=senderID |
-| Transfer (in) | GUID | PlayerType=targetID |
+| Game win/loss | GUID | currency parameter set to the in-game coin |
+| Transfer (out) | GUID | role parameter set to "sender" |
+| Transfer (in) | GUID | role parameter set to "recipient" |
 
 ### Key Field Notes (recharge-log table)
 

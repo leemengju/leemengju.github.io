@@ -76,7 +76,7 @@ categories: [fullstack, pm]
 
 ### 技術流程圖:前端
 
-這張圖展示了本次專案 React 應用的架構。首先,應用從 index.html 啟動,並通過 src/main.jsx 進入核心邏輯(src/App.jsx)。應用使用 src/routers/Routers.jsx 來處理路由,顯示不同的頁面組件。每個頁面組件使用共享的 UI 元件來構建視圖。這些視圖會與服務層(如 api.js、AuthService.js)交互,調用後端 API(Laravel API)來處理數據。應用的配置由 tailwind.config.js、vite.config.js 等文件管理,確保樣式和構建過程的正確性。最後,靜態資源(如圖片和工具文件)被用來支持應用的各種功能。整個架構協同運作,確保了從前端到後端的順暢數據流與頁面渲染。
+這張圖展示了本次專案 React 應用的架構。首先,應用從 index.html 啟動,並通過 src/main.jsx 進入核心邏輯(src/App.jsx)。應用使用 src/routers/Routers.jsx 來處理路由,顯示不同的頁面組件。每個頁面組件使用共享的 UI 元件來構建視圖。這些視圖會與服務層(API 請求模組、認證服務模組)交互,調用後端 API(Laravel API)來處理數據。應用的配置由 tailwind.config.js、vite.config.js 等文件管理,確保樣式和構建過程的正確性。最後,靜態資源(如圖片和工具文件)被用來支持應用的各種功能。整個架構協同運作,確保了從前端到後端的順暢數據流與頁面渲染。
 
 ![前端 React 應用架構流程圖](/legacy/project5/media19.png)
 

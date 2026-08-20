@@ -87,7 +87,7 @@ flowchart LR
 - **重跑**:遊戲 el-select + 上線日 el-date-picker + 確認 dialog + 操作記錄表格。
 - **範本**:範本清單管理 dialog + 範本新增/編輯 dialog(過濾停用與非表列遊戲)。
 
-多版本 log 相容:重跑操作記錄跨越了一次欄位調整,read 端以 `gameName ?? gameId` 之類的 fallback 顯示,舊紀錄才不會開天窗。
+多版本 log 相容:重跑操作記錄跨越了一次欄位調整,read 端以「有遊戲名稱就用、否則退回遊戲 ID」之類的 fallback 顯示,舊紀錄才不會開天窗。
 
 ## 最痛的坑
 
@@ -97,7 +97,7 @@ flowchart LR
 
 ```php
 // 錯誤:允許送同值的設定頁,不能用 affected rows 判斷成功
-$affected = DB::table('bet_report_template')
+$affected = DB::table('<範本表>')
     ->where('id', $id)
     ->update($data);
 if ($affected === 0) {
@@ -105,7 +105,7 @@ if ($affected === 0) {
 }
 
 // 正確:update() 未拋例外即成功;affected=0 只代表 nothing changed
-DB::table('bet_report_template')->where('id', $id)->update($data);
+DB::table('<範本表>')->where('id', $id)->update($data);
 return $this->success();
 ```
 
@@ -117,7 +117,7 @@ return $this->success();
 function onTemplateChange (id) {
   if (id == null) return          // 清空事件 → 不動既有選擇
   const tpl = templateOptions.find(t => t.id === id)
-  games = parseSelectGameList(tpl.selectGameList)
+  games = parseGameList(tpl.gameList)
 }
 ```
 
@@ -151,21 +151,21 @@ function onTemplateChange (id) {
 **整理前(flat)**
 
 ```
-app/Http/Controllers/
+控制器層/
   報表控制器.php            # 命名沿用「60 天押注額」,職責單一
 
-src/page/report/
+頁面層/報表/
   報表主頁.vue              # 扁平頁面,無子元件分離
 ```
 
 **整理後(模組命名空間 + 子資料夾)**
 
 ```
-app/Http/Controllers/betDaily/
+控制器層/押注額報表模組/
   報表控制器.php            # 含全部原方法 + 重跑 / 後台操作 log 讀取
   範本設定控制器.php        # 範本 CRUD
 
-src/page/report/betDaily/
+頁面層/報表/押注額報表模組/
   報表主頁.vue              # 主頁(工具列左右分區、範本選擇)
   rerun/
     重跑對話框.vue          # 重跑 Dialog + 確認
@@ -173,7 +173,7 @@ src/page/report/betDaily/
   template/
     範本管理對話框.vue      # 範本清單管理
     範本編輯對話框.vue      # 範本新增 / 編輯
-    範本API.js              # 範本 API + 解析
+    範本 API 模組.js        # 範本 API + 解析
 ```
 
 > [!NOTE]

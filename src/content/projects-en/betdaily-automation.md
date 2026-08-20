@@ -87,7 +87,7 @@ flowchart LR
 - **Re-run**: game el-select + launch-date el-date-picker + a confirmation dialog + an operation-log table.
 - **Templates**: a template-list management dialog + an add/edit template dialog (filtering out discontinued and non-listed games).
 
-Multi-version log compatibility: the re-run operation log spanned a column change, so the read side displays with a fallback like `gameName ?? gameId` to keep old records from showing blanks.
+Multi-version log compatibility: the re-run operation log spanned a column change, so the read side displays with a fallback like "game name, else game id" to keep old records from showing blanks.
 
 ## Worst Pitfalls
 
@@ -98,7 +98,7 @@ When editing a template, if the user submitted content identical to the existing
 ```php
 // Wrong: a settings page that allows submitting the same value
 // must NOT judge success by affected rows
-$affected = DB::table('bet_report_template')
+$affected = DB::table('<template_table>')
     ->where('id', $id)
     ->update($data);
 if ($affected === 0) {
@@ -107,7 +107,7 @@ if ($affected === 0) {
 
 // Right: no exception from update() means success;
 // affected=0 only means nothing changed
-DB::table('bet_report_template')->where('id', $id)->update($data);
+DB::table('<template_table>')->where('id', $id)->update($data);
 return $this->success();
 ```
 
@@ -119,7 +119,7 @@ The template el-select on the main page had `clearable`; after the user clicked 
 function onTemplateChange (id) {
   if (id == null) return          // clear event → leave existing selection alone
   const tpl = templateOptions.find(t => t.id === id)
-  games = parseSelectGameList(tpl.selectGameList)
+  games = parseGameList(tpl.gameList)
 }
 ```
 
@@ -153,29 +153,29 @@ Illustrated by one reorganization done as the feature grew: what began as a sing
 **Before (flat)**
 
 ```
-app/Http/Controllers/
-  ReportController.php        # named after "60-day bet amounts", single responsibility
+controllers/
+  report-controller.php          # named after "60-day bet amounts", single responsibility
 
-src/page/report/
-  MainReport.vue              # flat page, no sub-component separation
+page/report/
+  report-main-page.vue           # flat page, no sub-component separation
 ```
 
 **After (module namespace + subfolders)**
 
 ```
-app/Http/Controllers/betDaily/
-  ReportController.php         # all original methods + re-run / back-office log read
-  TemplateSettingsController.php  # template CRUD
+controllers/bet-amount-report-module/
+  report-controller.php              # all original methods + re-run / back-office log read
+  template-settings-controller.php   # template CRUD
 
-src/page/report/betDaily/
-  MainReport.vue               # main page (split toolbar, template selection)
+page/report/bet-amount-report-module/
+  report-main-page.vue           # main page (split toolbar, template selection)
   rerun/
-    RerunPanel.vue             # re-run dialog + confirmation
-    OperationLogTable.vue      # paginated back-office operation log table
+    rerun-dialog.vue             # re-run dialog + confirmation
+    operation-log-table.vue      # paginated back-office operation log table
   template/
-    TemplateManager.vue        # template list management
-    TemplateEditor.vue         # add / edit template
-    templateApi.js             # template API + parsing
+    template-manager-dialog.vue  # template list management
+    template-editor-dialog.vue   # add / edit template
+    template-api-module.js       # template API + parsing
 ```
 
 > [!NOTE]

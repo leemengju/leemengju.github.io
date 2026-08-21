@@ -4,7 +4,7 @@ role: UI/UX 設計師
 period: "2023.09 - 2023.12"
 tags: [UI/UX, 教育平台, 資料視覺化]
 metrics: "使用人數由 15 萬成長至 28 萬+;獲全球 ICT 傑出數位教育學習獎"
-order: 17
+order: 19
 categories: [uiux]
 ---
 

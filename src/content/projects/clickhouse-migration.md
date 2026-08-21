@@ -4,7 +4,7 @@ role: 全端工程師
 period: "2026.05 - 2026.06"
 tags: [ClickHouse, MySQL, Laravel, 效能優化]
 metrics: "整月查詢 約104s → 約5s(~21×)"
-order: 5
+order: 1
 categories: [db-performance]
 beforeAfter:
   label: "玩家整月查詢時間"
@@ -46,6 +46,33 @@ beforeAfterMotion: gsap
 |--------|------|------|----------|
 | 總勝分(玩家) | 單一大型明細表(日均約 14.7 萬筆) | **MV + 聚合表** | 兩支 Materialized View(標準機台 / 刮刮樂各一,insert 時自動預聚合)→ AggregatingMergeTree 聚合表(查報表用) |
 | 依遊戲分表的子報表 | 109 張同結構的原始分遊戲日誌表 | **合併視圖 + 聚合表 + Kernel 排程 pull** | 合併視圖(以 regex 命名規則自動含括新遊戲)→ 排程增量同步(everyMinute,浮水印機制)→ 聚合表 |
+
+資料流與系統邊界:
+
+```mermaid
+flowchart LR
+  subgraph SRC["來源(寫入端)"]
+    D1["單一大型明細表<br/>日均約 14.7 萬筆"]
+    D2["109 張分遊戲日誌表<br/>約 111 GiB"]
+  end
+  subgraph CH["ClickHouse(聚合層)"]
+    MV["Materialized View x2<br/>insert 時預聚合"]
+    MG["合併視圖<br/>新遊戲自動納入"]
+    SY["排程增量同步<br/>浮水印半開區間<br/>exactly-once"]
+    AMT[("聚合表<br/>AggregatingMergeTree")]
+    RAW[("raw 明細")]
+  end
+  subgraph RPT["後台報表(查詢端)"]
+    SPLIT{"查詢區間<br/>是否含今天"}
+    OUT["報表輸出<br/>aggregate state merge"]
+  end
+  D1 -->|insert| MV --> AMT
+  D1 --> RAW
+  D2 --> MG --> SY -->|"半開區間增量"| AMT
+  AMT -->|"過去完整日"| SPLIT
+  RAW -->|"今天(未達浮水印)"| SPLIT
+  SPLIT --> OUT
+```
 
 - **計分一律走 aggregate state**:`sumMerge` / `uniqCombined64Merge`,各批 partial state 自動 merge。
 - **「今天」一律走 raw**:聚合表只到上次同步浮水印、未必完整;過去完整日讀聚合表,跨今天則「過去日聚合狀態 ∪ 今天 raw 狀態後 merge」(人數跨段去重正確)。

@@ -4,7 +4,7 @@ role: Full-Stack Engineer
 period: "2026.05 - 2026.06"
 tags: [ClickHouse, MySQL, Laravel, Performance]
 metrics: "Full-month query ~104s → ~5s (~21×)"
-order: 5
+order: 1
 categories: [db-performance]
 beforeAfter:
   label: "Full-month player query time"
@@ -46,6 +46,33 @@ Split by the source shape of each sub-report:
 |---|---|---|---|
 | Win-score (player) | One large detail table (~147K rows/day) | **MV + aggregate table** | Two Materialized Views (one for standard machines, one for scratch; pre-aggregating on insert) → AggregatingMergeTree aggregate table (served to the report) |
 | Per-game sharded sub-reports | 109 same-schema raw per-game log tables | **Merge view + aggregate table + scheduled pull** | A merge view (auto-includes new games via a regex naming rule) → scheduled incremental sync (every minute, watermark-based) → aggregate table |
+
+Data flow and system boundaries:
+
+```mermaid
+flowchart LR
+  subgraph SRC["Sources (write side)"]
+    D1["One large detail table<br/>~147K rows/day"]
+    D2["109 per-game log tables<br/>~111 GiB"]
+  end
+  subgraph CH["ClickHouse (aggregation layer)"]
+    MV["Materialized View x2<br/>pre-aggregate on insert"]
+    MG["Merge view<br/>new games auto-included"]
+    SY["Scheduled incremental sync<br/>watermark half-open interval<br/>exactly-once"]
+    AMT[("Aggregate table<br/>AggregatingMergeTree")]
+    RAW[("Raw detail")]
+  end
+  subgraph RPT["Back-office report (read side)"]
+    SPLIT{"Does the range<br/>include today?"}
+    OUT["Report output<br/>aggregate state merge"]
+  end
+  D1 -->|insert| MV --> AMT
+  D1 --> RAW
+  D2 --> MG --> SY -->|"half-open increment"| AMT
+  AMT -->|"past complete days"| SPLIT
+  RAW -->|"today (past watermark)"| SPLIT
+  SPLIT --> OUT
+```
 
 - **Scoring always runs through aggregate state** — `sumMerge` / `uniqCombined64Merge`, with each batch's partial state merging automatically.
 - **"Today" always reads raw** — the aggregate table only extends to the last sync watermark and may be incomplete; past complete days read the aggregate table, and a query spanning today merges "past-day aggregate state ∪ today's raw state" (keeping cross-boundary player-count dedup correct).

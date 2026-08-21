@@ -4,7 +4,7 @@ role: Front-End Engineer
 period: "2024.11 - 2025.01"
 tags: [React, RWD, Figma, UI Flow]
 metrics: "90%+ design-to-build fidelity; RWD extended from a single breakpoint to full device coverage"
-order: 11
+order: 13
 categories: [fullstack, uiux]
 ---
 

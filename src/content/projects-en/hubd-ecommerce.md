@@ -4,7 +4,7 @@ role: Full-Stack Engineer + Project Manager
 period: "2025.02 - 2025.04"
 tags: [React, Laravel, MySQL, Vite, Tailwind]
 metrics: "5-person team, delivered customer-side + enterprise-side MVP in 8 weeks"
-order: 10
+order: 12
 categories: [fullstack, pm]
 ---
 

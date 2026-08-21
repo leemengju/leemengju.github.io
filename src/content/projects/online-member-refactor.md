@@ -4,7 +4,7 @@ role: 全端工程師
 period: "2026.05 - 2026.06"
 tags: [Vue, Laravel, API 設計, 重構]
 metrics: "1 支混亂 API 拆成 3 支;主檔 712 行 → 約 190 行"
-order: 6
+order: 7
 categories: [refactor, fullstack]
 beforeAfter:
   label: "前端主檔行數"

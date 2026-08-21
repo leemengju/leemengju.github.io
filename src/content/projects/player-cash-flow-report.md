@@ -4,7 +4,7 @@ role: 全端工程師
 period: "2026.06 - 2026.07"
 tags: [Laravel, MySQL, ClickHouse, 效能優化]
 metrics: "20 人批量查詢 4~5 分鐘 → 15~20 秒(QA 實測 3.2×)"
-order: 1
+order: 3
 categories: [db-performance, data-automation]
 beforeAfter:
   label: "批量查詢耗時(QA 實測)"

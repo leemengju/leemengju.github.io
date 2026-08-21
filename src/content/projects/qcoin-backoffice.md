@@ -4,7 +4,7 @@ role: 全端工程師
 period: "2026.03 - 2026.05"
 tags: [Laravel, Vue, MySQL, 專案管理]
 metrics: "8 週從零交付,34 項工項上線,個人 69 commits"
-order: 4
+order: 9
 categories: [fullstack, pm]
 timeline:
   - date: "2026-03-10"

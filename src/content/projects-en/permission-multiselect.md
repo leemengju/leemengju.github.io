@@ -4,7 +4,7 @@ role: Full-Stack Engineer
 period: "2026.03"
 tags: [Laravel, MySQL, Database Schema Design]
 metrics: "Single role → unlimited multi-role combinations; zero-downtime hot upgrade"
-order: 9
+order: 10
 categories: [fullstack, db-performance]
 ---
 

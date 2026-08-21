@@ -4,7 +4,7 @@ role: Full-Stack Engineer
 period: "2026.05 - 2026.06"
 tags: [Laravel, Vue, v-charts, Automation]
 metrics: "Daily manual entry: 20 min → 0 (all 6 pain points solved)"
-order: 3
+order: 8
 categories: [data-automation, fullstack]
 beforeAfter:
   label: "Daily manual work time"

@@ -4,7 +4,7 @@ role: 專案經理
 period: "2023.11 - 2024.03"
 tags: [專案管理, 體驗設計, 活動企劃]
 metrics: "兩天活動宣傳品全數發完,吸引超過 7,000 人到訪"
-order: 13
+order: 15
 categories: [pm]
 ---
 

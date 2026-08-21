@@ -4,7 +4,7 @@ role: Full-Stack Engineer
 period: "2026.06 - 2026.07"
 tags: [Laravel, MySQL, ClickHouse, Performance]
 metrics: "20-player batch query 4–5 min → 15–20 s (QA-measured 3.2×)"
-order: 1
+order: 3
 categories: [db-performance, data-automation]
 beforeAfter:
   label: "Batch query time (QA-measured)"

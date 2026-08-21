@@ -4,7 +4,7 @@ role: 全端工程師
 period: "2025.11 - 2026.04"
 tags: [Vue, 重構, 架構設計]
 metrics: "巨型 Vue 檔案分三波拆為 10 檔;主檔案縮減 54%"
-order: 7
+order: 6
 categories: [refactor]
 beforeAfter:
   label: "主檔案行數"

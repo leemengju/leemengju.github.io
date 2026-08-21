@@ -4,7 +4,7 @@ role: UI/UX 設計師
 period: "2023.12 - 2024.06"
 tags: [UI/UX, Wireframe, 企業系統設計]
 metrics: "16 組碳盤查步驟模組轉化為 700+ 頁系統介面"
-order: 16
+order: 18
 categories: [uiux]
 ---
 

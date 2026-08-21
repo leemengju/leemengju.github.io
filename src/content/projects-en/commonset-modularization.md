@@ -4,7 +4,7 @@ role: Full-Stack Engineer
 period: "2025.11 - 2026.04"
 tags: [Vue, Refactoring, Architecture]
 metrics: "Monolithic Vue file split into 10 files over three passes; main file reduced by 54%"
-order: 7
+order: 6
 categories: [refactor]
 beforeAfter:
   label: "Main-file line count"

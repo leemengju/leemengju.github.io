@@ -4,7 +4,7 @@ role: Full-Stack Engineer
 period: "2026.07 - 2026.08"
 tags: [Node.js, TLS, Bash, Laravel, Monitoring]
 metrics: "Detection point: 2 days after failure → 14-day advance warning"
-order: 8.5
+order: 4
 categories: [data-automation]
 ---
 

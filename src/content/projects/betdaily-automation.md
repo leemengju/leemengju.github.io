@@ -4,7 +4,7 @@ role: 全端工程師
 period: "2026.05 - 2026.06"
 tags: [Laravel, Vue, v-charts, 自動化]
 metrics: "每日人工填表 20 分鐘 → 0(6 個痛點全數解決)"
-order: 3
+order: 8
 categories: [data-automation, fullstack]
 beforeAfter:
   label: "每日人工作業時間"

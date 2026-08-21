@@ -4,7 +4,7 @@ role: Full-Stack Engineer
 period: "2026.07 - 2026.08"
 tags: [PHP, Laravel, Handler Pattern, Refactoring]
 metrics: "7 monolithic dispatchers → 45 handlers; main file 1059→320 lines"
-order: 5.5
+order: 5
 categories: [refactor]
 beforeAfter:
   label: "Win-score statistics main-file size"

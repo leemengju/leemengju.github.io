@@ -4,7 +4,7 @@ role: 全端工程師
 period: "2026.07 - 2026.08"
 tags: [PHP, Laravel, Handler 模式, 重構]
 metrics: "7 支巨型判斷式 → 45 個 Handler,主檔 1059→320 行"
-order: 5.5
+order: 5
 categories: [refactor]
 beforeAfter:
   label: "勝分統計主檔行數"

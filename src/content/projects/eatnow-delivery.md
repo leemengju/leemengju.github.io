@@ -4,7 +4,7 @@ role: 前端工程師
 period: "2024.11 - 2025.01"
 tags: [React, RWD, Figma, UI Flow]
 metrics: "設計還原度 90%+;RWD 從單一斷點擴展至全載體"
-order: 11
+order: 13
 categories: [fullstack, uiux]
 ---
 

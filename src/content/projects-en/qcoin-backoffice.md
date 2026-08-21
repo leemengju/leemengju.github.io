@@ -4,7 +4,7 @@ role: Full-Stack Engineer
 period: "2026.03 - 2026.05"
 tags: [Laravel, Vue, MySQL, Project Management]
 metrics: "Delivered from zero in 8 weeks, 34 work items shipped, 69 personal commits"
-order: 4
+order: 9
 categories: [fullstack, pm]
 timeline:
   - date: "2026-03-10"

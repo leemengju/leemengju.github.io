@@ -25,11 +25,11 @@ beforeAfter:
 
 ## Objective
 
-Build a player-centric cash-flow report page that integrates several data sources, supporting single lookups, batch queries (up to 20 players), and a cross-page "Top-20 one-click export" from the net-café ranking page; every result downloads as one CSV.
+Build a player-centric cash-flow report page that integrates 6 data sources — replacing the page-by-page manual lookup across 5 back-office pages — supporting single lookups, batch queries (up to 20 players), and a cross-page "Top-20 one-click export" from the net-café ranking page; every result downloads as one CSV.
 
 ## Highlights
 
-1. **One row consolidates 5 dimensions**: OpenID, GUID, character name, deposit points, C-coin obtained after deposit conversion, total game win/loss (with per-game detail), transfer-in total and detail, and transfer-out total and detail — all on the same page in the same row.
+1. **One row consolidates 6 data sources**: OpenID, GUID, character name, deposit points, C-coin obtained after deposit conversion, total game win/loss (with per-game detail), transfer-in total and detail, and transfer-out total and detail — all on the same page in the same row.
 2. **Batch query**: paste or import a list of GUIDs / character names (up to 20), query all players at once, and produce a multi-row CSV.
 3. **Net-café Top-20 one-click export**: click the button on the ranking page → pass parameters via sessionStorage → auto-navigate → auto batch query → auto-download last month's CSV; fully hands-off.
 4. **Backend reuses existing logic**: win/loss consolidation calls the existing game win/loss Controller and transfer consolidation calls the existing transfer-query logic, with no reimplementation.
@@ -226,6 +226,25 @@ Verified correct for all three sources: UTF-8, UTF-8+BOM (BOM stripped automatic
 **Rejected option B (pcntl_fork)**: measured ~10.7s under CLI (19.6×), but the production PHP-FPM web SAPI never loads pcntl, so `function_exists('pcntl_fork')` returns false and after deploy the log shows `fork=no` — entirely inert (see Pitfall 2).
 
 **Current approach**: all three phases batched IN-clause — member lookup (1 JOIN), transfers (2 IN-clause replacing N×4), win/loss (statistics-table batch + gap fallback); **15–20s** on production, **1.8s** measured on QA (3.2×).
+
+### Trade-off 4: batch queries deliberately bypass the cache in favour of a single JOIN
+
+**Context**: the back office runs a Redis cache layer, and member data already sat behind a cache-aside layer — keyed on the player identifier, a hit skips the database entirely; that path also offers batched cache reads. The **single-player** cash-flow lookup goes through exactly that.
+
+**Choice**: batch lookups do *not* use it. They run one member-table x character-table JOIN with `whereIn` and **never touch the cache**.
+
+**Reasoning (it should never have been cached — not "the cache wasn't fast enough")**:
+
+- **The key space is effectively unbounded**: this path is parameterized by "player list x date range", a combination that differs on every single run. Such a query has **no key that will ever be hit twice** — the premise of caching, that the same key gets read again, simply does not hold here.
+- **It would only add memory pressure**: every entry written is a single-use key with a hit rate approaching zero — spending memory for a return that never materializes.
+- **One JOIN is already fast enough**: 20 players in a single `whereIn` JOIN is **one** database round trip; going through the batched cache instead means one cache read *plus* another database call for the misses — an extra layer that is also slower.
+
+> [!TIP]
+> A reusable test: **ask "will this key ever be read twice?" before asking "is it fast?"**
+> When the parameters are arbitrary user-supplied combinations (a list crossed with a date range), the answer is no — such queries call for SQL and index work, not a cache.
+> The counter-example sits in the same feature: caching member data for single lookups *is* worth it, precisely because the same player gets queried over and over, so keys do get reused.
+
+**The cost**: single and batch lookups now follow two different paths, so changing the selected fields on one means changing them on the other too — field drift is the inherent risk of this structure.
 
 ### Trade-off 3: cross-page parameters via sessionStorage, not Vuex / query params
 

@@ -90,7 +90,7 @@ flowchart LR
   - Row counts: MySQL = ClickHouse detail = **146,915**, a **0** discrepancy.
   - **ClickHouse detail vs. MySQL: every metric matched exactly** (including `uniqExact` player counts) — confirming clean ETL ingestion.
   - **ClickHouse aggregate vs. MySQL: amounts and round counts matched exactly**; player counts (`uniqCombined64` approximate distinct count) showed **0% error** that day (HLL is exact at small cardinalities, tolerance ~0.1%) — confirming the MV/aggregate logic.
-- **Process**: production was only cut over after the dual-track comparison passed in QA.
+- **Process**: production was only cut over after the dual-track comparison passed in the test environment.
 
 ## Error Handling & Operations
 
@@ -109,13 +109,13 @@ flowchart LR
 
 **`curl_multi` + libcurl < 7.20.0 (intermittent all-zero on production)**
 
-- **Symptom**: production intermittently showed "report all-zero / missing games," while local and QA hitting the same ClickHouse were fine. Logs showed batch-query items returning empty responses (`http=0, errno=0, body=""`), a few games at a time, at various times of day.
+- **Symptom**: production intermittently showed "report all-zero / missing games," while local and the test environment hitting the same ClickHouse were fine. Logs showed batch-query items returning empty responses (`http=0, errno=0, body=""`), a few games at a time, at various times of day.
 - **Ruled-out directions**: time zone, connecting to a different node / lagging replica, missing data — all wrong. The clue that pinned it down was the program semantics of "a failed call returns null and gets skipped ≠ actually zero," combined with the empty-response signature in the logs, pointing to the **connection layer**.
 - **Root cause**: the concurrent-query (curl_multi) driver loop's condition was written as `while ($running && $status === CURLM_OK)`, which breaks on **libcurl < 7.20.0**.
   - **Behavior on libcurl < 7.20.0**: whenever an internal step can proceed immediately without waiting on I/O (e.g. a connection just established, an internal state transition), `curl_multi_exec` returns `CURLM_CALL_MULTI_PERFORM` (value **-1**, not 0), meaning "call me again right away, don't go wait on select." It does **not** mean something succeeded or finished — it just means keep exec-ing through the steps that can proceed immediately, until a step needs to wait on a socket, at which point it returns `CURLM_OK`.
   - **Behavior on libcurl ≥ 7.20.0**: the internal state machine was rewritten (`multi_runsingle`) so the library itself runs through all the "can proceed immediately" steps in one go, and externally **never returns** `CURLM_CALL_MULTI_PERFORM` again — only ever `CURLM_OK` (or an error).
   - **Where it broke**: on the older version, if the first `exec` call returned `-1`, `$status === CURLM_OK` (0) evaluated false, so the outer `while` never entered even once and exited early — the transfer hadn't finished, so the still-in-flight handle returned an empty response. (Note: `CURLM_OK` ≠ done; completion is judged by `$running` reaching 0 / `curl_multi_info_read` returning `CURLMSG_DONE`.)
-- **Why only production**: the boundary is exactly **libcurl 7.20.0**. Production ran libcurl **7.19.7** (< 7.20, triggering the bug), while local and QA ran libcurl ≥ 7.20 — so it tested clean everywhere else.
+- **Why only production**: the boundary is exactly **libcurl 7.20.0**. Production ran libcurl **7.19.7** (< 7.20, triggering the bug), while local and the test environment ran libcurl ≥ 7.20 — so it tested clean everywhere else.
 - **Fix**: drain the intermediate steps first with `do { curl_multi_exec } while ($status === CURLM_CALL_MULTI_PERFORM)`; when the outer `curl_multi_select` returns -1, add `usleep(1000)` to prevent a busy-loop; and read the real CURLcode via `curl_multi_info_read` (`curl_errno` under the multi interface often unreliably returns 0). Also added "throw if the whole batch fails" to avoid silently returning a pile of nulls, and made the code robust to the older libcurl version rather than touching the production system library.
 
 ```php

@@ -3,11 +3,11 @@ title: Player Cash-Flow Report
 role: Full-Stack Engineer
 period: "2026.06 - 2026.07"
 tags: [Laravel, MySQL, ClickHouse, Performance]
-metrics: "20-player batch query 4–5 min → 15–20 s (QA-measured 3.2×)"
+metrics: "20-player batch query 4–5 min → 15–20 s (measured in the test environment 3.2×)"
 order: 3
 categories: [db-performance, data-automation]
 beforeAfter:
-  label: "Batch query time (QA-measured)"
+  label: "Batch query time (measured in the test environment)"
   before: 5.9
   after: 1.8
   unit: "s"
@@ -43,10 +43,10 @@ Build a player-centric cash-flow report page that integrates 6 data sources — 
 | Look up top-20 players' cash flow | 5 pages × 20 players ≈ 100 manual operations | 1 click, CSV downloads after a short wait |
 | Batch cap | none (single lookup only) | 20 on the frontend, 100 backend safety valve |
 | Data-source integration | 5 scattered pages | 1 CSV, 1 row = 1 player |
-| 20-player batch time (production) | sequential foreach: **4–5 min** | three-phase batch: **15–20 s** (production) / **1.8 s** (QA) |
+| 20-player batch time (production) | sequential foreach: **4–5 min** | three-phase batch: **15–20 s** (production) / **1.8 s** (test environment) |
 
 > [!NOTE]
-> Measurement basis: the adopted IN-clause batch approach measured QA sequential 5.9s → batch 1.8s (**3.2×**). Evidence for the rejected `pcntl_fork` approach: 20 players × 3 DB queries, ≈ 10,500ms I/O per player, ~210,000ms sequential vs ~10,700ms forked; but the production web SAPI cannot fork, so it was not adopted (see Pitfall 2).
+> Measurement basis: the adopted IN-clause batch approach measured in the test environment: sequential 5.9s → batch 1.8s (**3.2×**). Evidence for the rejected `pcntl_fork` approach: 20 players × 3 DB queries, ≈ 10,500ms I/O per player, ~210,000ms sequential vs ~10,700ms forked; but the production web SAPI cannot fork, so it was not adopted (see Pitfall 2).
 
 ## Solution & Architecture
 
@@ -336,7 +336,7 @@ That formula is correct whether the raw value is already signed or stored as an 
 
 **Rejected option B (pcntl_fork)**: measured ~10.7s under CLI (19.6×), but the production PHP-FPM web SAPI never loads pcntl, so `function_exists('pcntl_fork')` returns false and after deploy the log shows `fork=no` — entirely inert (see Pitfall 2).
 
-**Current approach**: all three phases batched IN-clause — member lookup (1 JOIN), transfers (2 IN-clause replacing N×4), win/loss (statistics-table batch + gap fallback); **15–20s** on production, **1.8s** measured on QA (3.2×).
+**Current approach**: all three phases batched IN-clause — member lookup (1 JOIN), transfers (2 IN-clause replacing N×4), win/loss (statistics-table batch + gap fallback); **15–20s** on production, **1.8s** measured in the test environment (3.2×).
 
 ### Trade-off 4: batch queries deliberately bypass the cache in favour of a single JOIN
 

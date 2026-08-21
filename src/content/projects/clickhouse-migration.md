@@ -90,7 +90,7 @@ flowchart LR
   - 列數:MySQL = CH 明細 = **146,915**(差 **0**)。
   - **CH 明細 vs MySQL:各欄完全一致**(含 `uniqExact` 精確人數)→ ETL 入 CH 無誤。
   - **CH 聚合表 vs MySQL:金額 / 局數完全一致**;人數(`uniqCombined64` 近似去重)此日**誤差 0%**(HLL 小基數下即精確,容許 ~千分之一)→ MV/聚合邏輯無誤。
-- **流程**:QA 雙軌比對通過後才切正式機。
+- **流程**:測試環境雙軌比對通過後才切正式機。
 
 ## 異常處理與維運規劃
 
@@ -109,13 +109,13 @@ flowchart LR
 
 **curl_multi + libcurl < 7.20.0(正式機間歇全 0)**
 
-- **症狀**:正式機間歇性「報表全 0 / 缺遊戲」,本地與 QA 打同一個 ClickHouse 卻都正常。log 顯示批次查詢裡的項目回傳空回應(`http=0, errno=0, body=""`),一次掉幾款、上午下午都有。
+- **症狀**:正式機間歇性「報表全 0 / 缺遊戲」,本地與測試環境打同一個 ClickHouse 卻都正常。log 顯示批次查詢裡的項目回傳空回應(`http=0, errno=0, body=""`),一次掉幾款、上午下午都有。
 - **誤判過的方向(已排除)**:時區、連到不同節點/落後 replica、資料缺失 —— 全錯。靠「失敗回 null 被跳過 ≠ 真的 0」這個程式語意,以及 log 的空回應 signature,才鎖定是**連線層**。
 - **根因**:併發查詢(curl_multi)的驅動迴圈舊條件寫成 `while ($running && $status === CURLM_OK)`,而這個寫法在 **libcurl < 7.20.0** 會爆。
   - **舊版規則(libcurl < 7.20.0)**:遇到「不必等 I/O、可以立刻往下推」的內部步驟(例如連線剛建立、內部狀態轉換)時,`curl_multi_exec` 會回傳 `CURLM_CALL_MULTI_PERFORM`(值 = **-1**,非 0),用意是「馬上再呼叫我一次,別去 select 等」。它**不代表某項成功/完成**,只是要你立刻再 exec 把這一串能立刻做的步驟消化掉;直到碰到要等 socket 才回 `CURLM_OK`。
   - **新版規則(libcurl ≥ 7.20.0)**:內部狀態機重寫(`multi_runsingle`),這些「能立刻做」的步驟改由函式庫自己一口氣做完,對外**永不再回** `CURLM_CALL_MULTI_PERFORM`,永遠只回 `CURLM_OK`(或錯誤)。
   - **出事點**:舊版第一次 exec 若回 `-1`,`$status === CURLM_OK`(=0) 判 false,外層 `while` 一次都進不去就**提前退出**,transfer 還沒跑完 → 還在飛的 handle 拿到空回應。(注意:`CURLM_OK` ≠ 完成;判完成看 `$running` 歸 0 / `curl_multi_info_read` 讀到 `CURLMSG_DONE`。)
-- **為什麼只有正式機**:版本分界正是 **libcurl 7.20.0**。正式機的 libcurl 是 **7.19.7**(< 7.20,觸發此 bug),而本地與 QA 的 libcurl ≥ 7.20,所以怎麼測都正常。
+- **為什麼只有正式機**:版本分界正是 **libcurl 7.20.0**。正式機的 libcurl 是 **7.19.7**(< 7.20,觸發此 bug),而本地與測試環境的 libcurl ≥ 7.20,所以怎麼測都正常。
 - **解法**:內層 `do { curl_multi_exec } while ($status === CURLM_CALL_MULTI_PERFORM)` 把它排乾,外層 `curl_multi_select` 回 -1 時 `usleep(1000)` 防 busy-loop,並改用 `curl_multi_info_read` 取真實 CURLcode(`curl_errno` 在 multi 介面下常回 0、不可靠)。同時加「整批全失敗丟例外」避免靜默回一堆 null,並讓程式層對舊版 libcurl 健壯,而不是去動正式機的系統庫。
 
 ```php

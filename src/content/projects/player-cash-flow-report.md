@@ -3,11 +3,11 @@ title: 玩家金流異動統計報表
 role: 全端工程師
 period: "2026.06 - 2026.07"
 tags: [Laravel, MySQL, ClickHouse, 效能優化]
-metrics: "20 人批量查詢 4~5 分鐘 → 15~20 秒(QA 實測 3.2×)"
+metrics: "20 人批量查詢 4~5 分鐘 → 15~20 秒(測試環境實測 3.2×)"
 order: 3
 categories: [db-performance, data-automation]
 beforeAfter:
-  label: "批量查詢耗時(QA 實測)"
+  label: "批量查詢耗時(測試環境實測)"
   before: 5.9
   after: 1.8
   unit: "s"
@@ -43,10 +43,10 @@ beforeAfter:
 | 查 Top20 玩家金流 | 手查 5 頁 × 20 人 ≈ 100 次操作 | 點 1 下,等待後自動下載 CSV |
 | 批量上限 | 無(只能單筆) | 前端 20 筆、後端安全閥 100 筆 |
 | 資料源整合 | 5 個分散頁面 | 1 份 CSV,1 列 = 1 位玩家 |
-| 20 人批量查詢耗時(正式機) | 序列 foreach:**4~5 分鐘** | 三 Phase batch:**15~20 秒**(正式機)/ **1.8 秒**(QA) |
+| 20 人批量查詢耗時(正式機) | 序列 foreach:**4~5 分鐘** | 三 Phase batch:**15~20 秒**(正式機)/ **1.8 秒**(測試環境) |
 
 > [!NOTE]
-> 實測依據:最終採用的 IN-clause batch 方案,QA 環境序列 5.9s → batch 1.8s(**3.2×**)。早期否決的 `pcntl_fork` 方案佐證:20 人 × 3 支 DB 查詢,每人 I/O ≈ 10,500ms,序列環境約 210,000ms、fork 環境約 10,700ms;但正式機 web SAPI 無法 fork,未採用(詳見坑 2)。
+> 實測依據:最終採用的 IN-clause batch 方案,測試環境序列 5.9s → batch 1.8s(**3.2×**)。早期否決的 `pcntl_fork` 方案佐證:20 人 × 3 支 DB 查詢,每人 I/O ≈ 10,500ms,序列環境約 210,000ms、fork 環境約 10,700ms;但正式機 web SAPI 無法 fork,未採用(詳見坑 2)。
 
 ## 解法與架構
 
@@ -335,7 +335,7 @@ $total  += $display;   // 加項加、扣除減 = 淨額
 
 **否決方案 B(pcntl_fork)**:CLI 實測約 10.7 秒(19.6×),但正式機 PHP-FPM 的 web SAPI 根本不載入 pcntl,`function_exists('pcntl_fork')` 回傳 false,部署後 log 顯示 `fork=no`,完全未生效(詳見坑 2)。
 
-**現行做法**:三 Phase 全改 IN-clause batch —— 會員身份批量(1 次 JOIN)、轉帳批量(2 次 IN-clause 取代 N×4)、輸贏批量(統計表 batch + 缺口 fallback);正式機 **15~20 秒**,QA 實測 **1.8 秒(3.2×)**。
+**現行做法**:三 Phase 全改 IN-clause batch —— 會員身份批量(1 次 JOIN)、轉帳批量(2 次 IN-clause 取代 N×4)、輸贏批量(統計表 batch + 缺口 fallback);正式機 **15~20 秒**,測試環境實測 **1.8 秒(3.2×)**。
 
 ### 取捨 4:批量查詢刻意不走快取,改單次 JOIN
 

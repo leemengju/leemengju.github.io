@@ -36,13 +36,13 @@ Split the shared-settings main file by functional responsibility into standalone
 
 ## Highlights
 
-- **Main file reduced by 54%**: the main file was compressed from 4,221 to 1,963 lines, sharply cutting reading and search cost.
-- **Extracted standalone-route modules**: virtual-goods trading, advanced settings, and game-currency & deposit management each got their own route, with clear functional boundaries that can later be granted different permissions.
+- **Main file reduced by 54%**: the main file was compressed from 4,221 to 1,963 lines, sharply cutting reading and search cost; overall, one file became ten (4 main modules + 5 dialog components + 1 logic js).
+- **Extracted standalone-route modules**: virtual-goods trading, advanced settings, and game-currency & deposit management each got their own route — taking standalone routes from 1 to 4 — with clear functional boundaries that can later be granted different permissions.
 - **Modularization was not improvised**: virtual-goods trading was extracted first as a trial (Pass 1) as early as 2025-11-06; only after it proved viable did the large-scale split of advanced settings and deposit management follow in 2026-03 — a planned, progressive refactor.
 - **Dialog componentization**: 5 dialogs each became standalone components, no longer buried deep in the main file, and can be opened, searched and modified independently.
 - **Lower merge-conflict risk**: with features spread across multiple files, the conflict surface shrank for parallel development.
 - **A reusable split framework**: the directory structure for modules and dialogs is established, so new settings only need to slot into place.
-- **The framework was immediately validated**: in 2026-04 the new-currency mechanism (Q-Coin) feature directly reused the new framework, adding a standalone dialog without changing the main file's structure — proving the split strategy correct.
+- **The framework was immediately validated**: in 2026-04 the subsequent virtual-currency back-office project — a brand-new virtual currency (Q-Coin) — reused the new framework directly for two new settings, each added as its own standalone dialog with no change to the main file's structure. The split strategy was not self-declared "cleaner architecture"; it was validated after the fact against a real requirement that did not yet exist when the split was designed.
 
 ## Quantitative Results
 
@@ -55,7 +55,7 @@ Split the shared-settings main file by functional responsibility into standalone
 | Largest single file | 4,221 | 1,963 |
 
 > [!NOTE]
-> **1,963 lines is a 2026-04 snapshot, not the finish line.** The main file kept gaining new features after modularization — for example, the same-period new-currency (Q-Coin) newcomer mechanism added roughly +105 lines back into it. In other words, without this split the main file would already far exceed 4,221 lines; the 54% reduction was achieved while the business kept expanding, so the bloat actually avoided is even larger.
+> **1,963 lines is a 2026-04 snapshot, not the finish line.** The main file kept gaining new features after modularization — for example, the same-period virtual-currency newcomer mechanism added roughly +105 lines back into it. In other words, without this split the main file would already far exceed 4,221 lines; the 54% reduction was achieved while the business kept expanding, so the bloat actually avoided is even larger.
 
 ## Solution & Architecture
 
@@ -69,7 +69,7 @@ graph TD
   B --> E[Standalone Routes]
   C --> E
   D --> E
-  E -->|2026-04 Validation| F[New-Currency Mechanism Reuses the Same Framework]
+  E -->|2026-04 Validation| F[Virtual-Currency Back-Office Project Reuses the Same Framework]
 ```
 
 | Module | Lines | Notes |
@@ -85,6 +85,12 @@ graph TD
 1. **Pass 1 (2025-11), trial**: extracted "virtual-goods trading" from the main file into a standalone module (plus one logic js), slightly shrinking the main file and adding a standalone route, to first validate that the split pattern works.
 2. **Pass 2 (2026-03)**: split "advanced settings" into a standalone module and extracted the first dialog (SMS-login settings), establishing the advanced-settings dialog directory.
 3. **Pass 3 (2026-03)**: split "game-currency and deposit management" into a standalone module and established its dialog directory.
+
+## Deployment Strategy
+
+- **Each pass shipped and validated on its own**: every pass went live before the next one started, confirming under real usage that the extracted module behaved exactly as it had inside the monolith; a "split everything, ship once" big-bang refactor was deliberately avoided (see [Key Trade-offs](#key-trade-offs) for why it was rejected).
+- **Pass 1 was deliberately a small trial**: virtual-goods trading took only about 50 lines out of the main file, so the line-count gain was negligible — the point was not shrinkage but proving, at minimal risk, that "extract into a standalone module + mount a new route" actually worked. Only once the pattern was proven did passes 2 and 3 each carve out a module of over a thousand lines.
+- **No broken URLs**: every new standalone route came with a matching route-config update, so existing entry paths kept working and neither bookmarks nor links from other pages were affected by the refactor.
 
 ## Challenges
 
@@ -120,7 +126,7 @@ So before extracting any dialog from the monolith, the practice is to first list
   - Rejected option: split every feature out at once.
   - Why rejected: with 4,221 highly coupled lines whose functions, data and computed properties cross-reference one another, moving it all in one go was extremely risky and hard to verify. Instead the work followed "prove the pattern on one module → ship and validate → split the next batch", spreading risk across time and matching the "staged milestone" framing.
 - **Choice: split by functional boundary, not by code structure**
-  - Why: functional boundaries map to real business needs and permissions can later be granted per feature; a structural split (grouping methods/computed together) has only engineering meaning, is invisible to the business, and cannot be mapped to "which team owns which block." This decision let the later new-currency mechanism slot straight in, adding settings without ever reaching back to alter the main file's structure.
+  - Why: functional boundaries map to real business needs and permissions can later be granted per feature; a structural split (grouping methods/computed together) has only engineering meaning, is invisible to the business, and cannot be mapped to "which team owns which block." This decision let the later virtual-currency back-office project slot straight in, adding settings without ever reaching back to alter the main file's structure.
 
 ## Roadmap
 

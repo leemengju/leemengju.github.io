@@ -19,6 +19,7 @@ beforeAfterMotion: gsap
 > [!IMPORTANT]
 > **Core pain: both "slow" queries and "untrustworthy" numbers.**
 
+- **The data volume is the premise of the pain**: the main single detail table took in roughly 147K rows a day (146,915 on a measured day), while the per-game raw log tables had accumulated to **109 tables totaling ~111 GiB**. Every symptom below follows from having to scan and aggregate row by row at that scale.
 - **Numbers often didn't match reality**: the old report's figures came from back-office statistics tables, which dropped log entries and needed manual reruns.
 - **Multiple teams repeatedly reported "the numbers are wrong"** — each time requiring manual chasing, recomputation, and patching.
 - **A whole set of workaround statistics tables emerged**: because scanning MySQL detail data directly was too slow, pre-computed statistics tables were built to stand in; migrating to ClickHouse with real-time aggregation made these unnecessary.
@@ -35,7 +36,7 @@ beforeAfterMotion: gsap
 2. **Real-time data is queryable** — previously only pre-written statistics could be queried; now today reads raw data while past complete days read the aggregate table.
 3. **Query time cut sharply** — full month **~104s → ~5s** (same-range measurement, ~21×).
 4. **Maintenance cost dropped significantly** — no longer maintaining the whole set of "write-the-stats" scheduled jobs and their patch-up logic (reruns, backfills, dropped-log handling).
-5. **Code consolidated, easier to hand off** — player / dedicated-machine / per-game sharded sub-reports moved from a scattered monolithic shared model file and multiple controllers into a domain layer, one query object per data source (see [File Structure](#file-structure)).
+5. **Code consolidated, easier to hand off** — four sub-report domains (player / dedicated machines / buy-free-game / the new-currency mechanism, Q-Coin) moved from a scattered monolithic shared model file and multiple controllers into a domain layer, one query object per data source (see [File Structure](#file-structure)).
 
 ## Solution & Architecture
 
@@ -43,10 +44,10 @@ Split by the source shape of each sub-report:
 
 | Sub-report | Source | Pattern | Key concept |
 |---|---|---|---|
-| Win-score (player) | One large detail table | **MV + aggregate table** | Materialized View (real-time aggregation on insert) → AggregatingMergeTree aggregate table (served to the report) |
-| Per-game sharded sub-reports | Dozens of same-schema tables | **Merge view + aggregate table + scheduled pull** | A merge view (auto-includes new games by naming convention) → scheduled incremental sync (every minute, watermark-based) → aggregate table |
+| Win-score (player) | One large detail table (~147K rows/day) | **MV + aggregate table** | Two Materialized Views (one for standard machines, one for scratch; pre-aggregating on insert) → AggregatingMergeTree aggregate table (served to the report) |
+| Per-game sharded sub-reports | 109 same-schema raw per-game log tables | **Merge view + aggregate table + scheduled pull** | A merge view (auto-includes new games via a regex naming rule) → scheduled incremental sync (every minute, watermark-based) → aggregate table |
 
-- **Scoring always runs through aggregate state** — sum / distinct-merge functions, with each batch's partial state merging automatically.
+- **Scoring always runs through aggregate state** — `sumMerge` / `uniqCombined64Merge`, with each batch's partial state merging automatically.
 - **"Today" always reads raw** — the aggregate table only extends to the last sync watermark and may be incomplete; past complete days read the aggregate table, and a query spanning today merges "past-day aggregate state ∪ today's raw state" (keeping cross-boundary player-count dedup correct).
 
 ## Rollout Strategy
@@ -57,24 +58,24 @@ Split by the source shape of each sub-report:
 
 ## Data Validation
 
-- **Method**: took one full past day and compared, game-by-game, across three sources for each metric (bet amount / win-loss / jackpot / rounds / players): **MySQL detail**, **ClickHouse detail** (with an exact distinct-count cross-check for players), and **ClickHouse aggregate table** (what the report actually reads).
+- **Method**: took one full past day and compared, game-by-game, across three sources for each metric (bet amount / win-loss / jackpot / rounds / players): **MySQL detail**, **ClickHouse detail** (with a `uniqExact` exact distinct-count cross-check for players), and **ClickHouse aggregate table** (what the report actually reads).
 - **Results (37 games × 5 metrics = 185 cells measured)**:
-  - Row counts: MySQL = ClickHouse detail, **0 discrepancy**.
-  - **ClickHouse detail vs. MySQL: every metric matched exactly** (including exact player counts) — confirming clean ETL ingestion.
-  - **ClickHouse aggregate vs. MySQL: amounts and round counts matched exactly**; player counts (approximate distinct count) showed **0% error** that day (HLL is exact at small cardinalities, tolerance ~0.1%) — confirming the MV/aggregate logic.
+  - Row counts: MySQL = ClickHouse detail = **146,915**, a **0** discrepancy.
+  - **ClickHouse detail vs. MySQL: every metric matched exactly** (including `uniqExact` player counts) — confirming clean ETL ingestion.
+  - **ClickHouse aggregate vs. MySQL: amounts and round counts matched exactly**; player counts (`uniqCombined64` approximate distinct count) showed **0% error** that day (HLL is exact at small cardinalities, tolerance ~0.1%) — confirming the MV/aggregate logic.
 - **Process**: production was only cut over after the dual-track comparison passed in QA.
 
 ## Error Handling & Operations
 
 - **Sync-state table**: every scheduled run records a watermark and status, queryable directly to confirm sync progress and last success time.
-- **Error alerting**: a scheduling failure (e.g. production unable to reach ClickHouse) triggers an automatic error notification to engineering rather than failing silently.
-- **Knowledge transfer**: architecture and operating logic are documented internally and accessible to the whole team.
+- **Slack error alert**: a scheduling failure (e.g. production unable to reach ClickHouse) automatically pushes a Slack error message to engineering rather than failing silently.
+- **Knowledge transfer**: architecture and operating logic are written up as docs maintained alongside the query-layer code, and folded into the team's shared technical documentation library so the whole team can look them up.
 
 ## Challenges
 
-1. **Aggregate-state columns can't be queried directly** — fields like amounts and player counts are aggregate states; a plain SELECT errors out, and must go through the corresponding merge function.
-2. **Distinct player counts can't simply be summed across segments** — naive summation breaks deduplication. The fix was generating the daily table's distinct-count state with exactly the same filter conditions as the detail query, so it merges correctly across days and sources without breaking dedup. After optimizing to "daily-table state + scan only today's remainder," two machine categories dropped from 24s/9s to 2.4s/sub-second, with zero value discrepancy.
-3. **Time zone** — the ClickHouse server's underlying clock is UTC, handled by carrying the correct time zone at the connection layer. Date fields are zone-agnostic; time-field comparisons need conversion to local time.
+1. **Aggregate-state columns can't be queried directly** — fields like amounts and player counts are aggregate states; a plain SELECT from a SQL client fails with a "failed to read value" error, and must go through the corresponding merge function (`sumMerge` / `uniqCombined64Merge`).
+2. **Distinct player counts can't simply be summed across segments** — naive summation breaks deduplication. The fix was generating the daily table's distinct-count state with exactly the same filter conditions as the detail query (the same "change-type code + non-zero amount" pair of conditions, one set for standard machines and one for scratch), so it merges correctly across days and sources without breaking dedup. After optimizing to "daily-table state + scan only today's remainder," standard machines and scratch dropped from 24s/9s to 2.4s/sub-second, with zero value discrepancy.
+3. **Time zone** — the ClickHouse server's underlying clock is UTC, overridden by carrying a `session_timezone` setting on every request at the connection layer. Date fields are zone-agnostic; time-field comparisons must be done in local time.
 4. **New games auto-included** — per-game sharded sources keep growing new tables; the goal was to avoid manually patching the MV/redeploying every time a new game launched.
 
 ## The Worst Pitfall
@@ -85,7 +86,7 @@ Split by the source shape of each sub-report:
 - **Ruled-out directions**: time zone, connecting to a different node / lagging replica, missing data — all wrong. The clue that pinned it down was the program semantics of "a failed call returns null and gets skipped ≠ actually zero," combined with the empty-response signature in the logs, pointing to the **connection layer**.
 - **Root cause**: the concurrent-query (curl_multi) driver loop's condition was written as `while ($running && $status === CURLM_OK)`, which breaks on **libcurl < 7.20.0**.
   - **Behavior on libcurl < 7.20.0**: whenever an internal step can proceed immediately without waiting on I/O (e.g. a connection just established, an internal state transition), `curl_multi_exec` returns `CURLM_CALL_MULTI_PERFORM` (value **-1**, not 0), meaning "call me again right away, don't go wait on select." It does **not** mean something succeeded or finished — it just means keep exec-ing through the steps that can proceed immediately, until a step needs to wait on a socket, at which point it returns `CURLM_OK`.
-  - **Behavior on libcurl ≥ 7.20.0**: the internal state machine was rewritten so the library itself runs through all the "can proceed immediately" steps in one go, and externally **never returns** `CURLM_CALL_MULTI_PERFORM` again — only ever `CURLM_OK` (or an error).
+  - **Behavior on libcurl ≥ 7.20.0**: the internal state machine was rewritten (`multi_runsingle`) so the library itself runs through all the "can proceed immediately" steps in one go, and externally **never returns** `CURLM_CALL_MULTI_PERFORM` again — only ever `CURLM_OK` (or an error).
   - **Where it broke**: on the older version, if the first `exec` call returned `-1`, `$status === CURLM_OK` (0) evaluated false, so the outer `while` never entered even once and exited early — the transfer hadn't finished, so the still-in-flight handle returned an empty response. (Note: `CURLM_OK` ≠ done; completion is judged by `$running` reaching 0 / `curl_multi_info_read` returning `CURLMSG_DONE`.)
 - **Why only production**: the boundary is exactly **libcurl 7.20.0**. Production ran libcurl **7.19.7** (< 7.20, triggering the bug), while local and QA ran libcurl ≥ 7.20 — so it tested clean everywhere else.
 - **Fix**: drain the intermediate steps first with `do { curl_multi_exec } while ($status === CURLM_CALL_MULTI_PERFORM)`; when the outer `curl_multi_select` returns -1, add `usleep(1000)` to prevent a busy-loop; and read the real CURLcode via `curl_multi_info_read` (`curl_errno` under the multi interface often unreliably returns 0). Also added "throw if the whole batch fails" to avoid silently returning a pile of nulls, and made the code robust to the older libcurl version rather than touching the production system library.
@@ -110,13 +111,13 @@ do {
    - **Cost**: not real-time (data lags to the last sync, so "today" always reads raw) and requires maintaining a schedule. **Benefit**: a new game launches with zero code changes and is included automatically, and every row is guaranteed to be processed exactly once (exactly-once).
 
 2. **Why parallelize (batch) for further speed-up, instead of adding a finer-grained intermediate table?**
-   - An hourly-scoped intermediate table (scanning only the current hour) was evaluated. But the measured bottleneck was **the fixed cost of opening each table × N sequential round-trips per game, independent of scan volume** (scanning one hour was about as slow as scanning a full day) — a finer-grained table barely helped, and was dropped.
-   - Switched to sending N per-game queries **concurrently**, letting the fixed costs overlap → **~6.5x** (sequential 3347ms → parallel 515ms), with values matching the sequential version.
+   - An hourly-scoped intermediate table (scanning only the current hour) was evaluated. But the measured bottleneck was **the ~64ms fixed cost of opening each table × N sequential round-trips per game, independent of scan volume** (scanning one hour took 89ms vs. 95ms for a full day) — a finer-grained table barely helped, and was dropped.
+   - Switched to sending N per-game queries **concurrently** via `curl_multi` (concurrency capped at 10), letting the fixed costs overlap → **~6.5x** (sequential 3347ms → parallel 515ms), with values matching the sequential version.
    - Also evaluated and rejected: merging N games into one big UNION ALL query — a single pipeline parallelizes worse internally, and one missing table fails the whole batch.
 
-3. **Why an approximate distinct-count algorithm instead of an exact one for player counts?**
-   - An exact distinct count gives precise unique players, but requires building a full hash set — high memory, large state, slow full-range scans, and large state doesn't merge well across days/sources.
-   - The approximate algorithm is HLL-based, with **~0.1% error** — operations statistics tolerate this, in exchange for **small, mergeable aggregate state and a large query speed-up** — exactly what makes it possible for the daily table to store player-count state and merge dedup across segments.
+3. **Why approximate `uniqCombined64` instead of exact `uniqExact` for player counts?**
+   - `uniqExact` gives precise unique players, but requires building a full hash set — high memory, large state, slow full-range scans, and large state doesn't merge well across days/sources.
+   - `uniqCombined64` is HLL-based, with **~0.1% error** — operations statistics tolerate this, in exchange for **small, mergeable aggregate state and a large query speed-up** — exactly what makes it possible for the daily table to store player-count state and `uniqCombined64Merge` dedup across segments.
    - Evidence: player-count computation dropped from **~24.2s** scanning full raw data to **~0.1s** once merged from daily-table state.
 
 ## Quantified Impact
@@ -125,13 +126,13 @@ do {
 |---|---|---|
 | Full-month player query (same-range measurement) | Scanning detail (no aggregate table): **104.3s** | Reading aggregate table: **5.0s** (~21×) |
 | Detail-level aggregation job | ~47s | Reads the daily table |
-| Player-count dedup (two machine categories) | 24s / 9s | 2.4s / sub-second |
+| Player-count dedup (standard machines / scratch) | 24s / 9s | 2.4s / sub-second |
 | Per-game sharded query (30 games) | 3347ms sequential | 515ms parallel (~6.5×) |
 
 ## Future Plans
 
 - Extend the same aggregate-table pattern to the remaining reports / currencies still scanning MySQL directly.
-- The number and size of raw per-game tables keep growing; the merge view itself is 0 bytes, with actual size in the underlying tables. A retention policy would need per-table TTLs or monthly partition drops, with a retention window well beyond the longest plausible sync-job outage — otherwise the aggregate table would develop a permanent gap.
+- The number and size of the raw per-game tables (the 109 tables / ~111 GiB above) keep growing; the merge view itself is 0 bytes, with all actual size in the underlying tables. A retention policy would need per-table TTLs or monthly partition drops, with a retention window well beyond the longest plausible sync-job outage — otherwise the aggregate table would develop a permanent gap.
 - Evaluate connection reuse / pooling for the ClickHouse HTTP client, and tune concurrency.
 - Keep monitoring sync-watermark health (existing error alerting + a status table already support this; could add "notify if stalled for more than N minutes").
 
@@ -164,7 +165,7 @@ Sub-segment: looking only at the "distinct player count" step, the before/after 
 
 ## File Structure
 
-The win-score report had accumulated many generations of patches with scattered data, plus varied developer conventions and short development windows — the original architecture was disorganized. One representative restructuring pulled win-score logic out of a **monolithic shared model file** and **scattered controllers**, into a **domain layer** + **one file per query domain** (roles below are described by responsibility, not by actual file names).
+The win-score report had accumulated many generations of patches with scattered data, plus varied developer conventions and short development windows — the original architecture was disorganized. One representative restructuring pulled win-score logic out of a **monolithic shared model file** and **scattered controllers**, into a **domain layer** + **one file per query domain**; that single restructuring alone removed **2,729 lines** from the monolithic shared model file (roles below are described by responsibility, not by actual file names).
 
 **Before (scattered)**
 
@@ -172,7 +173,7 @@ The win-score report had accumulated many generations of patches with scattered 
 win-score code (before)
 ├─ monolithic shared model file    # thousand-line shared model, win-score logic tangled in
 ├─ controller layer/win-score/
-│  ├─ entry controller             # main controller
+│  ├─ entry controller             # main controller (278 lines)
 │  ├─ statistics writer
 │  └─ primary currency/
 │     ├─ duplicate-data check
@@ -187,15 +188,19 @@ win-score code (before)
 
 ```
 win-score code (after)
-├─ monolithic shared model file    # substantially slimmed down, win-score logic all moved out
+├─ monolithic shared model file    # substantially slimmed (−2,729 lines), win-score logic all moved out
 ├─ domain layer/win-score/         # new domain layer, centralizes win-score business logic
-│  ├─ report domain class          # report reads
+│  ├─ report domain class          # report reads (741 new lines)
 │  ├─ statistics writer            # ← formerly in the controller layer
 │  ├─ duplicate-data check         # ← formerly in the controller layer (primary currency)
 │  └─ daily-data cleanup           # ← formerly in the controller layer (primary currency)
-├─ controller layer/entry controller     # slimmed to a thin entry point
+├─ controller layer/entry controller     # slimmed to a thin entry point (37 lines)
 └─ query layer/ClickHouse/win-score/     # ClickHouse queries: one file per domain
    ├─ sub-report query: player
    ├─ sub-report query: buy-free-game
+   ├─ sub-report query: new-currency (Q-Coin) player / buy-free-game
    └─ sub-report query: dedicated machines
 ```
+
+> [!NOTE]
+> The diagrams above use one representative restructuring; the standalone query file for dedicated machines only landed in a later change a few days afterwards, and is shown in the "after" tree for completeness.

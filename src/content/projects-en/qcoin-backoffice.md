@@ -34,6 +34,8 @@ Paired with one teammate, deliver the Q-Coin back-office back end and front end 
 
 ## Highlights
 
+**Delivery scale** (volume of delivery, not of data): a 2-person team over 8 weeks; nearly 50 reports planned and 34 work items shipped; 16 work items and 69 commits (Laravel 32 + Vue 37) delivered personally.
+
 - **34 feature work items shipped** — spanning four major categories (reports, settings, point management, member management), with another 15+ items assessed and confirmed as not needing development, effectively narrowing scope.
 - **Brand-new DB tables with a compatibility-safe design** — created Q-Coin-specific tables while keeping the shared player-asset table backward-compatible, so existing-currency logic was unaffected.
 - **16 work items completed independently** — covering core features such as the free-game purchase report, coin top-up control center, passbook records, online members, and item cards, with 69 commits submitted (Laravel 32 + Vue 37).
@@ -104,6 +106,50 @@ this.searchStats()
 // Fixed: run statistics only after the list resolves
 this.getGameList().then(() => this.searchStats())
 ```
+
+## Key Trade-offs
+
+### Trade-off 1: dedicated statistics tables for the new currency; shared asset tables extended by adding columns only
+
+**Choice**: Q-Coin statistics are written into newly created dedicated tables; the shared player-asset table that genuinely had to be shared was extended by adding columns only.
+
+**Rejected option**: reuse the existing-currency tables throughout, rewriting the meaning of the shared columns so both currencies could squeeze into the same set of fields.
+
+**Reason for rejection**: the existing currency's reports, top-ups, deductions, and statistics all read those columns directly, and the nearly 50 reports had each evolved for years with independent SQL logic. Touching the semantics of a shared column would pull every downstream existing-currency query into the blast radius, and an 8-week schedule left no room to regression-test all of them. Adding columns without touching the old ones was the only extension that could guarantee existing-currency logic stayed completely unaffected.
+
+### Trade-off 2: code first, schema second — a "does the table exist?" guard to cover the gap
+
+**Choice**: while the DB table was not yet on the test environment, a "does the table exist?" guard was added in the controller so the feature code could enter version control first; the next commit after the table was built removed the guard and fully enabled the feature.
+
+**Rejected option**: wait until the test environment had the table before merging the feature code at all.
+
+**Reason for rejection**: code that reads a nonexistent table errors out on the test environment immediately — but holding the feature code locally is not safe either: with 8+ short-lived branches merging over the same period, the later it enters version control, the larger the eventual one-shot diff and the harder the conflicts. A table-existence guard was the only way to get both "code lands in version control early" and "the environment stays up".
+
+**The cost**: the guard is temporary scaffolding that someone has to remember to remove, so the reminder was written into the commit message itself and closed out by the next commit after the table was created.
+
+### Trade-off 3: cut an integration branch before release instead of resolving conflicts on pre-release/production
+
+**Choice**: two weeks before release, cut an integration branch off pre-release, merge all of the release's feature commits into it and resolve the conflicts there, rebase, then merge back into pre-release — and only merge up into production after verification.
+
+**Rejected option**: merge each feature branch straight into pre-release/production and resolve conflicts in place on the target branch.
+
+**Reason for rejection**: with 8+ short-lived branches running in parallel, resolving conflicts in place would leave the two branches that must stay shippable at all times sitting half-resolved for long stretches, and one bad resolution would contaminate production directly. Concentrating the conflicts on a single integration branch keeps pre-release and production clean, and a failed verification only ever affects the integration branch itself.
+
+### Trade-off 4: the back office stores only the mother card; the client parses the child cards
+
+**Choice**: Q-Coin item cards store only a single mother-card code in the back office; child cards never enter the DB.
+
+**Rejected option**: store the child cards in the back-office DB as well, so the back office owns the full card list and its images.
+
+**Reason for rejection**: the client can already derive the child cards and their images from the mother-card code, so storing a second copy gives the same information two sources — every new card would have to be synced in both places, raising both back-office complexity and the risk of divergence.
+
+### Trade-off 5: proactively trim 15+ features rather than accepting all of the nearly 50 reports
+
+**Choice**: list every candidate feature in one table (category / feature / priority / feasibility / owner / completion progress), align on it report by report with each department, schedule Priority 1–2 for development, and mark Priority 3–4 and the items confirmed as unnecessary as "not needed" — ending with 34 items shipped and 15+ confirmed as not to be built.
+
+**Rejected option**: build a Q-Coin counterpart for all of the nearly 50 existing-currency reports.
+
+**Reason for rejection**: the nearly 50 reports were structurally heterogeneous and mostly needed rewriting rather than 1:1 copying, which 2 people over 8 weeks could not possibly cover; and after going through them department by department, 15+ were explicitly judged as not needing development. The scope was actively established, not passively accepted.
 
 ## Future Plans
 

@@ -100,6 +100,74 @@ flowchart LR
 
 **Transfer merge**: sum amounts by the counterparty's GUID (falling back to character name) and filter out incomplete transfers.
 
+## Follow-up Evolution: From Fixed Columns to Toggleable Modules
+
+Collapsing five pages into one row solved the page-by-page lookup, but going live exposed a different class of problem — **this report could neither grow nor be seen through**:
+
+- **"C-coin obtained after deposit conversion" was a black box**: one column mixed vault and passbook flows of several kinds, so risk-control saw a number with no way to break down where that C-coin came from.
+- **Cash-flow item types were hard-coded as backend constants**: every new money-change type (scratch cards, free games, squad gift packs…) required a code change and a release before it showed up in the report, so maintenance could not keep pace with the game shipping new features.
+- **Every query hit everything**: whether the user wanted only deposits or only transfers, the backend queried all data sources regardless — especially wasteful in batch mode.
+- **Deduction items displayed as positive**: bets, purchases, and gifts — money going out — showed positive values in the detail, and the total simply summed everything, so the net figure was invisible.
+- **The code legend grew without bound**: the code explanations stacked in a single column, so with many items it stretched into one long strip, in a jumbled order and with no way to download it.
+- **Hard to investigate when numbers didn't reconcile**: when a stakeholder said "this column is wrong," an engineer had to read the code by hand to answer "what SQL did it actually run, against which table?"
+
+The second phase reshaped the report into a **modular, self-extending, self-serve-verifiable** system, and its audience widened from risk-control alone to risk-control (the report), QA, and operations (self-serve reconciliation). Deliberately left untouched: the batch and cross-page export skeleton that phase one had already stabilized.
+
+### Toggleable modules = a performance switch
+
+The query form gained a multi-select: deposits, vault, passbook, game win/loss, and transactions — **5 modules**. The frontend assembles columns from the selection, and the backend gates on that same module list — **an unchecked module is not queried at all**, letting a batch run skip the most expensive pieces (game win/loss and the day-partitioned passbook detail) outright.
+
+```mermaid
+flowchart LR
+    A["Select modules<br/>deposits / vault / passbook<br/>win-loss / transactions"] --> B["backend gates on the<br/>same module list"]
+    B -->|checked| C["query that data source"]
+    B -->|unchecked| D["not queried at all<br/>no DB request issued"]
+    C --> E["columns assembled<br/>from the selection"]
+    D --> E
+```
+
+### Splitting the black-box C-coin into three meaningful columns
+
+The single "C-coin obtained" column became three: **vault detail** (10 curated item types), **passbook detail** (44 curated item types), and **passbook total**. Each column lists "item: amount" line by line, sorted by signed magnitude, so the composition of the C-coin is visible rather than just a lump sum.
+
+Four of those items — scratch-card purchases / prizes and purchased / versus free games — are required to "appear in the detail but not count toward the total," so the detail lines **deliberately** do not add up to the total column. The legend marks those four with an asterisk and notes "inconsistent with the total, not an error" — the wording deliberately stays direction-neutral, because those four are a mix of positive and negative, so the detail may come out either above or below the total.
+
+### Deductions display negative, totals become net
+
+The displayed sign is now derived from the code (a negative code means a deduction), and the total changed from "sum everything" to a signed net sum — additions add, deductions subtract. The mechanism, and the formula that holds under either storage convention, is in Pitfall 8.
+
+### A self-extending item list: new codes need zero code changes
+
+Passbook detail and total now automatically pick up any item in the code-definition table that is "of the money-change type and whose code falls in the reserved positive range `[118, 1000)`" — **add one row to the definition table and the report grows that item on its next query, with no code change and no release** (open-closed principle / configuration-driven).
+
+The implementation deliberately merges *strings* rather than switching the whole query over to filtering by integer code: the definition table's name column happens to equal the cash-flow detail table's change-description column, so it is enough to merge the in-range names into the existing `whereIn` list — the query structure needs no rewrite at all. Because a batch run resolves the item map once per player, the map is memoized once per request so it cannot degrade into N queries; and if the definition table can't be read, a try/catch falls back to empty — the report still renders, only the dynamic items are temporarily missing (graceful degradation), instead of the whole report blowing up.
+
+### The code legend: from a stacked list to a usable tool
+
+The legend went from one column stacking downward to a **CSS grid with multiple columns** (column count decided by container width), sorted **descending** by code, **downloadable as CSV**, and showing the numeric codes alongside the names; the 4 detail-only exceptions are asterisked and placed last. The whole block was extracted into a **page-private component** (same folder, locally registered, kept out of the shared component library — see Trade-off 6), with its data consolidated into a single legend endpoint the component loads itself.
+
+### Export query SQL: a self-serve reconciliation spec for QA
+
+A new "export SQL" endpoint returns, for the current query, which API each module called and what SQL it ran, with bound parameters always inlined into syntax that **pastes straight into a MySQL client** (even for a module that actually runs on ClickHouse, it emits the equivalent MySQL with a note). The whole value is that "pasting it into the DB reproduces the screen": QA and operations can verify how each column was computed without asking an engineer to read the code. The approach was later distilled into a reusable internal procedure for other multi-module reports to follow.
+
+### Before / after the modularization
+
+| Metric | Before modularization | After |
+|------|--------|--------|
+| Readability of C-coin sources | 1 mixed column, impossible to break down | 3 columns (vault / passbook detail / passbook total) + per-item detail |
+| Getting a new cash-flow code onto the report | change a backend constant + release | in the reserved range → **appears automatically, 0 code changes** |
+| Wanting only some modules | all 5 modules queried regardless | only what's checked; unchecked modules **never touch the DB** |
+| Deductions and totals | shown positive, total not a net figure | deductions shown negative, total = signed net |
+| Legend as item count grows | one column growing without bound | multi-column grid, codes descending, downloadable |
+| Reconciling report numbers | engineer reads the code by hand | QA hits "export SQL" and reconciles against the DB themselves |
+| Batch transfer correctness | batch disagreed with single lookup (over- / under-counting) | single = batch (one shared de-duplication rule) |
+
+### What's next
+
+- Dynamic items currently mean "one hit on the definition table per query"; the items change very rarely, so a short-TTL cache is only worth adding if that changes.
+- Automatic pickup of deduction (negative) codes waits until the game side's code semantics settle.
+- The grid's column count currently follows the popover width; if the item count explodes further, scrollable category tabs are the next step.
+
 ## Most Painful Pitfalls
 
 ### Pitfall 1: sequential batch query too slow
@@ -207,6 +275,49 @@ if (text.indexOf("�") !== -1) {          // not valid UTF-8
 
 Verified correct for all three sources: UTF-8, UTF-8+BOM (BOM stripped automatically), and Big5. Text-encoding detection can't rely on `try/catch` (most decoders don't throw); it has to rely on "whether the decoded content is sensible": try the strict encoding (UTF-8) first, fall back to the lenient one (Big5) when `�` appears — never the reverse, because a lenient encoding fails silently and gives you nothing to catch.
 
+### Pitfall 7: batch and single-lookup transfers disagreed — one extra layer of IP filtering
+
+**Symptom**: for the same player, the single lookup and the batch query returned different transfer-in / transfer-out amounts, the batch sometimes over-counting and sometimes under-counting.
+
+**Misjudgment (with the direction backwards, too)**: I initially assumed the single lookup was the broken path and wanted to make it delegate to the batch version; in fact the single lookup was the correct baseline and the batch path was the wrong one.
+
+**Root cause**: the transfer-record table holds several rows per order — the sender's perspective has a source IP with the target IP empty, the recipient's is the mirror image, and each side additionally has a "created" and a "completed" row; the amount column is identical on every row. The batch version had added "source / target IP IS NOT NULL" on top of that, combined with per-column `MAX()`: if the row for that particular direction happened to be missing its IP, the entire order was dropped (under-counting); or `MAX()` took each column's maximum independently and assembled a field combination that never existed on any single row (picking the wrong stage). Direction should have been decided by the character identifier, which is populated on every row, not by an IP that may be empty.
+
+**How it surfaced**: walking two real multi-row samples row by row confirmed that "the row with the latest event time has an empty IP" → the IP filter was guaranteed to miss it.
+
+**Fix**: make the batch mirror the single lookup — a subquery pulls order IDs by the direction's character identifier (**no IP filter**), and the outer query orders by event time DESC, then groups by order ID to take each order's latest **whole row**. After the change, single = batch.
+
+**Reusable takeaway**: when the same data has two paths (single and batch), one seemingly harmless extra WHERE clause is enough to make them non-equivalent. The batch version should be a set-based rewrite of the single version, not a re-implementation of its semantics — and per-column `MAX()` deserves particular care, since it returns each column's maximum with no guarantee those values came from the same row.
+
+### Pitfall 8: cash-flow values store magnitude with the sign in the code — a raw SUM makes deductions positive
+
+**Symptom**: deduction items such as bets, purchases, and gifts displayed positive in the detail, and the passbook total was "everything added up" rather than a net figure, so it wouldn't reconcile.
+
+**Root cause**: the amount column stores the magnitude only; the meaning of the sign lives in the cash-flow code (a negative code means a deduction). This is classic sign-magnitude storage — the value itself carries no direction.
+
+**Fix**: derive the displayed sign from the code and make the total a signed net sum:
+
+```php
+// the code decides direction, the raw value contributes magnitude only;
+// correct under either storage convention
+$display = ($code < 0) ? -abs($raw) : abs($raw);
+$total  += $display;   // additions add, deductions subtract = net
+```
+
+That formula is correct whether the raw value is already signed or stored as an absolute value — when it is already signed, `-abs(negative)` equals the original, so it never double-flips. That means there is no need to first establish which convention each table uses.
+
+**Reusable takeaway**: for any cash-flow table that separates magnitude from a direction code, always derive the displayed sign from the code; never SUM the raw values and call it a net figure.
+
+### Pitfall 9: (type, code) in the code-definition table is not unique
+
+**Symptom**: building a "code → display name" map keyed by code collides on keys.
+
+**Root cause**: (type, code) is merely a composite index on that table, not a unique one — one negative code, for instance, maps to the bet names of two different lottery variants. (This is also why the existing curated lists have always keyed off the change-description string rather than the code.)
+
+**Fix**: the dynamic lookup **de-duplicates by name**, taking the first row per name, and never assumes code-to-name is one-to-one. Fortunately the duplicated code sits outside the positive range used for dynamic pickup, so it doesn't affect the automatic results.
+
+**Reusable takeaway**: before using a DB column as a map key, confirm that column combination actually carries a uniqueness constraint — "there is a composite index" does not mean "it is unique."
+
 ## Key Trade-offs
 
 ### Trade-off 1: passbook totals go through a new backend Controller, everything else uses existing APIs
@@ -256,6 +367,44 @@ Verified correct for all three sources: UTF-8, UTF-8+BOM (BOM stripped automatic
 
 **Reason for rejection**: sessionStorage needs no extra store wiring, survives navigation, and makes a one-shot removal a simple way to prevent re-triggering.
 
+### Trade-off 5: dynamic pickup covers the positive range only; deductions get added by hand later
+
+**Choice**: automatic pickup scans only items "of the money-change type whose code falls in `[118, 1000)`" (the curated list tops out at code 117, hence starting at 118; that whole range is positive = additive).
+
+**Rejected option**: automatically pick up negative (deduction) codes as well.
+
+**Reason for rejection**: the semantics of a new deduction item need a human call — should it count toward the total, is it detail-only — and there is currently no way to decide that from the code alone, so forcing the automation would sweep things into the net figure that don't belong there. The stakeholder's ruling was "add them when they actually show up," which means hand-adding them to the curated list later. The automation boundary therefore sits at "unambiguously additive items," and the part that requires judgement stays with a human.
+
+### Trade-off 6: the legend is a page-private component, not a shared-library one
+
+**Choice**: the legend component lives in the report's own folder and is registered locally, staying out of the shared component library's reference list.
+
+**Rejected option**: put it in the shared components directory and register it globally.
+
+**Reason for rejection**: the test is "is there a second caller *today*," not "might there be one later." This legend's content — the curated passbook / vault / transaction items and its dedicated legend endpoint — is only useful to this one report; making it shared would only drag it into the shared components' regression scope, so every future edit would mean regression-testing a pile of unrelated pages. If a second caller ever appears, promoting it is cheap: move the file and switch to global registration.
+
+### Trade-off 7: build the multi-column layout, rather than copying "how the existing page does it"
+
+**Context**: the request was for the legend to "split into columns like the account-passbook page does." Checking that page revealed that **it has no legend at all** — it prints the Chinese change description on each row; nor did the frontend project contain any existing multi-column text layout.
+
+**Approach**: report the false premise honestly first, then build to the request's actual **intent** (a compact multi-column presentation): the legend list moved from a single flex-wrap row to a CSS auto-filling grid, with the popover widened to match.
+
+```css
+/* column count follows container width: more items grow rightward
+   instead of dragging the popover into one long strip */
+grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+```
+
+When there is no template to copy, don't pretend there is — building against a nonexistent "existing approach" only produces something nobody recognizes.
+
+### Trade-off 8: the exported SQL is always MySQL syntax
+
+**Choice**: even for a module that actually runs on ClickHouse (the passbook detail routes by date), the exported SQL is emitted as equivalent MySQL with an explanatory note.
+
+**Rejected option**: emit each database's native dialect verbatim.
+
+**Reason for rejection**: QA and operations have a MySQL client in front of them; a ClickHouse dialect simply won't run for them, and the spec loses its purpose. The value of this output is that "pasting it into the DB has to reproduce the screen," so the syntax accommodates the reader's tooling rather than the implementation.
+
 ## Engineering Principle
 
 > [!TIP]
@@ -267,6 +416,8 @@ Verified correct for all three sources: UTF-8, UTF-8+BOM (BOM stripped automatic
 - **Monthly / daily partition tables**: the recharge-log table partitions by year-month and the cash-flow detail table by day; each must confirm the table exists before querying (`hasTable` / `SHOW TABLES LIKE`).
 - **Vue 2 multi-line cells**: slots need the `slot` + `slot-scope` attribute syntax (not `v-slot` / `#`), and multi-line divs need special newline handling on CSV export.
 - **CSV-import encoding auto-detection**: decode UTF-8 first, then switch to Big5 if `�` is detected (see Pitfall 6).
+- **Scoped styles inside a popover**: the legend is popover content, so its DOM is relocated under `body`, yet `<style scoped>` still applies (the nodes carry the scope attribute with them); the same page must also avoid arrow functions and `??` / `?.`, which this build chain does not transpile.
+- **Connection and degradation for dynamic items**: the code-definition table lives in a different database, so the query must target the matching connection and fall back to empty in a try/catch — one unreadable dictionary table must never stop the whole report from rendering.
 
 ## Appendix
 
@@ -280,6 +431,10 @@ Verified correct for all three sources: UTF-8, UTF-8+BOM (BOM stripped automatic
 | Game win/loss | GUID | currency parameter set to the in-game coin |
 | Transfer (out) | GUID | role parameter set to "sender" |
 | Transfer (in) | GUID | role parameter set to "recipient" |
+| Vault detail | GUID | grouped and summed by signed code, 10 curated items |
+| Passbook detail + total | GUID | grouped and summed by change description, 44 curated items + dynamic pickup |
+| Code legend | none | single data source for the legend component; carries the "detail-only, excluded from total" flag |
+| Export query SQL | current query parameters | returns each module's API plus inlined, runnable MySQL |
 
 ### Key Field Notes (recharge-log table)
 
@@ -291,6 +446,6 @@ Verified correct for all three sources: UTF-8, UTF-8+BOM (BOM stripped automatic
 
 ### File Structure
 
-- Backend: cash-flow report Controller + two Models (recharge-log, cash-flow detail).
-- Frontend: cash-flow report main page + batch-query dialog + net-café ranking page (the entry point that triggers the cross-page export).
+- Backend: cash-flow report Controller + four Models (recharge log, cash-flow detail, vault detail, code definitions). The Controller also holds a detail-shaping helper shared by passbook and vault, which applies the sign, excludes "detail-only" items from the total, and sorts by signed magnitude.
+- Frontend: cash-flow report main page + batch-query dialog + legend component (page-private) + net-café ranking page (the entry point that triggers the cross-page export).
 - Spec: the openspec change's design / tasks documents.

@@ -33,6 +33,8 @@ Add a verification feature to the item-settings back office so a user can enter 
 
 ## Highlights
 
+Verification spans three layers (back-office upload / origin JSON / Akamai edge) and is enabled only on the production-like and production environments (the local one has no CDN architecture); its users are customer service and operations, plus the back-end engineers who previously had to connect to the origin themselves to confirm the JSON.
+
 - **Instant location on entering an itemId**: the new back-office feature takes an itemId → the system checks the three stages in order, replacing what used to be over an hour of manual stage-by-stage investigation.
 - **Three-stage diagnosis with an obvious failure point**: (1) whether the back-office image uploaded successfully, (2) whether the origin JSON maps to the correct path, (3) whether the Akamai CDN edge already reflects the latest image — reported separately, so the root cause is clear.
 - **External-domain vs internal-domain path comparison**: verification decides whether the CDN is in sync with the origin by comparing the external-domain path (what the client sees) against the internal-domain path (the origin), rather than by HTTP status alone.
@@ -76,9 +78,35 @@ The **core logic** lives in the item-settings back-office verification feature: 
 - **Akamai edge response lag**: after a purge, an edge node's update time is not fixed, so the verification copy has to hint "if you just purged, wait a few minutes and re-verify," preventing users from misreading "not yet propagated" as "the fix failed."
 - **Independent yet dependent stages**: when the JSON isn't updated, the CDN path is itself wrong, and a CDN 200 is easily misread as fine; the design deliberately shows JSON before CDN, so the display order itself teaches the dependency — only once the JSON is correct does it even make sense to ask whether the CDN reflects the latest image.
 
+## Key Trade-offs
+
+### Trade-off 1: the CDN layer is judged by external-domain vs internal-domain path comparison, not by HTTP status
+
+**Choice**: compare whether the client-side (external-domain) and origin (internal-domain) image paths match, and render the image the client actually fetched.
+
+**Rejected option**: judge the layer by the CDN endpoint's HTTP status — a 200 means this stage passes.
+
+**Reason for rejection**: when the JSON isn't updated, the path the CDN is asked for is itself wrong, and a wrong path (or a stale image still on the edge) returns 200 just the same — so the status code marks "the edge is still serving the old image" as healthy, missing exactly the most common failure. Path comparison asks a different question: does what the edge currently points at equal what the origin currently holds? That is what actually verifies sync state. Rendering the client-side image alongside it confirms the picture the player ends up seeing, rather than an inference about some intermediate stage.
+
+### Trade-off 2: diagnosis only, no automatic repair
+
+**Choice**: add a read-only query feature that stops after reporting the three stages; pushing a purge remains a human decision based on the result.
+
+**Rejected option**: push a purge automatically whenever verification finds a mismatch, doing diagnosis and repair in one shot.
+
+**Reason for rejection**: automatic repair means integrating the Akamai Fast Purge API — an integration of a different order of magnitude that would have delayed the thing that mattered first, making the root cause visible. And one of the original pain points was precisely "push a purge on a cache hunch": when the JSON hasn't been updated, a purge is useless by definition, so automating before root-cause judgement is stable would just automate the useless operation. Staying read-only also keeps the feature zero-intrusion on the existing item-settings flow, with the lowest release risk. Automatic purge therefore went into the roadmap rather than into the first version.
+
+### Trade-off 3: switch the entry point off on local rather than letting it run
+
+**Choice**: the frontend gates the verification entry point by environment, so it only appears on the production-like and production environments that genuinely have the CDN architecture.
+
+**Rejected option**: show the button in every environment and let a local click run the whole check anyway.
+
+**Reason for rejection**: the local dev environment has no CDN architecture, so verification wouldn't error — it would return a set of meaningless results, and this tool's entire value rests on its report being trustworthy; a diagnostic that gives misleading answers in some environments sends people down the wrong investigation path. Gating at the entry point rather than at the result also spares users from having to remember which environments' results can't be taken at face value.
+
 ## Future Plans
 
-- **Akamai Fast Purge API integration**: connect the Akamai API so the back office can trigger a purge directly on the page once the origin JSON is confirmed correct, without logging into the Akamai console separately.
+- **Akamai Fast Purge API integration**: connect the Akamai API so the back office can trigger a purge (cache invalidation) directly on the page once the origin JSON is confirmed correct, without logging into the Akamai console separately.
 - **Purge status tracking**: poll purge status after calling purge, and once the edge refreshes, auto-re-verify the CDN layer, giving operations a complete "fix loop."
 
 ## Appendix

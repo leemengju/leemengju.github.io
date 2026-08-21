@@ -4,7 +4,7 @@ role: Full-Stack Engineer
 period: "2026.02"
 tags: [Laravel, Akamai CDN, Diagnostics Tooling]
 metrics: "Troubleshooting time from 1+ hour → instant lookup on entering an itemId"
-order: 11
+order: 12
 categories: [integration]
 ---
 

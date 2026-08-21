@@ -4,7 +4,7 @@ role: 專案經理助理
 period: "2023.12 - 2024.01"
 tags: [專案管理, UI/UX, 標案簡報]
 metrics: "團隊完成標案並獲得第二名"
-order: 14
+order: 15
 categories: [pm]
 ---
 

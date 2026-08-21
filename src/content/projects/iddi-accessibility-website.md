@@ -4,7 +4,7 @@ role: 專案管理與 UI/UX 設計師
 period: "2024.06 - 2024.09"
 tags: [WCAG, UI/UX, 專案管理]
 metrics: "四個月從零製作 landing page + 兩組功能模塊"
-order: 17
+order: 18
 categories: [uiux, pm]
 ---
 

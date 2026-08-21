@@ -4,7 +4,7 @@ role: Project Manager Assistant
 period: "2023.12 - 2024.01"
 tags: [Project Management, UI/UX, Tender Proposal]
 metrics: "Team completed the tender and placed 2nd"
-order: 14
+order: 15
 categories: [pm]
 ---
 

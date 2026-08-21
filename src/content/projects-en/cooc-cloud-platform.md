@@ -4,7 +4,7 @@ role: UI/UX Designer
 period: "2023.09 - 2023.12"
 tags: [UI/UX, EdTech, Data Visualization]
 metrics: "Users grew from 150k to 280k+; won the Global ICT Excellence Award for digital learning"
-order: 19
+order: 20
 categories: [uiux]
 ---
 

@@ -4,7 +4,7 @@ role: 全端工程師＋專案管理
 period: "2025.02 - 2025.04"
 tags: [React, Laravel, MySQL, Vite, Tailwind]
 metrics: "5 人團隊,8 週交付客戶端＋企業端 MVP"
-order: 12
+order: 13
 categories: [fullstack, pm]
 ---
 

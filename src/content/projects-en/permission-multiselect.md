@@ -15,6 +15,8 @@ categories: [fullstack, db-performance]
 - People in the same position but with different feature combinations either shared one over-broad role, or incurred very high cost when managed separately.
 - "All permissions" (group number 0) could not be mixed with other roles, leaving its boundary behavior ill-defined.
 
+The change was small in scope but wide in reach: one new join table, four new back-end methods, four front-end files, and a one-off migration moving every existing account's single role into the new structure — it touches **the permission-resolution path of every back-office account**.
+
 ## Goal
 
 Add a junction table so one account can bind multiple roles; the back end merges each role's rule string and sends the whole set to the front end. The legacy role column is kept to stay compatible with existing read paths, leaving the current login and permission-verification flow untouched.
@@ -102,6 +104,15 @@ flowchart TD
       W -->|sync first of the group list| ROLE[Legacy role column]
     end
 ```
+
+## Rollout Strategy
+
+- **Zero-downtime hot upgrade**: a migration created the join table, then a one-off migration script moved every account's existing single role into it — no downtime, no manual permission reset.
+- **Dual-write for compatibility**: the write path populates the join table *and* writes back to the original single-role column (taking the first group in the list), so code paths not yet updated still read a valid value.
+- **Existing validation untouched**: the permission-group table and rule format stayed exactly as they were; the change is confined to the account-to-role association layer.
+
+> [!NOTE]
+> These three are one trade-off seen from three sides: **let old and new coexist first, converge later**. Permissions sit on the path of every single back-office request, so the blast radius of a hard cutover is too large — paying for a dual write buys the ability to roll back at any moment.
 
 ## Difficulties
 

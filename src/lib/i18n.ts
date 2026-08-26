@@ -65,8 +65,8 @@ export const strings = {
  * six skill areas plus PM and UI/UX.
  */
 export const categoryLabels: Record<string, { zh: string; en: string }> = {
-  refactor: { zh: '系統重構', en: 'System Refactoring' },
-  'db-performance': { zh: '資料庫與效能', en: 'DB & Performance' },
+  refactor: { zh: '系統架構與重構', en: 'System Architecture & Refactoring' },
+  'db-performance': { zh: '資料庫與快取效能', en: 'Database, Cache & Performance' },
   'data-automation': { zh: '數據可視與自動化', en: 'Data Viz & Automation' },
   integration: { zh: '第三方串接', en: 'Integration' },
   fullstack: { zh: '全端開發', en: 'Full-Stack' },

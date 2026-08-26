@@ -13,8 +13,10 @@ import type { Locale } from './i18n';
 export interface SkillItem {
   name: string;
   desc: string;
-  /** Icon key rendered by HomeSections' inline-SVG icon map. */
-  icon: 'refactor' | 'database' | 'chart' | 'plug' | 'stack' | 'kanban';
+  /** Icon key rendered by HomeSections' inline-SVG icon map.
+   * `plug` / `stack` / `kanban` are currently unused (their skill entries were
+   * retired in the 2026-08 résumé pass) but stay in the map for reuse. */
+  icon: 'refactor' | 'database' | 'shield' | 'radar' | 'chart' | 'plug' | 'stack' | 'kanban';
 }
 export interface StatItem {
   value: string;
@@ -55,8 +57,8 @@ export interface Profile {
 
 const zh: Profile = {
   about: [
-    '我是孟儒，擁有 2 年跨產業經驗，涵蓋數位產品設計與全端工程開發，現任線上娛樂平台全端工程師，曾參與百萬預算的 SaaS、金融、政府與線上娛樂平台專案。',
-    '曾主導總勝分報表由 MySQL 遷移至 ClickHouse，將玩家整月查詢時間由約 104 秒大幅降至約 5 秒（約 21 倍）；並持續推動報表與監控作業自動化，年省逾 300 小時人力，同時重構大型 Vue 模組（4221 行縮減 54%），提升系統可維護性。',
+    '我是孟儒，擁有 3 年跨產業經驗，涵蓋數位產品設計與全端工程開發，現任糖蛙線上娛樂股份有限公司全端工程師，曾參與百萬預算的 SaaS、金融、政府與線上娛樂平台專案。',
+    '曾主導總勝分報表由 MySQL 遷移至 ClickHouse，將玩家整月查詢時間由約 104 秒降至約 5 秒（約 21 倍）；並以 Handler 模式重構七支千行級判斷式（最大主檔 1059 → 320 行）、將 4221 行巨型前端模組拆為 10 檔（主檔 −54%）；報表與監控自動化年省逾 300 小時人力。',
     '除了扎實的工程實作能力，設計與專案管理背景更讓我能精準掌握需求脈絡與使用者體驗，有效降低跨部門溝通的轉譯成本，讓技術決策直接對接商業目標。'
   ],
   stats: [
@@ -64,16 +66,15 @@ const zh: Profile = {
     { value: '300+', label: '小時/年 自動化節省' },
     { value: '−54%', label: '巨型 Vue 主檔瘦身(4221→1963 行)' },
     { value: '8wks', label: '從零交付新貨幣後台(34 項工項)' },
-    { value: '17+', label: '篇專案作品' },
+    { value: '19', label: '篇專案作品' },
     { value: '3.2×', label: '批量金流查詢提速(QA 實測)' }
   ],
   skills: [
-    { icon: 'refactor', name: '系統重構', desc: '主導共用設定模組化，4221 行巨型 Vue 檔分三波拆為 10 檔、主檔縮減 54%；並重構線上會員頁，將單一混亂 API 拆成 3 支職責清晰 API、前端主檔由 712 行降至約 190 行。' },
-    { icon: 'database', name: '資料庫遷移與效能優化', desc: '熟悉 MySQL/MariaDB/ClickHouse 設計與操作，獨立主導 MySQL→ClickHouse 遷移（MV + AggregatingMergeTree），查詢提速約 21 倍，零停機切換、資料一致。' },
-    { icon: 'chart', name: '數據可視與自動化', desc: '將重複性人工作業轉為自動化排程與資料視覺化，以 v-charts 折線圖與可拖拉表格呈現多維趨勢，並將日報表、監控回報改為 Kernel 排程，年省逾 300 小時人力。' },
-    { icon: 'plug', name: '第三方串接', desc: '具備 LINE/Slack Bot SDK 串接與 cloudflared 內網穿透經驗，擅長打通防火牆內網限制，將訊息與資料即時同步推送。' },
-    { icon: 'stack', name: '全端開發技術', desc: 'React、Vue 前端框架與 PHP、Laravel 後端框架開發經驗，熟悉 MVC 與前後端串接，能獨立完成從資料庫設計到前端呈現的完整開發。' },
-    { icon: 'kanban', name: '專案管理', desc: '熟練使用 Notion、Trello、Redmine 進行專案管理，掌控進度與任務、提高執行效率。' }
+    { icon: 'refactor', name: '系統架構與重構', desc: '以 Contract + Registry 單一分派點的 Handler 模式重構七支千行級判斷式（約 45 個處理器，最大主檔 1059 → 320 行），並將 4221 行巨型 Vue 分三波拆為 10 檔（主檔 −54%）；兩者都在無既有測試的程式碼上完成，以 golden-master 與實際 SQL 位元組級比對證明行為零改變。' },
+    { icon: 'database', name: '資料庫與快取效能優化', desc: '主導 MySQL 遷移至 ClickHouse，物化視圖 + AggregatingMergeTree 於寫入時聚合，整月查詢約 104 秒降至約 5 秒（約 21 倍），雙軌並行零停機切換、報表零誤差；快取走 cache-aside 與游標式失效，並判斷何時不該快取——鍵值空間無界時改用單次 JOIN。' },
+    { icon: 'shield', name: '交易一致性與容錯', desc: '將推播內容間歇性短少的根因定位為逐筆寫入與定時讀取之間的競態條件，以鏈式觸發 + 整批原子性寫入根治；為「上游回報成功卻未落庫」設計送出後對帳，16 次匯入攔截 1 次真實遺失；外部服務不穩時以斷路器 + 短逾時 + 即時切回人工優雅降級。' },
+    { icon: 'radar', name: '可觀測性與根因定位', desc: '主動探測而非被動等報錯：「檢查全綠、前端全掛」的隱形故障改以完成 TLS 握手取證比對來監控（只查埠監聽抓不到靜默降級），偵測時點由故障後兩天提前至到期前 14 天；亦能定位僅正式環境重現的問題，如舊版 libcurl 併發介面差異造成的間歇性空回應。' },
+    { icon: 'chart', name: '數據可視與自動化', desc: '將重複性人工作業轉為自動化排程與資料視覺化，以 v-charts 折線圖與可拖拉表格呈現多維趨勢，並將日報表、監控回報改為 Kernel 排程，年省逾 300 小時人力。' }
   ],
   experience: [
     {
@@ -83,7 +84,7 @@ const zh: Profile = {
       summary: '隸屬技術支援課，負責遊戲營運數據報表與後台系統之全端開發與維運。',
       highlights: [
         '主導總勝分報表資料庫遷移，玩家整月查詢由約 104 秒降至約 5 秒（約 21 倍）。',
-        '將投注額日表、區間賠率監控、玩家金流查詢等每日人工作業（合計每年逾 300 小時）全面自動化。',
+        '將投注額日表、區間賠率監控等每日人工作業改為排程執行與機器人推送（年省逾 300 小時）；整月玩家金流分析則由跨 5 個後台頁面手查，整合為單頁一鍵批量匯出。',
         '將 4221 行巨型 Vue 檔模組化重構，拆為 10 檔、主檔縮減 54%，新框架為後續功能沿用驗證。',
         '與同事協作 8 週內從零交付全新貨幣機制後台（34 項工項上線、個人 69 commits）。'
       ]
@@ -149,8 +150,8 @@ const zh: Profile = {
 
 const en: Profile = {
   about: [
-    'I am Meng-Ju, with 2 years of cross-industry experience spanning digital product design and full-stack software development. Currently a full-stack engineer at an online gaming platform, with prior involvement in million-NTD-budget SaaS, finance, government and online-gaming projects.',
-    "I led the migration of the platform's win-score report from MySQL to ClickHouse, cutting a player's full-month query time from ~104s to ~5s (~21×), and continuously drive report and monitoring automation that saves 300+ hours of manual work per year, alongside refactoring a large Vue module (4,221 lines cut by 54%) to improve maintainability.",
+    'I am Meng-Ju, with 3 years of cross-industry experience spanning digital product design and full-stack software development. Currently a full-stack engineer at Tonwa Online Entertainment Co., Ltd., with prior involvement in million-NTD-budget SaaS, finance, government and online-gaming projects.',
+    "I led the migration of the win-score report from MySQL to ClickHouse, cutting a player's full-month query from ~104s to ~5s (~21×); refactored seven thousand-line dispatch conditionals into the Handler pattern (largest main file 1,059 → 320 lines) and split a 4,221-line front-end module into 10 files (main file −54%); and drove report and monitoring automation saving 300+ hours per year.",
     'Beyond solid engineering execution, my design and project-management background lets me stay closely attuned to requirements and user experience, meaningfully cutting the communication overhead between teams and tying technical decisions directly to business goals.'
   ],
   stats: [
@@ -158,16 +159,15 @@ const en: Profile = {
     { value: '300+', label: 'hrs/yr saved via automation' },
     { value: '−54%', label: 'monolith Vue slimmed (4221→1963 lines)' },
     { value: '8wks', label: 'new-currency back office from zero (34 items)' },
-    { value: '17+', label: 'project write-ups' },
+    { value: '19', label: 'project write-ups' },
     { value: '3.2×', label: 'batch cash-flow query speed-up (QA)' }
   ],
   skills: [
-    { icon: 'refactor', name: 'System Refactoring', desc: 'Led the shared-settings modularization (a 4,221-line monolithic Vue file split into 10 files across three passes, main file cut 54%) and the online member page refactor (one tangled API split into 3, front-end main file from 712 to ~190 lines).' },
-    { icon: 'database', name: 'Database Migration & Performance', desc: 'MySQL/MariaDB/ClickHouse design and operation; independently led a MySQL→ClickHouse migration (Materialized View + AggregatingMergeTree) for ~21× query speed-up with zero-downtime cutover and full data consistency.' },
-    { icon: 'chart', name: 'Data Visualization & Automation', desc: 'Turns repetitive manual work into scheduled automation and visualized reporting — v-charts line charts with a draggable table, and daily reports / monitoring moved to Kernel-scheduled jobs, saving 300+ hours/year.' },
-    { icon: 'plug', name: 'Third-Party Integration', desc: 'LINE/Slack Bot SDKs and cloudflared tunneling; routes messages and data through firewalled internal networks with real-time sync.' },
-    { icon: 'stack', name: 'Full-Stack Development', desc: 'React and Vue on the front end, PHP and Laravel on the back end; comfortable with the MVC pattern and front-to-back integration, from database design through to the front end.' },
-    { icon: 'kanban', name: 'Project Management', desc: 'Uses Notion, Trello, and Redmine to manage schedules and tasks and keep execution on track.' }
+    { icon: 'refactor', name: 'System Architecture & Refactoring', desc: 'Refactored seven thousand-line dispatch conditionals into a Handler pattern behind a Contract and a Registry as the single dispatch point (~45 handlers; largest main file 1,059 → 320 lines), and split a 4,221-line monolithic Vue file into 10 files (main file −54%) — both on code with no existing tests, behavior proven unchanged by golden-master runs and byte-level SQL comparison.' },
+    { icon: 'database', name: 'Database, Cache & Performance', desc: 'Led a MySQL-to-ClickHouse migration — Materialized View + AggregatingMergeTree aggregating at insert time, full-month query ~104s → ~5s (~21×), dual-track zero-downtime cutover with zero reporting discrepancy; cache-aside reads with cursor-based invalidation, plus knowing when not to cache — an unbounded key space gets a single JOIN instead.' },
+    { icon: 'shield', name: 'Transactional Consistency & Fault Tolerance', desc: 'Traced intermittently short push notifications to a race condition between row-by-row writes and scheduled reads, fixed at the root with chained triggering plus one atomic batch insert; added post-write reconciliation for silent loss (1 real loss caught across 16 imports); protected the front end from unstable third-party services with a circuit breaker, short timeouts and graceful degradation.' },
+    { icon: 'radar', name: 'Observability & Root-Cause Analysis', desc: 'Probe actively rather than wait for errors: with every check green but the front end down, monitoring now completes a real TLS handshake and compares the certificate — a port check misses a silent plaintext fallback — moving detection from two days post-outage to 14 days pre-expiry; also root-causes production-only faults, such as intermittent empty responses from a legacy libcurl multi-interface state machine.' },
+    { icon: 'chart', name: 'Data Visualization & Automation', desc: 'Turns repetitive manual work into scheduled automation and visualized reporting — v-charts line charts with a draggable table, and daily reports / monitoring moved to Kernel-scheduled jobs, saving 300+ hours/year.' }
   ],
   experience: [
     {
@@ -177,7 +177,7 @@ const en: Profile = {
       summary: 'Technical Support team — full-stack development and maintenance of game-operations reporting and back-office systems.',
       highlights: [
         "Led the win-score report DB migration; full-month player query cut from ~104s to ~5s (~21×).",
-        'Fully automated formerly-daily manual tasks (daily bet report, interval-odds monitoring, cash-flow queries — 300+ hours/year combined).',
+        'Turned the daily bet report and interval-odds monitoring into scheduled jobs and bot pushes (300+ hours/year saved); consolidated the full-month player cash-flow analysis from a manual lookup across 5 back-office pages into one page with one-click bulk export.',
         'Refactored a 4,221-line monolithic Vue file into 10 files (main file −54%); reused and validated by later features.',
         'Delivered a brand-new currency-mechanism back office from scratch in 8 weeks with a teammate (34 items, 69 personal commits).'
       ]

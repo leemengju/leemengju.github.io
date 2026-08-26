@@ -206,8 +206,19 @@ const linkedinIcon =
     let category = 'all';
     let page = 0;
 
-    const filtered = () =>
-      cards.filter((c) => category === 'all' || (c.dataset.categories || '').split(' ').includes(category));
+    // Within a filter, rank by how central that category is to the project:
+    // `categories` is authored primary-first, so a project that lists the active
+    // filter as its FIRST tag sorts above one that lists it second. Ties keep DOM
+    // order — which is the global `order`, i.e. overall strength. Array#sort is
+    // stable, so that tiebreak is guaranteed, not incidental.
+    const filtered = () => {
+      const set = cards.filter(
+        (c) => category === 'all' || (c.dataset.categories || '').split(' ').includes(category)
+      );
+      if (category === 'all') return set;
+      const rank = (c: HTMLElement) => (c.dataset.categories || '').split(' ').indexOf(category);
+      return set.sort((a, b) => rank(a) - rank(b));
+    };
 
     // Gooey-dot pager (item 4): accent dots that blob together via an SVG goo
     // filter as the active one scales up; chevron arrows either side.
@@ -256,6 +267,10 @@ const linkedinIcon =
         c.hidden = !on;
         if (on) c.classList.add('is-visible'); // paged-in cards never stuck at opacity:0
       });
+      // Cards keep their original DOM slots when merely hidden/shown, so the
+      // per-category ranking above would be invisible without re-appending.
+      // render() only runs on a filter/page change, so this is not a hot path.
+      set.slice(page * PAGE, page * PAGE + PAGE).forEach((c) => list.appendChild(c));
       buildPager(pages);
     }
 

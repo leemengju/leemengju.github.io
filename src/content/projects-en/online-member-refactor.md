@@ -5,7 +5,7 @@ period: "2026.05 - 2026.06"
 tags: [Vue, Laravel, API Design, Refactoring]
 metrics: "1 tangled API split into 3; main file 712 lines → ~190 lines"
 order: 7
-categories: [refactor, fullstack]
+categories: [refactor]
 beforeAfter:
   label: "Front-end main file line count"
   before: 712

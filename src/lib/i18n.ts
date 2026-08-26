@@ -69,7 +69,6 @@ export const categoryLabels: Record<string, { zh: string; en: string }> = {
   'db-performance': { zh: '資料庫與快取效能', en: 'Database, Cache & Performance' },
   'data-automation': { zh: '數據可視與自動化', en: 'Data Viz & Automation' },
   integration: { zh: '第三方串接', en: 'Integration' },
-  fullstack: { zh: '全端開發', en: 'Full-Stack' },
   pm: { zh: '專案管理', en: 'Project Management' },
   uiux: { zh: 'UI/UX', en: 'UI/UX' }
 };

@@ -5,7 +5,7 @@ period: "2026.05 - 2026.07"
 tags: [Laravel, Vue, v-charts, Automation]
 metrics: "Daily manual entry: 20 min → 0 (all 7 pain points solved)"
 order: 8
-categories: [data-automation, fullstack]
+categories: [data-automation]
 beforeAfter:
   label: "Daily manual work time"
   before: 20

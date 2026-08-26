@@ -5,7 +5,7 @@ period: "2024.11 - 2025.01"
 tags: [React, RWD, Figma, UI Flow]
 metrics: "設計還原度 90%+;RWD 從單一斷點擴展至全載體"
 order: 13
-categories: [fullstack, uiux]
+categories: [uiux]
 ---
 
 > 為繁忙的你，定義每一刻的美好滋味。

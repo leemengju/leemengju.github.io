@@ -67,10 +67,9 @@ export const strings = {
 export const categoryLabels: Record<string, { zh: string; en: string }> = {
   refactor: { zh: '系統架構與重構', en: 'System Architecture & Refactoring' },
   'db-performance': { zh: '資料庫與快取效能', en: 'Database, Cache & Performance' },
+  reliability: { zh: '交易一致性與容錯', en: 'Consistency & Fault Tolerance' },
+  observability: { zh: '可觀測性與根因定位', en: 'Observability & Root-Cause Analysis' },
   'data-automation': { zh: '數據可視與自動化', en: 'Data Viz & Automation' },
-  integration: { zh: '第三方串接', en: 'Integration' },
-  pm: { zh: '專案管理', en: 'Project Management' },
-  uiux: { zh: 'UI/UX', en: 'UI/UX' }
 };
 
 export function homePath(locale: Locale): string {

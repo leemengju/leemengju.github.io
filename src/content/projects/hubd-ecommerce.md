@@ -5,7 +5,6 @@ period: "2025.02 - 2025.04"
 tags: [React, Laravel, MySQL, Vite, Tailwind]
 metrics: "5 人團隊,8 週交付客戶端＋企業端 MVP"
 order: 12
-categories: [pm]
 ---
 
 > Happy unbirthday 🎂|364-非生日快樂|「你依舊閃閃發亮—在非生日的 364 個日子裡。」

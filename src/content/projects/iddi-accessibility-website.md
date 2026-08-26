@@ -5,7 +5,6 @@ period: "2024.06 - 2024.09"
 tags: [WCAG, UI/UX, 專案管理]
 metrics: "四個月從零製作 landing page + 兩組功能模塊"
 order: 17
-categories: [uiux, pm]
 ---
 
 ## 背景

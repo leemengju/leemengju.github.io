@@ -5,7 +5,6 @@ period: "2023.11 - 2024.03"
 tags: [Project Management, Experience Design, Event Planning]
 metrics: "All promotional items distributed within the two-day event, attracting 7,000+ visitors"
 order: 15
-categories: [pm]
 ---
 
 ## Background

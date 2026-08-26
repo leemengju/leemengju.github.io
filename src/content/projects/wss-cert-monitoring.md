@@ -5,6 +5,7 @@ period: "2026.07 - 2026.08"
 tags: [Node.js, TLS, Bash, Laravel, 監控告警]
 metrics: "偵測時點:故障後 2 天 → 到期前 14 天預警"
 order: 4
+categories: [observability]
 ---
 
 ## 背景

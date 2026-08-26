@@ -5,7 +5,6 @@ period: "2024.07 - 2024.08"
 tags: [UI/UX, Prototype, Project Management]
 metrics: "MVP feature UI, design guideline and prototype delivered in two months"
 order: 16
-categories: [uiux, pm]
 ---
 
 > Building the heart's destination for second-hand trading with the beauty of locality — Second-hand trading / iOS / local entrepreneurship

@@ -45,6 +45,6 @@
 
 ## 8. Later phases (out of this change's critical path)
 
-- [ ] 8.1 Add English i18n locale and en content
-- [ ] 8.2 Configure custom domain (CNAME) and cut DNS over from Framer
-- [ ] 8.3 Retire the Framer site once verified
+- [x] 8.1 Add English i18n locale and en content （已完成:`src/content/projects-en/` 19 頁）
+- [~] 8.2 ~~Configure custom domain (CNAME) and cut DNS over from Framer~~ — **不做**（2026-08-26 裁定:不需要自訂網域,站台維持 leemengju.github.io）
+- [~] 8.3 ~~Retire the Framer site once verified~~ — **不做**（2026-08-26 裁定:lancelee.framer.website 留著,不影響）

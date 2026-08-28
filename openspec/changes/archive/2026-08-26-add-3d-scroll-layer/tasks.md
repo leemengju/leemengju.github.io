@@ -1,5 +1,20 @@
 # Tasks — scroll-driven 3D layer
 
+> **歸檔註記（2026-08-26）**:使用者確認本 change 已完成。勾選狀態停留在 3/27 是**沒回頭打勾**,
+> 不代表未實作。歸檔前以檔案存在性實查:
+>
+> | 項目 | 實查結果 |
+> |---|---|
+> | three / @react-three/fiber / @react-three/drei | ✅ `three@^0.185.1`、`fiber@^9.6.1`、`drei@^10.7.7` |
+> | Scene3D island | ✅ `src/components/effects/Scene3D.tsx`（另有 `DroneScene.tsx`） |
+> | choreography | ✅ `src/components/effects/drone-choreography.ts`（檔名與原規劃略異） |
+> | bright/dark glb | ✅ `public/models/` 2 個 |
+> | **lenis / leva** | ❌ **未採用**。leva 是調參期的臨時面板,作法有調整 |
+>
+> ⚠ 行為面項目（gating、效能上限、a11y、主題切換熱換模）**未逐項驗證**,
+> 依使用者確認歸檔。未逐一勾選是刻意的 —— 不勾我沒驗過的。
+
+
 > Updated 2026-07-27 to the finalized plan (see design.md): one meshopt drone,
 > theme-swapped, across 5 of 7 home sections; leva-assisted tuning.
 

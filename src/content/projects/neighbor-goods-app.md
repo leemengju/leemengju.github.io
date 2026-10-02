@@ -4,7 +4,7 @@ role: 專案管理與 UI/UX 設計師
 period: "2024.07 - 2024.08"
 tags: [UI/UX, Prototype, 專案管理]
 metrics: "兩個月完成 MVP 功能介面、design guideline、prototype"
-order: 16
+order: 19
 ---
 
 > 用在地化的美好，打造二手交易的心之所嚮 —— 二手交易／iOS／在地創業

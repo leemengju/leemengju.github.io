@@ -4,7 +4,7 @@ role: UI/UX Designer
 period: "2023.12 - 2024.06"
 tags: [UI/UX, Wireframe, Enterprise System Design]
 metrics: "16 carbon-inventory step modules turned into 700+ pages of system UI"
-order: 18
+order: 21
 ---
 
 ![Project key visual: ESG Carbon Sustainable Cloud — carbon inventory system UI design](/banners/iisi-carbon-system.webp)

@@ -4,7 +4,7 @@ role: Full-Stack Engineer + Project Manager
 period: "2025.02 - 2025.04"
 tags: [React, Laravel, MySQL, Vite, Tailwind]
 metrics: "5-person team, delivered customer-side + enterprise-side MVP in 8 weeks"
-order: 12
+order: 15
 ---
 
 > Happy unbirthday 🎂 | 364 — happy un-birthday | "You still shine brightly on the 364 days that are not your birthday."

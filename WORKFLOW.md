@@ -1,12 +1,12 @@
 # 作品集維護工作流(WORKFLOW)
 
 > 本檔是這個 repo 的維護 SOP。內容管線一律走:
-> **(personalInfo + achievement)→ projects.md → html → 排版邏輯與特效分類**。
+> **(私有履歷 + achievement)→ projects.md → html → 排版邏輯與特效分類**。
 > 任何新專案、改版、改特效,都照本檔對號入座,不要繞過管線直接改產出。
 
 ```mermaid
 graph LR
-  A[E:\personalInfo 履歷<br/>私有 repo] --> C
+  A[私有履歷 repo<br/>本機,不公開] --> C
   B[~/.claude/memory achievement<br/>私有 repo,含機密] -->|achievement-to-portfolio skill<br/>整篇複製 → 去識別化| C[src/content/projects{,-en}/*.md]
   C -->|astro build,schema 驗證| D[dist/ 靜態 html]
   D -->|push main → Actions| E[leemengju.github.io]
@@ -18,9 +18,9 @@ graph LR
 
 | 來源 | 位置 | 用途 |
 |---|---|---|
-| 履歷(中/英) | `E:\personalInfo\`(private repo `personal-info`) | 首頁 About/Skills/Experience/Education 的內容底稿 → 人工複製進 `src/lib/profile.ts` |
-| Achievement 完整記錄 | `C:\Users\tw25324\.claude\memory\achievement-*.md`(private repo `claude_compexity`) | 專案頁內容 → 走 `achievement-to-portfolio` skill |
-| 敘事原則 | `E:\personalInfo\履歷維護原則.md` | 所有文案的風格規範(禁防禦框架/比較句/「教訓:」標籤等) |
+| 履歷(中/英) | 私有履歷 repo(本機) | 首頁 About/Skills/Experience/Education 的內容底稿 → 人工複製進 `src/lib/profile.ts` |
+| Achievement 完整記錄 | 私有 memory repo 的 `achievement-*.md`(本機) | 專案頁內容 → 走 `achievement-to-portfolio` skill |
+| 敘事原則 | 私有履歷 repo 的「履歷維護原則」 | 所有文案的風格規範(禁防禦框架/比較句/「教訓:」標籤等) |
 
 **安全邊界**:私有 → 公開必須經過人工去識別化(skill 裡有過濾清單:主機名、內網域、DB 表名、commit hash、人名、電話…)。libcurl 版本號經使用者核准可保留。**絕不用 submodule/symlink/build script 自動連動私有內容。**
 
@@ -90,7 +90,7 @@ graph LR
 | 想做什麼 | 動哪裡 |
 |---|---|
 | 新增一個專案頁 | 跑 skill「把 XX achievement 擴寫進 portfolio」→ 產出 zh/en 兩檔 + `categories` |
-| 改自介/技能/經歷 | 先改 `E:\personalInfo` 履歷(source of truth)→ 人工同步到 `src/lib/profile.ts` |
+| 改自介/技能/經歷 | 先改私有履歷 repo(source of truth)→ 人工同步到 `src/lib/profile.ts` |
 | 加/改篩選分類 | `i18n.ts` 的 `categoryLabels` + 各專案 frontmatter `categories` |
 | 換配色 | `styles/tokens.css` 的 `--accent` 等 |
 | 加新特效 | 先對照上面的特效分層表選層級,再決定放哪個元件 |

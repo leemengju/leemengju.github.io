@@ -3,7 +3,7 @@
  * Contact) — the fuller site structure carried over from the old Framer site.
  *
  * IMPORTANT: this is a PUBLIC file in a public repo. Content is derived from
- * the résumé (E:\personalInfo, private) but curated for public display —
+ * the résumé (a private repo) but curated for public display —
  * NOTABLY no phone number (the résumé has one; it must never appear here).
  * The résumé is NOT imported at build time on purpose (private→public stays a
  * manual, reviewed copy — same boundary as the achievement-to-portfolio skill).
@@ -38,7 +38,7 @@ export interface EducationItem {
 export interface Profile {
   about: string[];
   /** Headline numbers for the About stats carousel — every figure must be
-   * traceable to an achievement record (see E:\personalInfo\履歷維護原則.md). */
+   * traceable to an achievement record (see the private résumé guidelines). */
   stats: StatItem[];
   skills: SkillItem[];
   experience: ExperienceItem[];

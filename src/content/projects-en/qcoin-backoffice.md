@@ -5,6 +5,7 @@ period: "2026.03 - 2026.05"
 tags: [Laravel, Vue, MySQL, Project Management]
 metrics: "Delivered from zero in 8 weeks, 34 work items shipped, 69 personal commits"
 order: 9
+categories: [reliability, data-automation]
 timeline:
   - date: "2026-03-10"
     label: "Built the Q-Coin passbook from scratch (first commit)"

@@ -28,5 +28,5 @@ The current portfolio (`lancelee.framer.website`) is produced via Figma→Framer
 - **New project** at `E:\portfolio` (own Git repo, pushed to GitHub). No existing code affected.
 - **Dependencies**: Astro, `@astrojs/mdx`, `@astrojs/sitemap`, a Mermaid integration, optional `gsap`, optional `@astrojs/react` + `framer-motion`.
 - **Hosting migration**: moves off Framer; domain starts as `<account>.github.io`, custom domain (e.g. `lancelee.dev`) later.
-- **Content**: sourced from `C:\Users\tw25324\Desktop\個人資料\個人簡介--李孟儒[工程師版]202607.md` and the EN résumé.
+- **Content**: sourced from the private résumé repo (ZH and EN versions).
 - See `E:\portfolio\PLAN.md` for the full decision record.

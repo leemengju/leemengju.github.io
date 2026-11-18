@@ -9,7 +9,7 @@
 - **託管**：GitHub Pages，push main → GitHub Actions 自動 `astro build` → 上線。**不用 Docker**（動效是 client-side，靜態託管照樣能跑，Docker 對作品集非必要）。
 - **內容託管**：專案介紹一律 md，放本 repo，改 md→push→自動上線；舊 Framer 專案頁自然淘汰。
 - **專案路徑**：`E:\portfolio`（獨立 git repo，之後 push 上 GitHub）。
-- **語言**：先繁中，英文之後補（Astro i18n）。內容可沿用兩份履歷 md（`C:\Users\tw25324\Desktop\個人資料\個人簡介--李孟儒[工程師版]202607.md`、`CV--Lee MengJu[EN]202607.md`）。
+- **語言**：先繁中，英文之後補（Astro i18n）。內容可沿用私有履歷 repo 的中英文兩份履歷 md。
 
 ## 內容模型
 

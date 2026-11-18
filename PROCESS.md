@@ -27,16 +27,78 @@
    grep -rniE "gmtap|vm140|cash7|gmtool|PHP 7\.1|CentOS|player_money_change|pmc_win_score|buyfg_|copperCoin|lance324|0939|lineRobotMember|administrator_permission_groups" src/content/ src/lib/profile.ts
    ```
    須 **0 命中**(libcurl 7.19.7 / 7.20.0 為使用者核准保留的例外)。
+
+   🔴 **這條只掃 `src/content/` 與 `profile.ts`,而且是固定字串 denylist** —— 擋不住沒列進去的字,
+   也掃不到根目錄與 `openspec/` 的 .md。2026-11-18 就是這樣讓 4 個檔的本機路徑過關的。
+   **改到 repo 任何地方時改跑這條**(涵蓋全部 tracked 檔 + pattern 型紅線):
+   ```bash
+   git ls-files -z | xargs -0 grep -nIE "gmtap|vm140|cash7|gmtool|player_money_change|pmc_win_score|buyfg_|copperCoin|lance324|0939|lineRobotMember|administrator_permission_groups|PHP 7\.1|CentOS|[A-Z]:\\Users|09[0-9]{2}[- ]?[0-9]{3}[- ]?[0-9]{3}"
+   ```
+   `-I` 跳過二進位檔(`public/legacy/` 的 mp4/gif 會隨機命中 `E:\`,全是誤判)。
+   ⚠ **預期會有 4 筆「自我命中」**:`PROCESS.md` 的兩條閘門指令與紅線清單、`WORKFLOW.md:82` 的舊指令 ——
+   那是清單在描述自己,不是外洩。**真正要看的是 `src/`、`public/`、`openspec/` 底下有沒有命中。**
+   要排掉自我命中:在上面那條後面接 `| grep -vE "^(PROCESS|WORKFLOW)\.md:"`。
+
+   ⚠ **不要用 `grep -r . --include=...`** —— 這個 repo 實測會漏報(node_modules 太大),
+   2026-11-18 它對已存在的命中回報「0 命中」,差點讓我宣告清乾淨。以 `git ls-files` 餵清單才可靠。
 4. **目視**:特效與版面改動,build 無法驗證外觀 → 在 `npm run preview` 目視(特別是 hero、導覽、手機版)。
 5. **commit + push**:內容一類、版面/特效一類,分開 commit;push `main` 後等 Actions 部署完再看線上。
 
 ## 去識別化紅線(push 到 public 前絕不外洩)
 
-內部主機名(gmtap-2 / vm140 / gmtool-be01)、內部網域(*.cash7.com.tw)、DB 表/欄名、commit hash、branch 名、同事本名(→「同事」)、電話。**例外**:libcurl 版號 7.19.7 / 7.20.0 經核准可留。`E:\personalInfo` 與 `~/.claude` 兩個私有 repo 的內容絕不進 public。
+內部主機名(gmtap-2 / vm140 / gmtool-be01)、內部網域(*.cash7.com.tw)、DB 表/欄名、commit hash、branch 名、同事本名(→「同事」)、電話。
+**例外**:libcurl 版號 7.19.7 / 7.20.0 經核准可留。
+
+🔴 **2026-11-18 新增一類紅線:本機絕對路徑、OS 帳號名、私有 repo 名。**
+兩個私有 repo(履歷源、Claude memory)的**內容**本來就絕不進 public,但當時沒把「**路徑與 repo 名本身**」列為紅線,
+結果 4 個 tracked 檔(含 `src/lib/profile.ts`)長期寫著含 OS 帳號的絕對路徑。已於 2026-11-18 清除。
+描述這兩個來源時一律寫「私有履歷 repo」「私有 memory repo」,不寫路徑、不寫 repo 名。
 
 ---
 
 ## 進度日誌(新的寫最上面)
+
+### 2026-11-18 — 稽核補記:2026-07-23~2026-10-02 共 33 筆 commit 的合併日誌
+
+> 本段是**事後補記**。日誌從 2026-07-22 之後斷了近四個月,期間有 33 筆 commit
+> (`80e2594`..`ead125f`)沒有脈絡可追。以下依主題合併,不逐筆列。
+
+- **2026-07-23~07-31 — 第六輪 b 回饋、3D 圖層、環境音、履歷改版**
+  - 回饋 6b:timeline 光束、gooey 分頁器、履歷鈕、拿掉「研究員」。
+  - **捲動驅動的 3D 無人機圖層**(v1→v2):tune overlay 自製(放棄 leva)、S 曲線、亮度與旋轉 gating、
+    分段內運動、手機獨立 keyframes。
+  - **環境音 toggle**:opt-in → 預設開 → 跨頁連續播放。
+  - **履歷改版多輪**:雙頁亮色 → 白底去地點 → header band/icon 鈕/點狀專案 → 色階層次。
+    ⚠ `### 2026-07-22` 那段寫的「英文版待補」**已於 2026-07-24 `d30cc03` 完成**(zh + en 同批產出)。
+  - header 固定一度上線又 revert(2026-07-31 `d8f7501`)。
+
+- **2026-08 — 品牌、去識別化、achievement↔portfolio 一致性、分類系統**
+  - logo 改 LANCE LEE、履歷配色加深、3D 手機 keyframes 與 contact 角度確定性調校。
+  - **內部識別字全面泛化**(`161711e`)並新增兩篇專案頁。
+  - **achievement↔portfolio 一致性同步 Phase 1/2**(各 4 組)+ 修正稽核發現的錯誤;
+    玩家金流頁補回遺漏的專案說明;permission-multiselect 補上線策略與改版規模。
+  - **依 senior 四維訊號強度重排作品集**(`3517dff`),旗艦頁補架構圖。
+  - 新增後又移除 `legacy-system-onboarding`(判定「接手無文件遺留系統」是基本功、不是差異點)。
+  - **分類系統定版**:filter 改成技能區的鏡射(5 分類、順序一致)、移除「全端開發」維度、
+    分類內用 categories 陣列順序排強度(不新增 schema 欄位)。
+  - 首頁 profile 同步到 20260824 履歷(`fff0576`,該批唯一漏掉的一層)。
+  - openspec 歸檔 rebuild-portfolio-astro 與 add-3d-scroll-layer,建立主 specs。
+
+- **2026-10-02 — 新增三頁**(`ead125f`):錯誤通知改造、登入驗證改版、報表重查詢治理;專案數 19→22。
+
+### 2026-11-18 — achievement↔portfolio 稽核與去識別化補強
+
+- **本機路徑與私有 repo 名清出 public repo**:`PLAN.md`、`WORKFLOW.md`、
+  `openspec/.../proposal.md`、**`src/lib/profile.ts`** 四個檔含 Windows 使用者路徑、
+  私有 repo 名與私有履歷檔名,全部改成不含帳號的描述。
+  🔴 **`profile.ts` 一直在掃描範圍內、每次都被掃、每次都放行**——因為 denylist 沒有
+  私有履歷 repo 的名字。固定字串清單只能擋想得到的字,這是閘門的結構性限制。
+  `dist/` 建置產物本來就乾淨(0 命中),曝險僅限 GitHub 上的原始碼。
+- **`qcoin-backoffice` 補 `categories: [reliability, data-automation]`**(zh/en 同步)。
+  它是 order 1~14 區間裡唯一沒有分類的一筆,在 5 個 filter pill 下只有「全部」看得到。
+  ⚠ order 15~22 共 8 篇**刻意不分類**(早期職涯專案,5 個 category 都是台版後台工程向),
+  那是區塊邊界不是漏填,不要「補齊」。
+
 
 ### 2026-07-22 — 第六輪回饋(8 項,含履歷 PDF)
 - **根因:island/JS 產生的元素拿不到 Astro scoped CSS**。字母雨 hero(1)glyph 變成一行亂碼、分頁鈕(4)沒套色——都是因為 CSS 被 scope 到元件、但元素是 island/JS 建的。改用 `:global()` 後修好。**教訓已內化**:island 或 `document.createElement` 產生的節點,樣式要 `:global`。

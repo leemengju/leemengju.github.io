@@ -84,7 +84,7 @@
   <section class="page">
     <header class="head">
       <h1>李孟儒<span class="en">Lance Lee</span></h1>
-      <p class="intro">擁有 2 年跨產業經驗，涵蓋數位產品設計與全端工程開發，現任線上娛樂平台全端工程師，曾參與百萬預算的 SaaS、金融、政府與線上娛樂平台專案。主導總勝分報表由 MySQL 遷移至 ClickHouse（整月查詢約 104 秒→約 5 秒、約 21 倍），持續推動報表與監控自動化（年省逾 300 小時），並重構大型 Vue 模組（4221 行縮減 54%）。設計與專案管理背景讓我能精準掌握需求脈絡與使用者體驗，讓技術決策直接對接商業目標。</p>
+      <p class="intro">擁有 3 年跨產業經驗，涵蓋數位產品設計與全端工程開發，現任線上娛樂平台全端工程師，曾參與百萬預算的 SaaS、金融、政府與線上娛樂平台專案。主導總勝分報表由 MySQL 遷移至 ClickHouse（整月查詢約 104 秒→約 5 秒、約 21 倍）；以 Handler 模式重構七支千行級判斷式（最大主檔 1059→320 行）、將 4221 行巨型 Vue 模組拆為 10 檔（主檔 −54%）；並持續推動報表與監控自動化（年省逾 300 小時）。設計與專案管理背景讓我能精準掌握需求脈絡與使用者體驗，讓技術決策直接對接商業目標。</p>
       <div class="contact">
         <a class="icon-btn" href="mailto:emy0526@gmail.com" aria-label="Email">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 6 9-6"/></svg>
@@ -104,12 +104,11 @@
     <div class="section">
       <h2>技能</h2>
       <div class="skills">
-        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span><div><div class="k">系統重構</div><div class="d">共用設定模組化，4221 行巨型 Vue 檔分三波拆為 10 檔、主檔縮減 54%；線上會員頁單一混亂 API 拆成 3 支職責清晰 API、主檔 712→約 190 行。</div></div></div>
-        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span><div><div class="k">資料庫遷移與效能優化</div><div class="d">熟悉 MySQL/MariaDB/ClickHouse，獨立主導 MySQL→ClickHouse 遷移（MV + AggregatingMergeTree），查詢提速約 21 倍，零停機、資料一致。</div></div></div>
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span><div><div class="k">系統架構與重構</div><div class="d">以 Contract + Registry 單一分派點，將 7 支千行級判斷式重構為約 45 個 Handler（最大主檔 1059→320 行）；4221 行巨型 Vue 分三波拆為 10 檔（主檔 −54%）。兩者都在無既有測試的程式碼上完成並證明行為零改變。</div></div></div>
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span><div><div class="k">資料庫與快取效能優化</div><div class="d">主導 MySQL→ClickHouse 遷移（MV + AggregatingMergeTree 於寫入時聚合），整月查詢約 104 秒→約 5 秒（約 21 倍），零停機、報表零誤差；快取走 cache-aside 與游標式失效，並判斷何時不該快取。</div></div></div>
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.4v6.1c0 4.5 3.1 8.4 7.5 9.8 4.4-1.4 7.5-5.3 7.5-9.8V5.4L12 2.5Z"/><path d="m8.9 11.9 2.2 2.2 4.1-4.3"/></svg></span><div><div class="k">交易一致性與容錯</div><div class="d">將推播內容間歇性短少定位為逐筆寫入與定時讀取之間的競態條件，以鏈式觸發 + 整批原子性寫入根治；為「上游回報成功卻未落庫」設計送出後對帳，16 次匯入攔截 1 次真實遺失。</div></div></div>
+        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 12 18.4 5.6"/></svg></span><div><div class="k">可觀測性與根因定位</div><div class="d">主動探測而非被動等報錯：「檢查全綠、前端全掛」的隱形故障改以完成 TLS 握手取證比對來監控（只查埠監聽抓不到靜默降級），偵測時點由故障後 2 天提前至到期前 14 天。</div></div></div>
         <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 3-3 3 3 5-5"/></svg></span><div><div class="k">數據可視與自動化</div><div class="d">將重複性人工作業轉為自動化排程與資料視覺化，以 v-charts 折線圖與可拖拉表格呈現多維趨勢，日報表/監控回報改為 Kernel 排程，年省逾 300 小時。</div></div></div>
-        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M9 22v-6M15 22v-6M2 9h6M2 15h6M22 9h-6M22 15h-6"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></span><div><div class="k">第三方串接</div><div class="d">LINE/Slack Bot SDK 串接與 cloudflared 內網穿透經驗，擅長打通防火牆內網限制，將訊息與資料即時同步推送。</div></div></div>
-        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span><div><div class="k">全端開發技術</div><div class="d">React、Vue 前端與 PHP、Laravel 後端開發經驗，熟悉 MVC 與前後端串接，能獨立完成從資料庫設計到前端呈現的完整開發。</div></div></div>
-        <div class="skill"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v10"/></svg></span><div><div class="k">專案管理</div><div class="d">熟練使用 Notion、Trello、Redmine 進行專案管理，掌控進度與任務、提高執行效率。</div></div></div>
       </div>
     </div>
 
@@ -121,7 +120,7 @@
         <div class="summary">隸屬技術支援課，負責遊戲營運數據報表與後台系統之全端開發與維運。</div>
         <ul>
           <li>主導總勝分報表資料庫遷移，玩家整月查詢由約 104 秒降至約 5 秒（約 21 倍）。</li>
-          <li>將投注額日表、區間賠率監控、玩家金流查詢等每日人工作業（合計每年逾 300 小時）全面自動化。</li>
+          <li>將投注額日表、區間賠率監控等每日人工作業改為排程執行與機器人推送（年省逾 300 小時）；整月玩家金流分析則由跨 5 個後台頁面手查，整合為單頁一鍵批量匯出。</li>
           <li>將 4221 行巨型 Vue 檔模組化重構，拆為 10 檔、主檔縮減 54%，新框架為後續功能沿用驗證。</li>
           <li>與同事協作 8 週內從零交付全新貨幣機制後台（34 項工項上線、個人 69 commits）。</li>
         </ul>
@@ -151,11 +150,11 @@
     <div class="section">
       <h2>專案</h2>
 
-      <div class="proj"><div class="pt">玩家金流異動統計報表</div><ul>
-        <li>背景：客服／風管需查詢玩家金流異動，原查詢跨月分表，20 人批量查詢需 4~5 分鐘。</li>
-        <li>專案內容：重構查詢邏輯，依搜尋日期自動分流 ClickHouse 單表／MySQL 分表，並封裝查詢建構器。</li>
-        <li>專案挑戰：跨月分表查詢慢、批量查詢逾時、CH 與 MySQL 結果需完全對齊。</li>
-        <li>貢獻與成果：獨立設計分流邏輯與 CH schema、以實資料對數驗證；20 人批量查詢 4~5 分鐘 → 15~20 秒（QA 實測約 3.2×）。</li>
+      <div class="proj"><div class="pt">總勝分報表資料庫遷移（MySQL → ClickHouse）</div><ul>
+        <li>背景：總勝分報表查 MySQL 月／日分表，玩家整月查詢約 104 秒。</li>
+        <li>專案內容：遷移至 ClickHouse（MV + AggregatingMergeTree），依日期在 CH／MySQL 間分流。</li>
+        <li>專案挑戰：零停機切換、遷移前後資料一致性驗證。</li>
+        <li>貢獻與成果：獨立主導遷移、CH schema 與分區鍵設計、以實資料對數；整月查詢 約 104s → 約 5s（約 21×），零停機。</li>
       </ul></div>
 
       <div class="proj"><div class="pt">區間賠率監控 + 運營資料 LINE／Slack 機器人自動推送</div><ul>
@@ -165,32 +164,32 @@
         <li>貢獻與成果：獨立打通內網穿透、設計推送排程與異常處理；人工回報 → 全自動推送，約省 304 小時／年。</li>
       </ul></div>
 
-      <div class="proj"><div class="pt">投注額日表（betDaily）自動化與視覺化</div><ul>
-        <li>背景：投注額日表每日人工填表約 20 分鐘，且有 6 個長期痛點。</li>
-        <li>專案內容：建立自動化 pipeline，以 v-charts 折線圖與可拖拉表格呈現多遊戲趨勢。</li>
-        <li>專案挑戰：多遊戲資料整合、範本設定管理、歷史資料重跑。</li>
-        <li>貢獻與成果：設計資料 pipeline 與前端視覺化、範本管理流程；每日 20 分鐘人工 → 0，6 個痛點全數解決。</li>
+      <div class="proj"><div class="pt">玩家金流異動統計報表</div><ul>
+        <li>背景：客服／風管需查詢玩家金流異動，原查詢跨月分表，20 人批量查詢需 4~5 分鐘。</li>
+        <li>專案內容：重構查詢邏輯，依搜尋日期自動分流 ClickHouse 單表／MySQL 分表，並封裝查詢建構器。</li>
+        <li>專案挑戰：跨月分表查詢慢、批量查詢逾時、CH 與 MySQL 結果需完全對齊。</li>
+        <li>貢獻與成果：獨立設計分流邏輯與 CH schema、以實資料對數驗證；20 人批量查詢 4~5 分鐘 → 15~20 秒（QA 實測約 3.2×）。</li>
       </ul></div>
 
-      <div class="proj"><div class="pt">Q 幣後台系統建置</div><ul>
-        <li>背景：公司導入全新虛擬貨幣（Q 幣），後台完全從零建立。</li>
-        <li>專案內容：DB 建表與相容設計 + Vue 前端，近 50 份報表逐張評估、34 項工項上線。</li>
-        <li>專案挑戰：需求極度模糊、兩個月死線、跨幣種 UI 共存、8+ 短線分支合版。</li>
-        <li>貢獻與成果：與同事協作、16 項獨立完成、69 commits；8 週從零交付、34 項上線，並剃除 15+ 項不需要功能。</li>
+      <div class="proj"><div class="pt">WSS 憑證隱形故障：根因定位與到期監控</div><ul>
+        <li>背景：IT 換完憑證未重啟服務，行程仍持有記憶體中的舊憑證；行程、埠、log 全綠，前端 wss 卻全掛，隔兩天才被發現。</li>
+        <li>專案內容：以實際完成 TLS 握手取得「服務真正送出的憑證」，與磁碟憑證做 SHA256 指紋比對，掛進既有排程每週主動檢查。</li>
+        <li>專案挑戰：憑證缺失會靜默降級為明文連線、埠仍在聽，只查行程與埠一律看不出來；告警須讓非工程人員也能照做。</li>
+        <li>貢獻與成果：獨立定位根因並設計監控；偵測時點由故障後 2 天提前至到期前 14 天預警，5 種告警各附依主機動態產生的修復指令。</li>
       </ul></div>
 
-      <div class="proj"><div class="pt">總勝分報表資料庫遷移（MySQL → ClickHouse）</div><ul>
-        <li>背景：總勝分報表查 MySQL 月／日分表，玩家整月查詢約 104 秒。</li>
-        <li>專案內容：遷移至 ClickHouse（MV + AggregatingMergeTree），依日期在 CH／MySQL 間分流。</li>
-        <li>專案挑戰：零停機切換、遷移前後資料一致性驗證。</li>
-        <li>貢獻與成果：獨立主導遷移、CH schema 與分區鍵設計、以實資料對數；整月查詢 約 104s → 約 5s（約 21×），零停機。</li>
+      <div class="proj"><div class="pt">遊戲後台判斷式重構：巨型 switch 到 Handler 模式</div><ul>
+        <li>背景：勝分統計、角色輸贏、機台資訊等 7 支後端核心是上千行的巨型 if/elseif 與 switch（主檔 1059 行），所有遊戲共用、改 A 可能誤傷 B。</li>
+        <li>專案內容：重構為 Handler 模式（Contract + Registry 單一分派點、約 45 個 handler），新增遊戲改為「加一個檔 + Registry 一行」。</li>
+        <li>專案挑戰：這是財務／營運統計的寫入與讀取端，行為不得有任何改變，但程式碼沒有既有測試。</li>
+        <li>貢獻與成果：主檔 1059 → 320 行、巨型共用模型檔累計卸下 1550+ 行；以 dispatch 等價、新舊並跑輸出全等、攔截實際 SQL 做位元組比對（492/492）證明行為零改變。</li>
       </ul></div>
 
-      <div class="proj"><div class="pt">線上會員頁重構與多部門需求整合</div><ul>
-        <li>背景：線上會員頁為單一混亂 API、前端主檔 712 行，且需整合多部門需求。</li>
-        <li>專案內容：將單一 API 拆為 3 支職責清晰 API，並重構前端主檔。</li>
-        <li>專案挑戰：不破壞既有幣種邏輯，同時整合執行長／運營／風管等需求。</li>
-        <li>貢獻與成果：主導 API 拆分與前端重構、跨部門需求釐清；1 支混亂 API → 3 支，前端主檔 712 行 → 約 190 行。</li>
+      <div class="proj"><div class="pt">共用設定模組化重構</div><ul>
+        <li>背景：共用設定主檔長年是跨遊戲設定的「垃圾桶」，膨脹到 4221 行，改任一功能都要在 4000+ 行中翻找，多人並行常衝突。</li>
+        <li>專案內容：分三波按職責拆為 10 檔（4 主模組 + 5 個 Dialog 元件 + 1 支邏輯 js），獨立路由由 1 條增為 4 條。</li>
+        <li>專案挑戰：在業務持續擴充的前提下重構，且不得影響既有設定行為；需先以單一模組試水、驗證可行再放大。</li>
+        <li>貢獻與成果：主檔 4221 → 1963 行（−54%）；新框架於半年後被全新貨幣機制後台直接沿用，拆分策略在當時還不存在的需求上得到事後驗證。</li>
       </ul></div>
     </div>
 
